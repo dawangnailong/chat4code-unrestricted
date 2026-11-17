@@ -8,21 +8,21 @@ import {
   IconRefreshOutline16,
 } from '../base/icons.js'
 import {
-  BUILTIN_MODELS,
-  fetchRemoteModels,
+  builtinModels,
   modelLabel,
   readCachedModels,
   type ModelOption,
 } from '../../services/api/models.js'
+import { fetchProviderModels } from '../../services/api/provider.js'
 import { setModel, useSettings } from '../../services/settings.js'
 import { formatMoney, isKnownModel, modelPriceFor } from '../../services/chat/sessionStats.js'
 import { showToast } from '../base/toastState.js'
 import { useTranslate } from '../../i18n/index.js'
 import styles from './ModelPicker.module.css'
 
-const mergeModels = (remote: ModelOption[]): ModelOption[] => {
+const mergeModels = (remote: ModelOption[], builtin: ModelOption[]): ModelOption[] => {
   const seen = new Set(remote.map((item) => item.id))
-  return [...remote, ...BUILTIN_MODELS.filter((item) => !seen.has(item.id))]
+  return [...remote, ...builtin.filter((item) => !seen.has(item.id))]
 }
 
 /** 每个模型下方的价格：命中 / 未命中 / 输出，单位每 1M tokens */
@@ -41,8 +41,11 @@ const priceText = (model: string, t: ReturnType<typeof useTranslate>): string =>
 export const ModelPicker = () => {
   const t = useTranslate()
   const model = useSettings((state) => state.model)
+  const provider = useSettings((state) => state.apiProvider)
   const [open, setOpen] = useState(false)
-  const [models, setModels] = useState<ModelOption[]>(() => mergeModels(readCachedModels() ?? []))
+  const [models, setModels] = useState<ModelOption[]>(() =>
+    mergeModels(readCachedModels(provider) ?? [], builtinModels(provider))
+  )
   const [loading, setLoading] = useState(false)
   const fetched = useRef(false)
 
@@ -61,7 +64,7 @@ export const ModelPicker = () => {
 
   const refresh = useCallback(async (silent = false) => {
     const apiKey = useSettings.getState().apiKey ?? ''
-    if (!apiKey) {
+    if (!apiKey && useSettings.getState().apiProvider !== 'opencode-bridge') {
       if (!silent) {
         showToast({ key: 'modelFetchFailed' })
       }
@@ -69,8 +72,8 @@ export const ModelPicker = () => {
     }
     setLoading(true)
     try {
-      const remote = await fetchRemoteModels(apiKey)
-      setModels(mergeModels(remote))
+      const remote = await fetchProviderModels(apiKey)
+      setModels(mergeModels(remote, builtinModels(useSettings.getState().apiProvider)))
     } catch {
       if (!silent) {
         showToast({ key: 'modelFetchFailed' })
@@ -80,16 +83,22 @@ export const ModelPicker = () => {
     }
   }, [])
 
+  // 切换 provider 后重建列表并允许重新拉取
+  useEffect(() => {
+    setModels(mergeModels(readCachedModels(provider) ?? [], builtinModels(provider)))
+    fetched.current = false
+  }, [provider])
+
   // 首次打开且没有缓存时静默拉一次；失败继续用内置列表
   useEffect(() => {
     if (!open || fetched.current) {
       return
     }
     fetched.current = true
-    if (!readCachedModels()) {
+    if (!readCachedModels(provider)) {
       void refresh(true)
     }
-  }, [open, refresh])
+  }, [open, provider, refresh])
 
   const sourceText = useMemo(() => {
     if (loading) {

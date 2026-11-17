@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 echo ============================================
-echo   deepseek unrestricted - 前端启动器
+echo   chat4code-unrestricted - 前端启动器
 echo ============================================
 
 rem ---- 1. Node.js ----

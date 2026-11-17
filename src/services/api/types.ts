@@ -10,6 +10,9 @@
  */
 export type ChatModel = string
 
+/** 推理通道：浏览器直连 DeepSeek，或经 OpenCode Bridge 扩展转发到 OpenCode Console / Go */
+export type ApiProvider = 'deepseek' | 'opencode-bridge'
+
 /** 思考强度；Anthropic 协议用 budget_tokens，OpenAI 兼容协议用 reasoning_effort，这里同时下发 */
 export type ReasoningEffort = 'low' | 'medium' | 'high' | 'max'
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { TtsVoice } from './api/speech.js'
-import type { ChatModel } from './api/types.js'
+import type { ApiProvider, ChatModel } from './api/types.js'
 import { normalizeLocation, type UserLocation } from './location.js'
 import type { AutoTuneStrategy } from './unrestricted/autotune.js'
 import type { ObfuscationTechnique } from './unrestricted/parseltongue.js'
@@ -15,6 +15,10 @@ export type ThemePreference = 'light' | 'dark' | 'system'
 /** 本机设置，存 localStorage：API Key、语言、主题、位置、朗读音色、深度思考与智能搜索开关、模型参数、提示词开关、侧边栏收起状态 */
 type Settings = {
   apiKey: string | null
+  /** 推理通道：默认直连 DeepSeek，或经 OpenCode Bridge 扩展转发 */
+  apiProvider: ApiProvider
+  /** OpenCode Bridge 扩展 ID；空串表示未配置 */
+  bridgeExtensionId: string
   /** 当前模型：内置 flash / v4-pro，或云端列表里的任意 id */
   model: ChatModel
   locale: Locale
@@ -80,6 +84,8 @@ type Settings = {
 
 const KEYS = {
   apiKey: 'chat-demo:api-key',
+  apiProvider: 'chat-demo:api-provider',
+  bridgeExtensionId: 'chat-demo:bridge-extension-id',
   model: 'chat-demo:model',
   locale: 'chat-demo:locale',
   location: 'chat-demo:location',
@@ -252,6 +258,8 @@ const initialMaxTokens = (): number | null => {
   return Number.isFinite(value) && value >= 1 ? value : null
 }
 
+const API_PROVIDERS: ApiProvider[] = ['deepseek', 'opencode-bridge']
+
 const PROMPT_PRESETS: PromptPreset[] = ['deepseek', 'godmode']
 
 const TECHNIQUES: ObfuscationTechnique[] = [
@@ -296,6 +304,8 @@ const initialStmModules = (): string[] => {
 
 export const useSettings = create<Settings>(() => ({
   apiKey: read(KEYS.apiKey),
+  apiProvider: initialEnum(KEYS.apiProvider, API_PROVIDERS, 'deepseek'),
+  bridgeExtensionId: (read(KEYS.bridgeExtensionId) ?? '').trim(),
   model: initialModel(),
   locale: initialLocale(),
   location: initialLocation(),
@@ -366,6 +376,34 @@ export const setApiKey = (apiKey: string | null) => {
   write(KEYS.apiKey, apiKey)
   useSettings.setState({ apiKey })
 }
+
+/** 推理通道；切换后旧通道的 Key 与设置保留，切回即可继续使用 */
+export const setApiProvider = (apiProvider: ApiProvider) => {
+  write(KEYS.apiProvider, apiProvider)
+  // 两个通道的 Flash 模型 id 不同：切换时同步当前模型，避免下拉列表里没有选中项
+  const current = useSettings.getState().model
+  const nextModel =
+    apiProvider === 'opencode-bridge' && current === 'deepseek-flash'
+      ? 'deepseek-v4.1-flash'
+      : apiProvider === 'deepseek' && current === 'deepseek-v4.1-flash'
+        ? 'deepseek-flash'
+        : current
+  if (nextModel !== current) {
+    write(KEYS.model, nextModel)
+  }
+  useSettings.setState({ apiProvider, model: nextModel })
+}
+
+/** OpenCode Bridge 扩展 ID；不校验格式，留空表示未配置 */
+export const setBridgeExtensionId = (bridgeExtensionId: string) => {
+  const next = bridgeExtensionId.trim()
+  write(KEYS.bridgeExtensionId, next === '' ? null : next)
+  useSettings.setState({ bridgeExtensionId: next })
+}
+
+/** 是否处于 OpenCode Bridge 模式；组件用它隐藏 DeepSeek 专属功能 */
+export const useBridgeMode = (): boolean =>
+  useSettings((state) => state.apiProvider === 'opencode-bridge')
 
 export const setThinking = (thinking: boolean) => {
   // 打开时恢复到上次的档位（没有则用标准档），关闭时档位归零
@@ -549,6 +587,8 @@ export const resetSettings = () => {
   }
   useSettings.setState({
     apiKey,
+    apiProvider: 'deepseek',
+    bridgeExtensionId: '',
     model: 'deepseek-flash',
     locale: isChineseBrowser() ? 'zh-CN' : 'en-US',
     themePreference: 'system',

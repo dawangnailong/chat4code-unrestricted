@@ -23,10 +23,19 @@ export const openSettings = (section: SettingsSection) =>
 
 export const closeSettings = () => useSettingsDialog.setState({ open: false })
 
-/** 没有 API Key 时打开设置并选中 API Key 所在的「数据管理」，返回是否已有 Key */
+/** 没有可用凭据时打开设置并选中「数据管理」，返回是否已配置 */
 export const ensureApiKey = () => {
-  if (useSettings.getState().apiKey) {
+  const { apiKey, apiProvider, bridgeExtensionId } = useSettings.getState()
+  if (apiKey) {
     return true
+  }
+  // Bridge 模式的 Key 在扩展里，应用侧只要求填过扩展 ID
+  if (apiProvider === 'opencode-bridge') {
+    if (bridgeExtensionId.trim() !== '') {
+      return true
+    }
+    openSettings('data')
+    return false
   }
   openSettings('data')
   return false

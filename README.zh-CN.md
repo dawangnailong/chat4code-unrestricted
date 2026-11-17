@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="./brand.jpg" alt="chat-demo-unrestricted — 是，孙笑川聊天" width="760">
+  <img src="./brand.jpg" alt="chat4code-unrestricted — 是，孙笑川聊天" width="760">
 </p>
 <h1 align="center"><img src="https://github.com/EasyJailbreak/EasyJailbreak/blob/master/image/README/logo.png" alt="EasyJailbreak Logo" height="60"></h1>
 
-<h1 align="center">deepseek unrestricted</h1>
+<h1 align="center">chat4code-unrestricted</h1>
 
 <p align="center">
   是，孙笑川聊天 —— 基于 DeepSeek API 的静态聊天前端，带解除限制模式、回复改写与参数直调<br>
@@ -11,12 +11,12 @@
 </p>
 
 > 本项目是官方示例 [deepseek-ai/chat-demo](https://github.com/deepseek-ai/chat-demo) 的**非官方修改版**（fork），MIT 许可。
-> 所有改动都在浏览器里完成：请求体怎么拼、回复怎么存、界面怎么显示。没有代理、没有中转服务，
-> API Key 与对话记录仍只保存在你自己的浏览器里。
+> 所有改动都在浏览器里完成：请求体怎么拼、回复怎么存、界面怎么显示。没有服务端代理或中转服务，
+> API Key 与对话记录仍只保存在你自己的浏览器里；可选的 OpenCode Bridge 模式把 OpenCode Key 保存在本机 Chrome 扩展中。
 >
 > 🔗在线版：<https://chat-unrestricted.fur0.com/>
 >
-> 📦仓库：<https://github.com/xiaohuangbo/chat-demo-unrestricted>
+> 📦仓库：<https://github.com/debiandawangnailong7-coder/chat4code-unrestricted>
 >
 > 🎥介绍视频：<https://www.bilibili.com/video/BV1p5sL6LEfd/>
 >
@@ -336,6 +336,22 @@ Persona（官方身份分块）
 
 统计弹窗的费用区新增「按模型」分组，显示每个模型的回复条数与费用。
 
+### 3.17 OpenCode Bridge 通道（可选）
+
+设置 → **数据管理** → **推理通道** 增加一个默认关闭的第二通道：
+
+- `DeepSeek API`（默认）保持上面描述的浏览器直连行为。
+- `OpenCode Bridge` 通过本地 [OpenCode Bridge](https://github.com/debiandawangnailong7-coder/opencode-bridge) Chrome 扩展，把 Anthropic Messages 转发到 `https://opencode.ai/inference`（Console 按量付费）或 `https://opencode.ai/inference/go`（Go 订阅）；用哪个由扩展内的选项决定。之所以需要扩展，是因为 OpenCode 推理端点不返回 CORS 头、OPTIONS 预检直接 404，网页无法直连。
+
+配置步骤：
+
+1. 在 `chrome://extensions` 打开开发者模式，加载已解压的 OpenCode Bridge 扩展，在扩展选项里保存 `oc_sk_...` Key。Key 不会进入本页面。
+2. 把本页面的确切 Origin（例如 `http://localhost:8090`）加入扩展的 **Allowed origins**，选择 Console 或 Go，并把 User-Agent 覆盖为 `chat4code-unrestricted/1.0`。
+3. 在设置 → 数据管理 → OpenCode Bridge 填入扩展 ID，点「测试连接」。
+4. 通过 `http://localhost:...` 或其他 `http(s)` Origin 访问本应用；扩展会拒绝 `file://`。
+
+Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safety_check`、`latest_reminder`、`deepseek_*` 服务端工具、`title`、`reasoning_effort`）会被剥离，模型 id `deepseek-flash` 映射为 `deepseek-v4.1-flash`，并按聊天会话派生稳定的 `x-opencode-session`。附件、语音、服务端联网搜索与实验台在该模式下禁用。
+
 ---
 
 ## 4. 行为对照表
@@ -476,7 +492,7 @@ Persona（官方身份分块）
 
 - API Key、各项设置：浏览器 localStorage（键名见第 5 节）；
 - 会话与附件原件：IndexedDB，按浏览器用户配置与站点源隔离；
-- 出站请求只有你配置的 API 地址（默认 `https://api.deepseek.com`）：`/models` 校验 Key、`/anthropic/v1/messages` 对话、`/anthropic/v1/files` 附件、ASR / TTS 语音接口；
+- 出站请求只有你配置的 API 地址（默认 `https://api.deepseek.com`）：`/models` 校验 Key、`/anthropic/v1/messages` 对话、`/anthropic/v1/files` 附件、ASR / TTS 语音接口。OpenCode Bridge 模式下页面改为通过 `chrome.runtime` 把消息交给本地扩展，由扩展访问 `https://opencode.ai/inference[/go]`，页面不接触 OpenCode Key；
 - 没有统计、没有埋点、没有第三方脚本、没有中转服务器；
 - 历史导入导出为 ZIP，导出包含会话与本地图片原件，不包含 API Key 与设置；归档格式与保留范围见[历史导入导出说明](src/services/chat/history/README.md)。
 
@@ -492,8 +508,8 @@ Persona（官方身份分块）
 手动方式（任意系统），准备 Node.js 22.12+ 与 pnpm：
 
 ```sh
-git clone https://github.com/xiaohuangbo/chat-demo-unrestricted.git
-cd chat-demo-unrestricted
+git clone https://github.com/debiandawangnailong7-coder/chat4code-unrestricted.git
+cd chat4code-unrestricted
 pnpm install
 pnpm dev        # http://localhost:8090
 ```
@@ -514,7 +530,7 @@ pnpm build      # 产物在 dist/
 | `pnpm lint`   | oxlint 检查            |
 | `pnpm format` | oxfmt 格式化           |
 
-API 地址在 [`rspack.config.ts`](rspack.config.ts) 的 `createConfig({ apiOrigin })` 里配置，默认 `https://api.deepseek.com`。
+API 地址在 [`rspack.config.ts`](rspack.config.ts) 的 `createConfig({ apiOrigin })` 里配置，默认 `https://api.deepseek.com`。OpenCode Bridge 模式不走这个地址：OpenCode 的 base URL（Console 或 Go）由扩展自己的选项页选择。
 
 ---
 

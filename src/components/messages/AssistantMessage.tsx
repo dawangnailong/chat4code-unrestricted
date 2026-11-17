@@ -1,5 +1,5 @@
 import { useTranslate } from '../../i18n/index.js'
-import { useSettings } from '../../services/settings.js'
+import { useBridgeMode, useSettings } from '../../services/settings.js'
 import clsx from 'clsx'
 import { memo, useMemo, useState } from 'react'
 import {
@@ -60,6 +60,7 @@ export const AssistantMessage = memo(function AssistantMessage({
   onSelectVersion: SelectMessageVersion
 }) {
   const t = useTranslate()
+  const bridgeMode = useBridgeMode()
   const [editing, setEditing] = useState(false)
   // 拒绝后继续生成：设置开关或越狱模式下允许续写被拒绝的回复。
   const allowRefused = useSettings((state) => state.continueRefused || state.unrestricted)
@@ -209,7 +210,7 @@ export const AssistantMessage = memo(function AssistantMessage({
           <BranchSwitcher versions={versions} disabled={busy} onSelect={onSelectVersion} />
           <div className={clsx(styles.actions, isLast && styles.alwaysShow)}>
             {copyText ? <CopyButton text={copyText} /> : null}
-            {responseText && !refused ? (
+            {responseText && !refused && !bridgeMode ? (
               <ReadAloudButton
                 sessionId={sessionId}
                 messageId={message.id}

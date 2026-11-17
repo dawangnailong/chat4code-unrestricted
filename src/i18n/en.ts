@@ -29,7 +29,7 @@ export const en = {
     'Chats or attachments have not been saved locally. Retry before closing this page.',
   sessionDeleteFailed: 'Unable to delete this chat. Please try again.',
   settings: 'Settings',
-  appName: 'deepseek unrestricted',
+  appName: 'chat4code-unrestricted',
   deleteSessionModalContentTitle: 'Delete chat?',
   deleteSessionWithFilesDescription:
     'This chat and its uploaded files will be permanently deleted and cannot be recovered. Delete this chat?',
@@ -126,9 +126,9 @@ export const en = {
   settingDialogAsidePromptOptionLabel: 'Prompt',
   settingDialogAsideAboutOptionLabel: 'About',
   settingDialogAsideChangelogOptionLabel: 'Changelog',
-  aboutProjectName: 'deepseek unrestricted',
+  aboutProjectName: 'chat4code-unrestricted',
   aboutDescription:
-    'A static DeepSeek chat front end with unrestricted mode, custom system prompts, editable replies, and a EasyJailbreak lab powered by a local MCP backend.',
+    'A static DeepSeek chat front end with unrestricted mode, custom system prompts, editable replies, and an EasyJailbreak lab powered by a local MCP backend. It can also use OpenCode Go through the OpenCode Bridge extension — casual chat can still spark coding ideas.',
   aboutRepositoryLabel: 'GitHub repository',
   aboutDemoLabel: 'Live demo',
   aboutUpstreamLabel: 'Upstream project',
@@ -676,4 +676,42 @@ export const en = {
   latestReminderLanguage: 'English',
   settingsLocaleZhCN: 'Simplified Chinese',
   settingsLocaleEnUS: 'English',
+  settingProviderLabel: 'Inference provider',
+  settingProviderDescription:
+    'Call DeepSeek directly from the browser, or forward through the OpenCode Bridge extension to OpenCode Console / Go.',
+  settingProviderDeepseekOptionLabel: 'DeepSeek API',
+  settingProviderBridgeOptionLabel: 'OpenCode Bridge',
+  bridgeExtensionIdLabel: 'Extension ID',
+  bridgeExtensionIdDescription:
+    'Open chrome://extensions with Developer mode on and copy the OpenCode Bridge ID.',
+  bridgeExtensionIdPlaceholder: 'e.g. abcdefghijklmnopabcdefghijklmnop',
+  bridgeExtensionIdMissing: 'Enter the OpenCode Bridge extension ID first.',
+  bridgeTestConnection: 'Test connection',
+  bridgeTestConnectionOk: 'Connected. The model catalog has been loaded.',
+  bridgeTestConnectionFailed: 'Connection failed: {message}',
+  bridgeSetupTitle: 'OpenCode Bridge setup',
+  bridgeSetupOriginHint:
+    'Add this page origin ({origin}) to the extension options page Allowed origins.',
+  bridgeSetupKeyHint:
+    'The API key is stored only in the extension chrome.storage.local; do not paste it here.',
+  bridgeSetupUserAgentHint:
+    'Set the extension User-Agent override to chat4code-unrestricted/1.0.',
+  bridgeSetupBaseUrlHint:
+    'Choose the Console (pay-as-you-go) or Go subscription base URL inside the extension.',
+  bridgeErrorAuthMissing: 'No OpenCode API key has been saved in the extension yet.',
+  bridgeErrorOriginDenied:
+    'The extension denied this page origin. Add this site origin to its allowlist.',
+  bridgeErrorExtensionMissing:
+    'OpenCode Bridge was not found. Check that it is installed and the extension ID is correct.',
+  bridgeErrorNetwork: 'Could not reach the OpenCode Bridge extension or the upstream service.',
+  bridgeErrorDisconnected: 'The extension background connection closed before the reply finished.',
+  bridgeErrorBadRequest: 'The request does not match the OpenCode Anthropic-compatible schema.',
+  bridgeErrorBodyTooLarge:
+    'The request exceeds the bridge 4 MiB limit. Compress the conversation or remove attachments.',
+  bridgeErrorResponseTooLarge: 'The reply exceeds the bridge 32 MiB limit.',
+  bridgeErrorUpstreamHttp: 'Upstream returned HTTP {status}: {message}',
+  bridgeAttachmentsUnsupported: 'Attachment upload is not available in OpenCode Bridge mode.',
+  bridgeSpeechUnsupported: 'Speech input and read-aloud are not available in OpenCode Bridge mode.',
+  bridgeSearchUnsupported: 'Server-side web search is not available in OpenCode Bridge mode.',
+  bridgeLabUnsupported: 'The lab is unavailable in OpenCode Bridge mode. Switch back to DeepSeek.',
 } satisfies Record<keyof typeof zh, string>

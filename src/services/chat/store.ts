@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { createId } from '../../utils/id.js'
 import { translate } from '../../i18n/index.js'
-import { ApiError, streamMessage } from '../api/client.js'
+import { ApiError } from '../api/client.js'
+import { isBridgeMode, streamMessage } from '../api/provider.js'
 import type { ChatModel, CreateMessageRequest } from '../api/types.js'
 import type { SessionCompression } from './types.js'
 import { extractFileIds, getFileErrorCode, isRetryableApiError } from '../api/errors.js'
@@ -1111,6 +1112,10 @@ const prepareFiles = async (sessionId: string, request: Request, signal: AbortSi
   // 服务端判定 file_id 失效时会清掉会话里的 serverId，先用最新消息替换请求快照，
   // 否则快照里仍是旧 id，补传会直接复用它。
   request = refreshRequest(sessionId, request)
+  // OpenCode Bridge 模式禁用附件上传：Files API 是 DeepSeek 专属，图片块会在请求清洗时丢弃
+  if (isBridgeMode()) {
+    return { history: request.history, question: request.question, prefix: request.prefix }
+  }
   const apiKey = useSettings.getState().apiKey ?? ''
   const serverIds = new Map<string, string>()
   // 停止生成立即生效；上传本身不取消（输入框与其他消息可能共用同一任务），完成后照常写回 serverId
@@ -1404,7 +1409,8 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
             tools: serverTools(initial.search ?? false),
             ...(titleRequests.has(controller) ? { title: { enabled: true } } : {}),
           },
-          controller.signal
+          controller.signal,
+          sessionId
         )
         const blockIndexes = new Map<number, number>()
         for await (const event of events) {

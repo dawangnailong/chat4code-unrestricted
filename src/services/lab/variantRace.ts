@@ -1,4 +1,4 @@
-import { streamMessage } from '../api/client.js'
+import { streamMessage } from '../api/provider.js'
 import type { MessageUsage } from '../api/types.js'
 import { estimateRequestCost, usageCost } from '../chat/sessionStats.js'
 import { generateVariants } from '../unrestricted/parseltongue.js'
@@ -183,7 +183,12 @@ export const runVariantRace = async (
         tools: [],
       }
       let output = ''
-      for await (const event of streamMessage(options.apiKey, body, handlers.signal)) {
+      for await (const event of streamMessage(
+        options.apiKey,
+        body,
+        handlers.signal,
+        `vrace_${result.id}`
+      )) {
         if (event.type === 'content_block_start' && event.content_block.type === 'text') {
           output += event.content_block.text
         } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {

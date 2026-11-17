@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { useTranslate } from '../../i18n/index.js'
-import { useSettings } from '../../services/settings.js'
+import { useBridgeMode, useSettings } from '../../services/settings.js'
 import { McpClient } from '../../services/lab/mcpClient.js'
 import { closeLab, setLabEndpoint, useLab } from '../../services/lab/labStore.js'
 import { importPromptToChat } from '../../services/lab/importToChat.js'
@@ -52,6 +52,7 @@ type JobState = {
 /** 越狱实验台：连接本地 easyjailbreak-mcp 后端，跑 EasyJailbreak 的攻击器并展示逐条结果。 */
 export const LabView = () => {
   const t = useTranslate()
+  const bridgeMode = useBridgeMode()
   const endpoint = useLab((state) => state.endpoint)
   const apiKey = useSettings((state) => state.apiKey) ?? ''
 
@@ -279,6 +280,25 @@ export const LabView = () => {
     if (client && jobId) {
       await client.callTool('cancel_job', { job_id: jobId }).catch(() => undefined)
     }
+  }
+
+  if (bridgeMode) {
+    return (
+      <div className={styles.lab}>
+        <header className={styles.header}>
+          <div className={styles.heading}>
+            <div className={styles.title}>{t('labTitle')}</div>
+            <div className={styles.subtitle}>{t('labSubtitle')}</div>
+          </div>
+          <div className={styles.connection}>
+            <Button variant="outlined" size="s" onClick={closeLab}>
+              {t('labBack')}
+            </Button>
+          </div>
+        </header>
+        <div className={styles.error}>{t('bridgeLabUnsupported')}</div>
+      </div>
+    )
   }
 
   return (

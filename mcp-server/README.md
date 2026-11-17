@@ -1,7 +1,7 @@
 # easyjailbreak-mcp
 
 把 [EasyJailbreak](https://github.com/EasyJailbreak/EasyJailbreak) 的攻击器包装成 **MCP 服务**，
-供 chat-demo-unrestricted 的「越狱实验台」通过 MCP（Streamable HTTP）调用。
+供 chat4code-unrestricted 的「越狱实验台」通过 MCP（Streamable HTTP）调用。
 
 前端只负责界面与调度，真正的攻击逻辑跑在本地 Python 进程里：每个 query 单独构造一个
 EasyJailbreak attacker，逐实例执行、统计调用次数、汇总 ASR。

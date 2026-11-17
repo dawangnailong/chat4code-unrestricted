@@ -55,6 +55,7 @@ import {
   setTopP,
   setTtsVoice,
   setUnrestricted,
+  useBridgeMode,
   useSettings,
   type ThemePreference,
 } from '../../services/settings.js'
@@ -72,6 +73,7 @@ import { showToast } from '../base/toastState.js'
 import { ParamControl } from './ParamControls.js'
 import paramStyles from './ParamControls.module.css'
 import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
+import { BridgeField, ProviderField } from './BridgeField.js'
 import { closeSettings, useSettingsDialog, type SettingsSection } from './settingsDialogState.js'
 import styles from './Settings.module.css'
 
@@ -118,6 +120,7 @@ const SettingsContent = () => {
   const [section, setSection] = useState(() => useSettingsDialog.getState().section)
   // 切换分组不丢失正在输入的 API Key 与导入状态
   const apiKeyEditor = useApiKeyEditor()
+  const bridgeMode = useBridgeMode()
   const historyImport = useHistoryImport()
   const historyDelete = useHistoryDelete()
   const [resetOpen, setResetOpen] = useState(false)
@@ -173,7 +176,8 @@ const SettingsContent = () => {
             <ChangelogSetting />
           ) : (
             <>
-              <ApiKeyField editor={apiKeyEditor} />
+              <ProviderField />
+              {bridgeMode ? <BridgeField /> : <ApiKeyField editor={apiKeyEditor} />}
               <ImportHistory historyImport={historyImport} disabled={historyBusy} />
               <ExportHistory disabled={historyBusy} />
               <SettingCell
@@ -207,7 +211,7 @@ const SettingsContent = () => {
                   </Button>
                 }
               />
-              {isMobile ? <ApiKeyConfirm editor={apiKeyEditor} /> : null}
+              {isMobile && !bridgeMode ? <ApiKeyConfirm editor={apiKeyEditor} /> : null}
             </>
           )}
         </div>
@@ -421,9 +425,11 @@ const LocaleSetting = () => {
 const TtsVoiceSetting = () => {
   const t = useTranslate()
   const ttsVoice = useSettings((state) => state.ttsVoice)
+  const bridgeMode = useBridgeMode()
   return (
     <SettingCell
       label={t('settingsTtsVoice')}
+      description={bridgeMode ? t('bridgeSpeechUnsupported') : undefined}
       status={null}
       action={
         <Select
@@ -448,7 +454,7 @@ const AboutSetting = () => {
   const links: { label: TranslationKey; href: string }[] = [
     {
       label: 'aboutRepositoryLabel',
-      href: 'https://github.com/xiaohuangbo/chat-demo-unrestricted',
+      href: 'https://github.com/debiandawangnailong7-coder/chat4code-unrestricted',
     },
     { label: 'aboutDemoLabel', href: 'https://chat-unrestricted.fur0.com/' },
     { label: 'aboutUpstreamLabel', href: 'https://github.com/deepseek-ai/chat-demo' },

@@ -1,4 +1,4 @@
-import { streamMessage } from '../api/client.js'
+import { isBridgeMode, streamMessage } from '../api/provider.js'
 import type { Locale } from '../settings.js'
 import { getVisibleMessages } from './branches.js'
 import { getReplyAnswerText } from './reply.js'
@@ -100,7 +100,8 @@ const summarize = async (
   apiKey: string,
   transcript: string,
   locale: Locale,
-  signal: AbortSignal
+  signal: AbortSignal,
+  sessionId: string
 ): Promise<string> => {
   const system =
     locale === 'zh-CN'
@@ -116,7 +117,7 @@ const summarize = async (
     tools: [],
   }
   let text = ''
-  for await (const event of streamMessage(apiKey, body, signal)) {
+  for await (const event of streamMessage(apiKey, body, signal, sessionId)) {
     if (event.type === 'content_block_start' && event.content_block.type === 'text') {
       text += event.content_block.text
     } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
@@ -135,7 +136,7 @@ export const compressSession = async (
   apiKey: string,
   locale: Locale
 ): Promise<CompressOutcome> => {
-  if (!apiKey) {
+  if (!apiKey && !isBridgeMode()) {
     return { ok: false, reason: 'noKey' }
   }
   if (running.has(session.id)) {
@@ -168,7 +169,13 @@ export const compressSession = async (
         : previous
           ? `Previous summary:\n${previous.summary}\n\nNew transcript:\n`
           : ''
-    const summary = await summarize(apiKey, `${header}${transcript}`, locale, controller.signal)
+    const summary = await summarize(
+      apiKey,
+      `${header}${transcript}`,
+      locale,
+      controller.signal,
+      session.id
+    )
     if (summary === '') {
       return { ok: false, reason: 'error' }
     }

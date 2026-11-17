@@ -1,7 +1,7 @@
 {
-  "name": "chat-demo",
+  "name": "chat4code-unrestricted",
   "version": "2.5.2",
-  "description": "基于 DeepSeek API 的静态聊天示例。",
+  "description": "基于 DeepSeek API 与 OpenCode Bridge 的静态聊天前端。",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "dev": "rspack serve -c rspack.config.ts",
     "build": "rm -rf dist && NODE_ENV=production rspack build -c rspack.config.ts",
     "type": "tsc -p tsconfig.json",
-    "lint": "oxlint src rspack.config.ts",
+    "lint": "oxlint src rspack.config.ts --ignore-pattern src/vendor",
     "format": "oxfmt --write ."
   },
   "dependencies": {

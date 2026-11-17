@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="./brand.jpg" alt="chat-demo-unrestricted — Yes, Sun Xiaochuan Chat" width="760">
+  <img src="./brand.jpg" alt="chat4code-unrestricted — Yes, Sun Xiaochuan Chat" width="760">
 </p>
 <h1 align="center"><img src="https://github.com/EasyJailbreak/EasyJailbreak/blob/master/image/README/logo.png" alt="EasyJailbreak Logo" height="60"></h1>
 
-<h1 align="center">deepseek unrestricted</h1>
+<h1 align="center">chat4code-unrestricted</h1>
 
 <p align="center">
   Yes, Sun Xiaochuan Chat — a static DeepSeek chat front end with an unrestricted mode, editable replies, and direct control over model parameters<br>
@@ -12,11 +12,12 @@
 
 > This is an **unofficial fork** of the official demo [deepseek-ai/chat-demo](https://github.com/deepseek-ai/chat-demo), MIT licensed.
 > Every change lives in the browser: how the request body is assembled, how replies are stored, and how they are rendered.
-> There is no proxy and no relay service. Your API key and conversations stay in your own browser.
+> There is no server-side proxy or relay service. Your API key and conversations stay in your own browser; the optional
+> OpenCode Bridge mode keeps the OpenCode key in a local Chrome extension instead.
 >
 > 🔗Live demo: <https://chat-unrestricted.fur0.com/>
 >
-> 📦Repository: <https://github.com/xiaohuangbo/chat-demo-unrestricted>
+> 📦Repository: <https://github.com/debiandawangnailong7-coder/chat4code-unrestricted>
 >
 > 🎥Intro video: <https://www.bilibili.com/video/BV1p5sL6LEfd/>
 >
@@ -336,6 +337,22 @@ Prices (yuan per million tokens, off-peak; peak ×2):
 
 The billing section in the stats dialog gains a "By model" breakdown with reply counts and cost per model.
 
+### 3.17 OpenCode Bridge provider (optional)
+
+Settings → **Data** → **Inference provider** adds a second, opt-in transport:
+
+- `DeepSeek API` (default) keeps the existing browser-direct behaviour described above.
+- `OpenCode Bridge` forwards Anthropic Messages through the local [OpenCode Bridge](https://github.com/debiandawangnailong7-coder/opencode-bridge) Chrome extension to `https://opencode.ai/inference` (Console pay-as-you-go) or `https://opencode.ai/inference/go` (Go subscription), as selected inside the extension. This is needed because the OpenCode inference endpoints send no CORS headers and answer the OPTIONS preflight with 404, so a page cannot call them directly.
+
+Setup:
+
+1. Load the OpenCode Bridge extension unpacked (`chrome://extensions` → Developer mode → Load unpacked), open its options and save your `oc_sk_...` key there. The key never reaches this page.
+2. Add this page's exact origin (for example `http://localhost:8090`) to the extension's **Allowed origins**, choose Console or Go, and set the User-Agent override to `chat4code-unrestricted/1.0`.
+3. Paste the extension ID into Settings → Data → OpenCode Bridge and press **Test connection**.
+4. Serve this app over `http://localhost:...` or another `http(s)` origin; `file://` is rejected by the extension.
+
+Bridge mode sends standard Anthropic Messages only: DeepSeek-specific fields (`safety_check`, `latest_reminder`, `deepseek_*` server tools, `title`, `reasoning_effort`) are stripped, the model id `deepseek-flash` is mapped to `deepseek-v4.1-flash`, and a stable `x-opencode-session` is derived from each chat. Attachments, speech, server-side web search and the lab are disabled in this mode.
+
 ---
 
 ## 4. Behaviour matrix
@@ -476,7 +493,7 @@ Only three things differ: `system` is the assembled pipeline, the whole `safety_
 
 - API key and settings: browser localStorage (keys listed in section 5).
 - Conversations and original attachments: IndexedDB, isolated per browser profile and site origin.
-- The only outbound traffic goes to the API origin you configured (default `https://api.deepseek.com`): `/models` for key validation, `/anthropic/v1/messages` for chat, `/anthropic/v1/files` for attachments, and the ASR / TTS endpoints for speech.
+- The only outbound traffic goes to the API origin you configured (default `https://api.deepseek.com`): `/models` for key validation, `/anthropic/v1/messages` for chat, `/anthropic/v1/files` for attachments, and the ASR / TTS endpoints for speech. In OpenCode Bridge mode the page instead sends messages to the local extension over `chrome.runtime`; the extension talks to `https://opencode.ai/inference[/go]` and the page never sees the OpenCode key.
 - No analytics, no telemetry, no third-party scripts, no relay server.
 - History import/export uses ZIP archives; exports contain conversations and locally available image originals, but no API keys or settings. See the [history archive documentation](src/services/chat/history/README.md) for the format and retention rules.
 
@@ -492,8 +509,8 @@ Only three things differ: `system` is the assembled pipeline, the whole `safety_
 Manual setup (any OS), requires Node.js 22.12+ and pnpm:
 
 ```sh
-git clone https://github.com/xiaohuangbo/chat-demo-unrestricted.git
-cd chat-demo-unrestricted
+git clone https://github.com/debiandawangnailong7-coder/chat4code-unrestricted.git
+cd chat4code-unrestricted
 pnpm install
 pnpm dev        # http://localhost:8090
 ```
@@ -514,7 +531,7 @@ pnpm build      # output in dist/
 | `pnpm lint`   | Lint with oxlint             |
 | `pnpm format` | Format with oxfmt            |
 
-The API origin is set in [`rspack.config.ts`](rspack.config.ts) via `createConfig({ apiOrigin })`; it defaults to `https://api.deepseek.com`.
+The API origin is set in [`rspack.config.ts`](rspack.config.ts) via `createConfig({ apiOrigin })`; it defaults to `https://api.deepseek.com`. OpenCode Bridge mode does not use this origin: the extension chooses the OpenCode base URL (Console or Go) in its own options page.
 
 ---
 

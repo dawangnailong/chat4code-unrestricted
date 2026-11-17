@@ -1,7 +1,7 @@
 [project]
 name = "easyjailbreak-mcp"
 version = "2.5.2"
-description = "MCP server exposing EasyJailbreak attackers to the chat-demo-unrestricted lab"
+description = "MCP server exposing EasyJailbreak attackers to the chat4code-unrestricted lab"
 requires-python = ">=3.10"
 dependencies = [
   "mcp>=2.0",

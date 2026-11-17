@@ -5,7 +5,7 @@
  * 组合模板、深度指令、输入扰动与打分都复用 G0DM0D3 的移植实现
  * （libertas / prompts / parseltongue / scoring），这里只负责组装请求和手写并发池。
  */
-import { streamMessage } from '../api/client.js'
+import { streamMessage } from '../api/provider.js'
 import type { CreateMessageRequest } from '../api/types.js'
 import { applyHallOfFameCombo, HALL_OF_FAME } from '../unrestricted/libertas.js'
 import {
@@ -172,7 +172,12 @@ export const runRace = async (
     const startedAt = Date.now()
     try {
       let text = ''
-      for await (const event of streamMessage(options.apiKey, body, handlers.signal)) {
+      for await (const event of streamMessage(
+        options.apiKey,
+        body,
+        handlers.signal,
+        `race_${result.id}`
+      )) {
         // 文本块的起始事件可能已经带内容，直接累加可兼容多文本块
         if (event.type === 'content_block_start' && event.content_block.type === 'text') {
           text += event.content_block.text
