@@ -16,7 +16,7 @@
 >
 > 🔗在线版：<https://chat-unrestricted.fur0.com/>
 >
-> 📦仓库：<https://github.com/debiandawangnailong7-coder/chat4code-unrestricted>
+> 📦仓库：<https://github.com/dawangnailong/chat4code-unrestricted>
 >
 > 🎥介绍视频：<https://www.bilibili.com/video/BV1p5sL6LEfd/>
 >
@@ -341,7 +341,7 @@ Persona（官方身份分块）
 设置 → **数据管理** → **推理通道** 增加一个默认关闭的第二通道：
 
 - `DeepSeek API`（默认）保持上面描述的浏览器直连行为。
-- `OpenCode Bridge` 通过本地 [OpenCode Bridge](https://github.com/debiandawangnailong7-coder/opencode-bridge) 浏览器扩展（Chrome / Safari），把 Anthropic Messages 转发到 `https://opencode.ai/inference`（Console 按量付费）或 `https://opencode.ai/inference/go`（Go 订阅）；用哪个由扩展内的选项决定。之所以需要扩展，是因为 OpenCode 推理端点不返回 CORS 头、OPTIONS 预检直接 404，网页无法直连。
+- `OpenCode Bridge` 通过本地 [OpenCode Bridge](https://github.com/dawangnailong/opencode-bridge) 浏览器扩展（Chrome / Safari），把 Anthropic Messages 转发到 `https://opencode.ai/inference`（Console 按量付费）或 `https://opencode.ai/inference/go`（Go 订阅）；用哪个由扩展内的选项决定。之所以需要扩展，是因为 OpenCode 推理端点不返回 CORS 头、OPTIONS 预检直接 404，网页无法直连。
 
 配置步骤：
 
@@ -515,7 +515,7 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 手动方式（任意系统），准备 Node.js 22.12+ 与 pnpm：
 
 ```sh
-git clone https://github.com/debiandawangnailong7-coder/chat4code-unrestricted.git
+git clone https://github.com/dawangnailong/chat4code-unrestricted.git
 cd chat4code-unrestricted
 pnpm install
 pnpm dev        # http://localhost:8090

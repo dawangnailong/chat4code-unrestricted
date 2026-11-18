@@ -17,7 +17,7 @@
 >
 > 🔗Live demo: <https://chat-unrestricted.fur0.com/>
 >
-> 📦Repository: <https://github.com/debiandawangnailong7-coder/chat4code-unrestricted>
+> 📦Repository: <https://github.com/dawangnailong/chat4code-unrestricted>
 >
 > 🎥Intro video: <https://www.bilibili.com/video/BV1p5sL6LEfd/>
 >
@@ -342,7 +342,7 @@ The billing section in the stats dialog gains a "By model" breakdown with reply 
 Settings → **Data** → **Inference provider** adds a second, opt-in transport:
 
 - `DeepSeek API` (default) keeps the existing browser-direct behaviour described above.
-- `OpenCode Bridge` forwards Anthropic Messages through the local [OpenCode Bridge](https://github.com/debiandawangnailong7-coder/opencode-bridge) browser extension (Chrome or Safari) to `https://opencode.ai/inference` (Console pay-as-you-go) or `https://opencode.ai/inference/go` (Go subscription), as selected inside the extension. This is needed because the OpenCode inference endpoints send no CORS headers and answer the OPTIONS preflight with 404, so a page cannot call them directly.
+- `OpenCode Bridge` forwards Anthropic Messages through the local [OpenCode Bridge](https://github.com/dawangnailong/opencode-bridge) browser extension (Chrome or Safari) to `https://opencode.ai/inference` (Console pay-as-you-go) or `https://opencode.ai/inference/go` (Go subscription), as selected inside the extension. This is needed because the OpenCode inference endpoints send no CORS headers and answer the OPTIONS preflight with 404, so a page cannot call them directly.
 
 Setup:
 
@@ -516,7 +516,7 @@ Only three things differ: `system` is the assembled pipeline, the whole `safety_
 Manual setup (any OS), requires Node.js 22.12+ and pnpm:
 
 ```sh
-git clone https://github.com/debiandawangnailong7-coder/chat4code-unrestricted.git
+git clone https://github.com/dawangnailong/chat4code-unrestricted.git
 cd chat4code-unrestricted
 pnpm install
 pnpm dev        # http://localhost:8090

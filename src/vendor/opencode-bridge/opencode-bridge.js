@@ -1,6 +1,6 @@
 // OpenCode Bridge web SDK.
 //
-// Vendored from https://github.com/debiandawangnailong7-coder/opencode-bridge
+// Vendored from https://github.com/dawangnailong/opencode-bridge
 // at commit ec91664 (MIT License). Do not edit by hand; regenerate from the
 // upstream sdk/opencode-bridge.js when the bridge protocol changes.
 //

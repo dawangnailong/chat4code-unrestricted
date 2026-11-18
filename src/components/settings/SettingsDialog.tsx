@@ -454,7 +454,7 @@ const AboutSetting = () => {
   const links: { label: TranslationKey; href: string }[] = [
     {
       label: 'aboutRepositoryLabel',
-      href: 'https://github.com/debiandawangnailong7-coder/chat4code-unrestricted',
+      href: 'https://github.com/dawangnailong/chat4code-unrestricted',
     },
     { label: 'aboutDemoLabel', href: 'https://chat-unrestricted.fur0.com/' },
     { label: 'aboutUpstreamLabel', href: 'https://github.com/deepseek-ai/chat-demo' },

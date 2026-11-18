@@ -1,6 +1,6 @@
 /**
  * Hand-written declarations for the vendored OpenCode Bridge web SDK.
- * Source: https://github.com/debiandawangnailong7-coder/opencode-bridge
+ * Source: https://github.com/dawangnailong/opencode-bridge
  * Commit: ec91664 (MIT)
  */
 
