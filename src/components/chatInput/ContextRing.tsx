@@ -7,6 +7,7 @@ import {
   reserveGeometry,
 } from '../../services/chat/contextPressure.js'
 import { useChatStore } from '../../services/chat/store.js'
+import { useMemoryBank } from '../../services/chat/memoryBank.js'
 import { useSettings } from '../../services/settings.js'
 import { Tooltip } from '../base/Tooltip.js'
 import styles from './ContextRing.module.css'
@@ -51,6 +52,8 @@ export const ContextRing = ({
   const compression = useChatStore((state) =>
     sessionId ? state.sessionCache[sessionId]?.compression : undefined
   )
+  const memoryNodes = useMemoryBank((state) => state.nodes.length)
+  const memoryEdges = useMemoryBank((state) => state.edges.length)
   const tokens = effectiveContextTokens(usage?.tokens ?? 0, usage?.at ?? 0, compression)
   const window = contextWindowFor(model)
   const reserve = reserveGeometry(window, maxTokens ?? 8192)
@@ -75,6 +78,7 @@ export const ContextRing = ({
           saved: formatTokens(compression.savedTokens ?? 0),
         })
       : null,
+    memoryNodes > 0 ? t('contextMemoryLine', { nodes: memoryNodes, edges: memoryEdges }) : null,
   ]
     .filter(Boolean)
     .join(' · ')

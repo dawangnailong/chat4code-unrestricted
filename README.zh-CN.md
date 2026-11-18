@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="./brand.jpg" alt="chat4code-unrestricted — 是，孙笑川聊天" width="760">
+  <img src="./brand.jpg" alt="chat-demo-unrestricted — 是，孙笑川聊天" width="760">
 </p>
-<h1 align="center"><img src="https://github.com/EasyJailbreak/EasyJailbreak/blob/master/image/README/logo.png" alt="EasyJailbreak Logo" height="60"></h1>
+<h1 align="center"><img src="brand_2.jpg" alt="你应该放弃这世间所有的C端客户端，来体验宇宙最强对抗路神作，这是你唯一和顶级开源模型厮杀的机会" width="250"></h1>
 
-<h1 align="center">chat4code-unrestricted</h1>
+<h1 align="center">deepseek unrestricted</h1>
 
 <p align="center">
   是，孙笑川聊天 —— 基于 DeepSeek API 的静态聊天前端，带解除限制模式、回复改写与参数直调<br>
@@ -11,14 +11,14 @@
 </p>
 
 > 本项目是官方示例 [deepseek-ai/chat-demo](https://github.com/deepseek-ai/chat-demo) 的**非官方修改版**（fork），MIT 许可。
-> 所有改动都在浏览器里完成：请求体怎么拼、回复怎么存、界面怎么显示。没有服务端代理或中转服务，
-> API Key 与对话记录仍只保存在你自己的浏览器里；可选的 OpenCode Bridge 模式把 OpenCode Key 保存在本机浏览器扩展中（Chrome / Safari）。
+> 所有改动都在浏览器里完成：请求体怎么拼、回复怎么存、界面怎么显示。没有代理、没有中转服务，
+> API Key 与对话记录仍只保存在你自己的浏览器里。
 >
 > 🔗在线版：<https://chat-unrestricted.fur0.com/>
 >
 > 📦仓库：<https://github.com/dawangnailong/chat4code-unrestricted>
 >
-> 🎥介绍视频：<https://www.bilibili.com/video/BV1p5sL6LEfd/>
+> 🎥介绍视频：<https://www.bilibili.com/video/BV1m3s66WESg/>
 >
 > 📚参考论文：<https://arxiv.org/pdf/2403.12171>
 
@@ -48,15 +48,17 @@
 
 一个纯静态的 DeepSeek 网页聊天前端：多会话、流式回答、深度思考、联网搜索、链接阅读、附件、语音、Markdown / KaTeX / Mermaid、中英文与明暗主题、历史导入导出——这些原版功能全部保留，没有删减。
 
-> 当前版本：**2.5.2**
+> 当前版本：**2.6.4**
 
 在这个基础上，本仓库把原版里写死的限制改成可配置项，并补上了一整套越狱、实验与上下文管理能力：
 
 - **解除限制与提示词**：解除限制模式、默认破限文档 / GODMODE 预设、每轮静默注入系统提示词、实验性中文翻译；
+- **自定义思维链**：预先写好推理步骤，关闭深度思考时直接注入 system 并在回复上方显示，开启时作为实验性引导；
 - **高级引擎**：思考强度 0–4 档、输入扰动（33 种技术，可单技术或按档位生成变体）、AutoTune 自动调参、STM 输出整形、一键自动越狱（被拒绝自动换组合重试）；
 - **越狱实验台**：本地 MCP + EasyJailbreak 攻击器，多路提示词赛跑、变体赛跑（预算上限 + 开跑确认）、结果导入导出；
 - **会话能力**：回复改写、防撤回、分支到新对话（原对话不受影响）、长对话压缩（压力触发自动压缩 + 手动压缩）；
-- **模型与费用**：输入框模型卡片（内置 Flash / V4 Pro，可拉取云端模型列表）、上下文圆环、会话统计、按模型分别计费；
+- **模型与费用**：输入框模型卡片（内置 Flash / V4 Pro，可拉取云端模型列表）、上下文圆环、会话统计、按模型分别计费、每日 Token / 费用提醒；
+- **记忆**：长期记忆（手动 / 自动提炼）、网状记忆库（节点、连边、向量维度、检索权重、搜索调试），请求时自动注入相关记忆；
 - **数据与附件**：附件大小 / 数量 / 扩展名可配置、历史导入导出、一键恢复默认设置。
 
 - **解除限制模式（越狱模式）**：换掉系统提示词，自动跳过安全审核、允许继续生成被拒回复；
@@ -104,18 +106,23 @@
 
 ### 3.1 设置页结构
 
-设置页从原来的「通用设置 / 数据管理」两组扩到八组：
+设置页从原来的「通用设置 / 数据管理」两组扩到十三组：
 
-| 分组       | 内容                                                                                        |
-| ---------- | ------------------------------------------------------------------------------------------- |
-| 通用设置   | 主题、语言、朗读音色、位置（原版功能，未改动）                                              |
-| **模型**   | 当前模型、温度、Top P、最大输出 Token、防撤回、自动压缩长对话、跳过安全审核、拒绝后继续生成 |
-| **提示词** | 解除限制模式、每轮注入系统提示词、自定义系统提示词、组装流水线说明、实际下发全文预览        |
-| **高级**   | 系统提示词预设、中文越狱提示词、输入扰动、自动越狱、自动调参、输出整形                      |
-| **附件**   | 附件限制开关、单文件大小、单会话数量、扩展名白名单                                          |
-| 数据管理   | API Key、导入、导出、恢复默认设置、删除全部对话                                             |
-| 关于       | 仓库地址、演示地址、上游项目                                                                |
-| 更新日志   | 版本记录与上游鸣谢                                                                          |
+| 分组       | 内容                                                                                                  |
+| ---------- | ----------------------------------------------------------------------------------------------------- |
+| 通用设置   | 主题、语言、朗读音色、位置、每日用量与提醒                                                            |
+| **模型**   | 当前模型、流式输出、温度、Top P、最大输出 Token、防撤回、自动压缩长对话、跳过安全审核、拒绝后继续生成 |
+| **提示词** | 解除限制模式、每轮注入系统提示词、自定义系统提示词、组装流水线说明、实际下发全文预览                  |
+| **思维链** | 设置页 / 输入栏卡片双入口：开关、步骤编辑、示例 / 清空、注入预览；关闭深度思考时回复上方显示注入内容     |
+| **高级**   | 系统提示词预设、中文越狱提示词、输入扰动、自动越狱、自动调参、输出整形                                |
+| **搜索投毒** | 自定义当前时间与知识截止、接管联网搜索、关键字 / 正则替换、黑名单、强制自定义结果、白名单          |
+| **记忆**   | 长期记忆、自动提炼、网状记忆库、导入导出、关系图、向量维度、检索权重、搜索调试                        |
+| **附件**   | 附件限制开关、单文件大小、单会话数量、扩展名白名单                                                    |
+| **附件投毒** | 上传前改写附件：文本正文 / 图片文字 / DOCX / 元数据 / 文件尾 / 文件名 / 伴随文本附件                |
+| **统计**   | 用量概览与范围切换、每日趋势柱状图、8 周活跃热力图、输入构成环、按模型拆分、上下文统计管理          |
+| 数据管理   | API Key、导入、导出、恢复默认设置、删除全部对话                                                       |
+| 关于       | 仓库地址、演示地址、上游项目                                                                          |
+| 更新日志   | 版本记录与上游鸣谢                                                                                    |
 
 没有修改任何既有样式规则；新增控件只使用新增的 CSS 类（方块开关、滑块、编辑器各带独立 CSS Module，提示词预览的几条类追加在设置页样式里），颜色与圆角全部取自现有设计变量。
 
@@ -234,7 +241,7 @@ Persona（官方身份分块）
 
 ### 3.10 高级玩法：提示词预设、输入扰动、自动调参、输出整形与多路赛跑
 
-输入栏使用响应式工具行：桌面端单行展开文字标签（模型、自动越狱、思考强度、联网搜索、输入扰动），模型与开关之间有一条细分隔线；小于 768px 时收起为圆形图标并横向滚动，不再因为宽度测量把桌面端标签隐藏。
+输入栏使用响应式工具行：桌面端单行展开文字标签（模型、自动越狱、思考强度、联网搜索、输入扰动），模型与开关之间有一条细分隔线；小于 768px 时除模型选择外收起为圆形图标并横向滚动，不再因为宽度测量把桌面端标签隐藏。
 
 设置 → **高级**（全部默认关闭，开箱行为与之前一致）：
 
@@ -255,6 +262,7 @@ Persona（官方身份分块）
 ### 3.11 思考强度、上下文占用、会话统计与费用估算
 
 - **思考强度**：输入框原来的「深度思考」开关换成 0–4 档滑轨（关闭 / 轻量 / 标准 / 深度 / 极致）。档位写进请求：`thinking: { type: "enabled", budget_tokens }` 与 `reasoning_effort`（low / medium / high / max）；服务端返回 400 且报错里含 reasoning / thinking / budget / effort 时，自动去掉强度参数、退回 `thinking: { type: "enabled" }` 重试一次，并提示已降级。
+- **流式输出**：设置 → 模型新增开关，默认开启；关闭后不渲染中间态，等完整回复生成完再一次性显示。防撤回仍作用于最终内容：拒绝回复在「防撤回」开启时保留，关闭时丢弃。
 - **上下文占用**：输入框右下角的圆环按模型窗口（1M）折算本轮请求的上下文（`input + cache_read + cache_creation`），60% 以上变琥珀色、85% 以上变红色；悬停可看具体数值、压缩阈值（窗口 80%，预留 64k 余量与输出空间）以及压缩后的等效占用与节省量。
 - **会话统计**（输入框右侧「统计」按钮）：会话回合、步骤（回复 + 工具调用）、输出速度、首 token 平均、模型用时、缓存命中率，以及未缓存输入 / 缓存读取 / 缓存写入 / 输出四个 token 数；生成中还会显示本次生成的实时数据。
 - **自动越狱**（输入框工具行开关）：开启后 `system` 换成 GODMODE + 深度指令，强制输入扰动（未单独选技术时用全角）、强制自动调参、跳过安全审核；被安全拒绝（`stop_reason: refusal` 或正文命中拒绝话术）且没有保留正文时，按 L1B3RT4S 组合依次自动重试两次，全部失败会提示停止（每次重试都是一次真实请求，会产生额外费用）。
@@ -276,6 +284,8 @@ Persona（官方身份分块）
 ---
 
 ### 3.13 变体赛跑（实验台第三个标签页）
+
+> 「多路赛跑」与「变体赛跑」直接调用 API，**不需要连接 MCP 后端**；只有「越狱方法」页需要本地 MCP。
 
 把单文件版的 Parseltongue v4 搬进实验台：**33 种扰动技术**按档位（轻量 11 / 标准 22 / 重度 33）逐词改写问题，分批并发请求同一个模型，按综合分取最高分。
 
@@ -300,6 +310,7 @@ Persona（官方身份分块）
 | ------------------------ | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 每轮注入系统提示词       | 设置 → 提示词                         | 开启后每次请求都把当前系统提示词静默附在 `latest_reminder` 末尾，长对话里模型不容易忘记设定；不写入历史快照，代价是每轮输入 token 明显增加。                                                                                                    |
 | 中文越狱提示词（实验性） | 设置 → 高级                           | 把内置 GODMODE 与深度指令换成中文翻译；中文表达与训练语料差异可能降低越狱效果，默认关闭。赛跑用的 L1B3RT4S 组合保持英文。                                                                                                                       |
+| 历史思维链伪装为正文     | 设置 → 提示词                         | 开启后把**上一轮**回复的 thinking 并入下发的历史助手正文，避免服务端丢弃历史 thinking；只处理最后一条历史回复，token 会略微增加。                                                                                                               |
 | 长对话压缩               | 设置 → 模型（自动）+ 统计弹窗（手动） | 自动：上下文压力达到窗口 80%（预留 64k 余量与输出空间）且距上次压缩新增 ≥2 轮时，后台把较早内容总结成摘要；手动：统计弹窗「压缩较早对话」，始终保留最近 2 轮原文。摘要作为 `latest_reminder` 注入请求，本地完整历史不删除，可随时「清除摘要」。 |
 
 ---
@@ -325,6 +336,7 @@ Persona（官方身份分块）
 - 「从云端获取」调用 `GET /models`，失败再试 Anthropic 前缀 `/anthropic/v1/models`；拉到的模型缓存 1 小时，id 原样透传给请求；
 - 选择只影响之后的新回复：旧回复保留自己的模型，续写沿用原模型，统计与费用按每条回复的模型分别计算；
 - 上下文圆环按当前模型窗口估算；云端未收录模型按 Flash 价格与 128k 窗口兜底；
+- 手机端模型选择保持展开，直接显示当前模型名与下拉箭头；其他输入栏开关才收成圆形；
 - 设置 → 模型顶部显示当前模型；恢复默认设置会把模型重置为 DeepSeek Flash。
 
 计费表（元 / 百万 tokens，空闲价；高峰 ×2）：
@@ -336,7 +348,129 @@ Persona（官方身份分块）
 
 统计弹窗的费用区新增「按模型」分组，显示每个模型的回复条数与费用。
 
-### 3.17 OpenCode Bridge 通道（可选）
+### 3.17 长期记忆与每日用量
+
+**长期记忆**（设置 → 记忆）：
+
+- 手动添加 / 编辑 / 启停 / 删除 / 清空，启用的条目会注入每次请求的 `system`；
+- 打开「自动提炼」后，每轮结束会额外调用一次 Flash，把稳定事实、身份、长期偏好写成 JSON 操作并更新列表（会产生少量费用，默认关闭）；
+- 记忆只保存在本机，历史导出包不包含；与网状记忆库联动，启用的条目会同步成 `saved` 节点。
+
+**每日用量与提醒**（设置 → 通用）：
+
+- 统计当天 `input + cache_read + cache_creation + output` 的 token 与按模型 / 峰谷价估算的费用；
+- 可设置每日 Token 上限与费用上限，达到后当天只提醒一次（toast），不会阻止请求；
+- 统计弹窗的会话指标新增「今日 Token / 今日费用」，可随时重置今日计数。
+
+### 3.18 网状记忆库（移植自 Operit）
+
+设置 → 记忆 → **网状记忆库**：
+
+- 节点包含标题、正文、标签、重要度、可信度；新增节点时按本地哈希向量的余弦相似度自动连边（最多 3 条，权重为相似度）；
+- 检索同时计算关键词、标签、向量与关联边扩散分数，四项权重可分别调整；相关度阈值与每次注入条数可调；
+- 向量维度可选 64 / 128 / 256 / 384 / 768，默认 256；向量在浏览器本地生成，不调用外部 embedding 服务；
+- 「搜索调试」展示每个候选的关键词 / 标签 / 向量 / 关联分、总分与是否过阈值，并统计节点数、边数、命中数与边遍历次数；
+- 请求时按当前问题检索 Top N，与长期记忆一起注入 `system`；没有命中时不会注入；
+- 记忆库支持 JSON 导入导出，可选择「合并」（按内容去重）或「覆盖」；归档包含长期记忆与节点/边；
+- 「关系图」把节点与带权重的边画出来，点击节点查看正文与标签；手机端保持可读尺寸并横向滚动；
+- 直接展示当前向量维度、节点数、平均度与 Float32 预计占用；搜索调试额外显示维度、查询词数量与最高分；
+- 聊天统计与输入框上下文圆环会显示记忆库节点/边/维度/上次注入条数；恢复默认设置会重置检索参数与每日提醒，但保留已保存的记忆数据；
+- 手机端权重改为单列、搜索调试表格横向滚动，节点与标签自动换行。
+
+### 3.19 位置：清除、自定义与星际位置
+
+设置 → 通用 → 位置：
+
+- 已选择位置时出现「清除位置」按钮，可恢复为不注入位置；
+- 下拉框旁新增自定义输入框，可手写任意地点（如「巴黎」「南极中山站」）；回车或失焦生效；
+- 自定义位置优先于行政区与特殊位置，直接写入 `latest_reminder` 的位置字段；
+- 特殊位置：空间站（卫星 / 空间站）、月球（月之明面 / 月之暗面）、火星（时空管理中心）；
+- 特殊位置覆盖行政区选择；自定义位置与特殊位置都只影响 `latest_reminder`，不改变天气、联网搜索或服务端区域判断。
+
+### 3.20 搜索投毒
+
+设置 → 搜索投毒。这个分组把客户端能控制的搜索输入全部开放出来：
+
+| 能力 | 行为 |
+| --- | --- |
+| 当前时间 | 用 `datetime-local` 指定注入给模型的日期与星期；留空使用真实时间 |
+| 知识截止 | 声明模型数据库 / 训练数据截止日期；留空不声明 |
+| 接管联网搜索 | 有自定义结果时不声明 `deepseek_web_search`，模型只看到过滤后的本地结果；关闭则保留真实搜索 |
+| 结果替换 | 关键字或正则，按 URL / 标题 / 摘要 / 全部替换；正则支持 `$1` 捕获组 |
+| 黑名单 | 命中任意字段的结果从界面、导出和模型上下文中移除；自动接管搜索 |
+| 强制自定义结果 | 无论真实搜索是否命中，都把自定义结果注入模型并显示为搜索结果 |
+| 白名单 | 只保留命中白名单的自定义结果；服务端结果全部不返回 |
+
+- 规则引擎在 [`src/services/searchPoison.ts`](src/services/searchPoison.ts)：替换、黑名单、白名单都先于注入执行；最多 50 条规则、20 条自定义结果；
+- 自定义结果会进入 `system`，长内容会增加输入 token；单条摘要上限 4000 字符；
+- 接管模式：请求体 `tools` 只保留 `deepseek_read_url`，`system` 末尾追加 `[LOCAL SEARCH LAYER]` 分块，自定义结果同时补一个「投毒搜索」步骤，显示在回复时间线里，底部网页汇总可打开；
+- 非接管模式：仍使用服务端搜索；结果块进入客户端时替换 / 拉黑，正文引用角标同步替换 / 过滤，但服务端本轮已经消费过的结果无法撤回；
+- 自定义时间写入 `latest_reminder` 的日期、星期与位置，知识截止和搜索结果写入 `system`；界面时间、计费、天气、定位不变；
+- 与防撤回、流式输出兼容：只影响请求上下文和结果展示，拒绝内容保留逻辑不变；关闭流式时仍在结束后一次性显示投毒步骤；
+- 所有配置存 `chat-demo:search-poison`，恢复默认设置会重置；接管搜索时真实联网搜索不会执行，需要真实搜索请关闭接管或清空黑名单 / 白名单。
+
+### 3.21 附件投毒
+
+设置 → 附件投毒。默认关闭；启用后在上传前用浏览器本地处理改写附件，模型读取附件时会看到你填写的文本。
+
+| 方式 | 适用文件 | 说明 |
+| --- | --- | --- |
+| 文本正文注入 | TXT / MD / CSV / 代码 / HTML / JSON | 在正文前或后插入带 `[ATTACHMENT NOTE]` 标记的文本 |
+| DOCX 正文注入 | `.docx` | 解压后在 `word/document.xml` 的 body 末尾追加段落 |
+| 图片文字覆盖 | PNG / JPG / WebP / GIF 等位图 | 在图片顶部或底部绘制文字面板，模型通过视觉 / OCR 读取 |
+| 图片元数据（实验性） | JPEG / PNG | 写入 JPEG COM 或 PNG tEXt 元数据，部分解析器会读到 |
+| 文件尾附加（实验性） | PDF / 未知二进制 | 在文件末尾追加文本；ZIP 类 Office 文件自动跳过 |
+| 文件名注入 | 所有格式 | 把内容前 40 字写进上传文件名，模型能看到文件名时生效 |
+| 伴随文本附件 | PDF / Office / 任意格式 | 额外生成一个 `.txt` 随消息发送，最可靠，但占用一个附件名额 |
+
+- 方式可多选，按文件类型自动选择实际生效的处理；处理失败时回退为原文件，不阻断上传；
+- 内容上限 4000 字符，统一带 `[ATTACHMENT NOTE]` 标记；文字、DOCX 与图片文字面板可放在正文前或后；
+- 原始文件仍保存在 IndexedDB，上传的是处理后的副本；重新上传时可以按新配置重新投毒；
+- 修改设置后，下一次发送会按当前配置重新上传输入框里有本地原件的附件；已发送的历史附件不会重写，没有本地原件的导入附件保持原样；
+- 启用 / 关闭或切换伴随附件时，输入框里的原附件会立即重新上传；伴随文本附件在启用 / 关闭时自动同步，修改内容后请重新选择附件；
+- 恢复默认设置会关闭并清空附件投毒配置，并移除草稿中自动生成的伴随文本附件；
+- 图片文字覆盖会重新编码图片，GIF / 动图会变成静态图，GIF / BMP 等可能转成 PNG；PDF / Office 建议优先使用伴随文本附件。
+
+### 3.22 自定义思维链
+
+设置 → **思维链**。默认关闭；打开后把预先写好的推理步骤作为独立 system 分块注入每次请求，让模型按你定义的顺序推理，而不是只靠一句「请逐步思考」。
+
+| 深度思考 | 注入内容 | 行为 | 稳定性 |
+| --- | --- | --- | --- |
+| 关闭（0 档） | `[自定义思维链]` | 模型在内部按步骤作答；回复上方显示「已注入思维链」卡片，随后显示最终回答 | 常规能力 |
+| 开启（1-4 档） | `[自定义思维链 · 实验性]` | 作为服务端思考的引导；服务端可能忽略、调整或重写这些步骤 | 实验性 |
+
+- 输入栏重新排版：第一排为模型 / 自动越狱 / 扰动，第二排为思维链 / 智能搜索 / 深度思考；手机端仍是一行横向滚动；
+- 输入栏「思维链」按钮改为卡片入口，与设置页共用同一份配置：可直接开关、编辑、填入示例、清空，或点「打开设置」查看完整说明与 system 预览；
+- **关闭深度思考时，回复上方会显示「已注入思维链」卡片**（默认展开、可折叠），内容是这一轮实际写入 system 的步骤，不再只显示最终回答；它不是服务端返回的 thinking，而是用户预设的推理步骤；
+- 开启深度思考时不重复显示该卡片，服务端 thinking 照常展示；思维链仍作为实验性引导注入；
+- 每条回复保存本轮注入快照：续写沿用原快照，重新生成读取当前设置，避免中途修改设置导致同一轮前后不一致；
+- 思维链放在 Persona / 破限规则之后、长期记忆与搜索上下文之前；首轮请求同时带标题生成，也会注入，否则新会话第一条回复不会生效；
+- 正文上限 4000 字符；只保存在本机 `chat-demo:custom-cot` 与 `chat-demo:custom-cot-enabled`，每轮都会增加输入 token；
+- 只修改 `system`，不改消息结构：流式 / 非流式、续写、重新生成、标题生成、附件、搜索投毒与历史导入导出都保持兼容。
+
+### 3.23 统计、图表与上下文管理
+
+**位置：** 设置 → **统计**，以及输入栏的会话统计弹窗。
+
+- **用量账本**（`usageLedger`）：每轮请求结束时按「日 / 模型」记账，记录未缓存输入、缓存读取、缓存写入、输出、预估费用、请求次数与联网搜索次数；账本在 localStorage 里保留最近 400 天，只存聚合数字、不含对话正文，和只管今天（用来触发额度提醒）的每日用量分开。
+- **范围切换**：今天 / 7 天 / 30 天；中间没有请求的日期补 0，保证图表坐标连续。
+- **KPI 区**：总 token、预估费用、缓存命中率、请求次数、有用量的天数、联网搜索次数。
+- **每日趋势柱状图**：可切换指标——token（右柱为费用）、费用、请求数；每天一对柱子，悬停显示当天明细。
+- **活跃热力图**：最近 8 周，每天一格，按窗口内最忙的一天分四档强度。
+- **小时分布**：把所选范围内 24 小时的请求数画在一根轴上，能看出自己一般什么时候在聊；下方注明最忙的一小时。
+- **输入构成环**：未命中缓存输入 / 命中缓存输入 / 缓存写入 / 输出，各带 token 与占比，一眼看出费用主要来自哪一段。
+- **按模型拆分**：所选范围内每个模型的请求数、token 与费用；未知模型按 Flash 单价估算。
+- **会话排行**：范围内按 token 排序的会话，带费用与请求数；点「打开」直接跳到该会话（会话已删除时按钮置灰）。
+- **附加用量**：联网搜索、文档解析页数、语音合成字符与语音识别秒数——token 统计覆盖不到的计费项。
+- **上下文统计管理**：当前会话上下文对照模型窗口与压缩阈值，下面是记录中的会话表格，含上下文体量、窗口占比与最近请求时间；可清除单条、清空全部记录、导出 JSON / CSV、清空用量账本。
+- **账本 v2**：每天记录里增加 24 小时直方图与会话维度拆分；旧版 v1 账本读取时按缺省值补齐，升级不需要迁移脚本；损坏的 JSON 当作空账本处理，不会带崩页面。
+
+**输入栏会话统计弹窗**新增本次会话输出趋势（迷你折线 + 最新 / 平均 / 最长）、用于横向对比的「最近 7 天用量」、输入构成环、附加用量卡（搜索 / 抓取 / 解析文件与页数 / 语音字符 / 语音秒数），以及带剩余窗口与压缩阈值的上下文压力表；底部可直接跳到设置 → 统计。
+
+**API Key 脱敏**：越狱实验台不再渲染完整 Key，改成 `sk-****` 加末四位，并提供「在设置中修改」跳到设置 → 数据管理，和设置页自己保存 Key 的掩码展示保持一致。
+
+### 3.24 OpenCode Bridge 通道（可选）
 
 设置 → **数据管理** → **推理通道** 增加一个默认关闭的第二通道：
 
@@ -363,6 +497,7 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 
 ## 4. 行为对照表
 
+
 | 场景                 | 原版                    | 本仓库默认（所有开关关闭）                             | 越狱模式开启               |
 | -------------------- | ----------------------- | ------------------------------------------------------ | -------------------------- |
 | `system` 字段        | 官方身份说明            | 同原版                                                 | Persona + 破限规则分块     |
@@ -375,6 +510,8 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 | 采样参数             | 不传                    | 可调                                                   | 可调                       |
 | 导出拒绝回复         | `CONTENT_FILTER` + 模板 | 同原版（保留内容时按正常结束）                         | 同默认                     |
 | 其他原版功能         | —                       | 搜索、附件、分支、导入导出、朗读、主题、双语等全部保留 | 同默认                     |
+| 联网搜索             | 服务端执行              | 默认保留；搜索投毒可接管或改写展示                      | 同默认                     |
+| 自定义思维链         | 无此设置                | 默认关；启用后注入 system，关闭深度思考时回复上方显示「已注入思维链」 | 同默认                     |
 
 ---
 
@@ -390,6 +527,8 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 | 模型   | 拒绝后继续生成     | 关               | `chat-demo:continue-refused`               | 强制开启、置灰       |
 | 提示词 | 解除限制模式       | 关               | `chat-demo:unrestricted`                   | ——                   |
 | 提示词 | 自定义系统提示词   | 空（自动组装）   | `chat-demo:system-prompt`                  | 覆盖自动组装结果     |
+| 思维链 | 启用自定义思维链   | 关               | `chat-demo:custom-cot-enabled`             | 不受影响             |
+| 思维链 | 思维链正文         | 空               | `chat-demo:custom-cot`                     | 不受影响             |
 | 高级   | 系统提示词预设     | `deepseek`       | `chat-demo:prompt-preset`                  | 不受影响             |
 | 高级   | 输入扰动           | 关               | `chat-demo:parseltongue`                   | 不受影响             |
 | 高级   | 扰动技术           | `leetspeak`      | `chat-demo:parseltongue-technique`         | 不受影响             |
@@ -407,8 +546,20 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 | 实验台 | 变体赛跑预算       | 1 元             | `chat-demo:variant-race-budget`            | 不受影响             |
 | 实验台 | 变体赛跑确认已关闭 | 关               | `chat-demo:variant-race-confirm-dismissed` | 不受影响             |
 | 提示词 | 每轮注入系统提示词 | 关               | `chat-demo:inject-prompt-every-turn`       | 不受影响             |
+| 提示词 | 历史思维链伪装     | 关               | `chat-demo:thinking-as-body`               | 不受影响             |
+| 模型   | 流式输出           | 开               | `chat-demo:stream-output`                  | 不受影响             |
 | 模型   | 自动压缩长对话     | 关               | `chat-demo:auto-compress`                  | 不受影响             |
+| 搜索投毒 | 启用搜索投毒     | 关               | `chat-demo:search-poison`                  | 不受影响             |
+| 附件投毒 | 启用附件投毒     | 关               | `chat-demo:attachment-poison`              | 不受影响             |
 | 高级   | 中文越狱提示词     | 关               | `chat-demo:translate-jailbreak-zh`         | 不受影响             |
+| 通用   | 每日上限提醒       | 关               | `chat-demo:daily-limit-enabled`            | 不受影响             |
+| 通用   | 每日 Token 上限    | 1000000          | `chat-demo:daily-token-limit`              | 不受影响             |
+| 通用   | 每日费用上限（元） | 10               | `chat-demo:daily-cost-limit`               | 不受影响             |
+| 记忆   | 长期记忆           | 开               | `chat-demo:saved-memory-enabled`           | 不受影响             |
+| 记忆   | 自动提炼长期记忆   | 关               | `chat-demo:auto-extract-memory`            | 不受影响             |
+| 记忆   | 网状记忆检索       | 开               | `chat-demo:memory-bank-enabled`            | 不受影响             |
+| 记忆   | 注入条数           | 4                | `chat-demo:memory-bank-limit`              | 不受影响             |
+| 记忆   | 向量维度           | 256              | `chat-demo:memory-bank-dimension`          | 不受影响             |
 
 各项值在关闭越狱模式后仍按你各自勾选的状态生效。
 
@@ -438,6 +589,12 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 
 （`title` 只在这条会话还没有标题时出现，`thinking` 跟随输入框的深度思考开关，`max_tokens` 仅在设置后出现。）
 
+开启自定义思维链后，`system` 在 Persona / 破限规则与记忆、搜索上下文之间追加 `[自定义思维链]` 分块；深度思考开启时换成 `[自定义思维链 · 实验性]`。首轮同时带 `title` 也会注入，其余字段与消息结构不变。关闭深度思考时，客户端在回复上方额外渲染「已注入思维链」卡片；该卡片不进入请求，也不写入 `blocks`。
+
+开启搜索投毒并接管时，`tools` 只剩 `deepseek_read_url`，`system` 末尾追加 `[LOCAL SEARCH LAYER]` 搜索上下文，`latest_reminder` 使用自定义日期与位置；关闭接管或没有自定义结果时仍保持上面的真实搜索请求。
+
+附件投毒只改变上传到 Files API 的文件字节，不改变请求体结构；附件仍以 `file_id` 引用。
+
 越狱模式 + 调过参数（只列与上一例不同的字段）：
 
 ```json
@@ -461,19 +618,37 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 | 文件                                                                                               | 作用                                                                                                                   |
 | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | [`src/services/chat/systemPrompt.ts`](src/services/chat/systemPrompt.ts)                           | 系统提示词组装流水线：Persona + 破限规则分块，支持自定义覆盖                                                           |
-| [`src/services/chat/store.ts`](src/services/chat/store.ts)                                         | 请求体组装（system / 参数 / safety_check / 工具）、回复结束时的防撤回处理、续写守卫                                    |
+| [`src/services/chat/customCot.ts`](src/services/chat/customCot.ts)                                 | 自定义思维链归一化、注入快照与 system 分块生成（直接 / 实验性两种文案）                                                |
+| [`src/components/chatInput/CustomCotPanel.tsx`](src/components/chatInput/CustomCotPanel.tsx)       | 输入栏「思维链」卡片：开关、编辑、示例 / 清空、打开设置                                                                 |
+| [`src/components/messages/InjectedCot.tsx`](src/components/messages/InjectedCot.tsx)               | 回复上方的「已注入思维链」折叠卡片                                                                                     |
+| [`src/services/chat/usageLedger.ts`](src/services/chat/usageLedger.ts)                             | 按日 / 模型的用量账本（保留 400 天），统计图表的数据源                                                                 |
+| [`src/components/settings/StatsSettings.tsx`](src/components/settings/StatsSettings.tsx)           | 设置 → 统计：KPI、趋势柱状图、热力图、构成环与上下文管理                                                              |
+| [`src/components/stats/charts.tsx`](src/components/stats/charts.tsx)                               | 手写 SVG / CSS 图表：柱状图、热力图、环形图、迷你折线、压力表                                                          |
+| [`src/services/api/mask.ts`](src/services/api/mask.ts)                                             | API Key 脱敏（`sk-****` + 末四位），实验台与其它只读展示共用                                                          |
+| [`src/services/chat/store.ts`](src/services/chat/store.ts)                                         | 请求体组装（system / 参数 / safety_check / 工具）、自定义思维链注入、回复结束时的防撤回处理、续写守卫                  |
 | [`src/services/chat/reply.ts`](src/services/chat/reply.ts)                                         | `settleReply`（拒绝内容保留）、`hasReplyContent`、`rewriteReplyBlocks`（改写写回）、`canContinueReply`（继续生成判断） |
 | [`src/services/chat/describe.ts`](src/services/chat/describe.ts)                                   | 拒绝提示：保留内容时给提示行，否则给模板答复                                                                           |
 | [`src/services/chat/history/toArchive.ts`](src/services/chat/history/toArchive.ts)                 | 导出时拒绝回复的状态与模板处理                                                                                         |
 | [`src/services/settings.ts`](src/services/settings.ts)                                             | 新增设置的读写与默认值                                                                                                 |
+| [`src/services/searchPoison.ts`](src/services/searchPoison.ts)                                     | 搜索投毒规则引擎：替换 / 黑名单 / 白名单、上下文注入、结果块与引用改写                                                |
+| [`src/services/attachmentPoison.ts`](src/services/attachmentPoison.ts)                             | 附件投毒引擎：文本 / DOCX / 图片文字 / 元数据 / 文件尾 / 文件名 / 伴随文本附件                                       |
+| [`src/components/settings/AttachmentPoisonSettings.tsx`](src/components/settings/AttachmentPoisonSettings.tsx) | 附件投毒设置界面与方式说明                                                                                          |
+| [`src/components/settings/SearchPoisonSettings.tsx`](src/components/settings/SearchPoisonSettings.tsx) | 搜索投毒设置界面：时间、接管、规则与结果编辑                                                                          |
+| [`src/services/location.ts`](src/services/location.ts)                                             | 位置归一化与自定义位置                                                                                                 |
 | [`src/services/api/types.ts`](src/services/api/types.ts)                                           | 请求类型：`temperature` / `top_p` / `max_tokens` / 可选 `safety_check`                                                 |
-| [`src/components/settings/SettingsDialog.tsx`](src/components/settings/SettingsDialog.tsx)         | 设置页：模型分组、提示词分组、开关与预览                                                                               |
+| [`src/components/settings/SettingsDialog.tsx`](src/components/settings/SettingsDialog.tsx)         | 设置页：模型 / 提示词 / 思维链分组、开关与预览                                                                         |
 | [`src/components/settings/ParamControls.tsx`](src/components/settings/ParamControls.tsx)           | 滑块 + 数字输入控件                                                                                                    |
 | [`src/services/chat/sessionStats.ts`](src/services/chat/sessionStats.ts)                           | 会话统计、计时与费用估算                                                                                               |
 | [`src/services/chat/contextUsage.ts`](src/services/chat/contextUsage.ts)                           | 上下文占用（按会话缓存）                                                                                               |
 | [`src/components/chatInput/ThinkingSlider.tsx`](src/components/chatInput/ThinkingSlider.tsx)       | 思考强度 0–4 轨道                                                                                                      |
+| [`src/components/chatInput/ChatInput.tsx`](src/components/chatInput/ChatInput.tsx)                 | 输入栏「思维链」快捷入口，显示启用状态并打开设置分组                                                                   |
 | [`src/components/session/StatsDialog.tsx`](src/components/session/StatsDialog.tsx)                 | 统计与计费弹窗                                                                                                         |
 | [`src/services/chat/compression.ts`](src/services/chat/compression.ts)                             | 长对话压缩：结构化摘要、自动触发与节省量                                                                               |
+| [`src/services/chat/savedMemory.ts`](src/services/chat/savedMemory.ts)                             | 长期记忆：增删改查、自动提炼、system 注入                                                                              |
+| [`src/services/chat/memoryBank.ts`](src/services/chat/memoryBank.ts)                               | 网状记忆库：节点 / 边 / 哈希向量 / 加权检索 / 调试                                                                     |
+| [`src/services/chat/memoryArchive.ts`](src/services/chat/memoryArchive.ts)                         | 记忆归档 JSON 导入导出：合并 / 覆盖                                                                                    |
+| [`src/services/chat/dailyUsage.ts`](src/services/chat/dailyUsage.ts)                               | 每日 Token 与费用统计、上限提醒                                                                                        |
+| [`src/components/settings/MemorySettings.tsx`](src/components/settings/MemorySettings.tsx)         | 记忆设置与搜索调试界面                                                                                                 |
 | [`src/services/chat/contextPressure.ts`](src/services/chat/contextPressure.ts)                     | 上下文压力与压缩预留阈值（对齐 DSH）                                                                                   |
 | [`src/services/chat/feedbackStore.ts`](src/services/chat/feedbackStore.ts)                         | 回复评分与 AutoTune EMA 反馈画像                                                                                       |
 | [`src/services/api/models.ts`](src/services/api/models.ts)                                         | 内置模型列表、云端 /models 拉取与缓存                                                                                  |
@@ -487,7 +662,7 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 | [`src/components/lab/VariantView.tsx`](src/components/lab/VariantView.tsx)                         | 变体赛跑界面与开跑确认                                                                                                 |
 | [`src/components/base/Switch.tsx`](src/components/base/Switch.tsx)                                 | 方块开关组件                                                                                                           |
 | [`src/components/messages/ReplyEditor.tsx`](src/components/messages/ReplyEditor.tsx)               | 回复编辑器（思维链 / 正文）                                                                                            |
-| [`src/components/messages/AssistantMessage.tsx`](src/components/messages/AssistantMessage.tsx)     | 编辑入口、「继续生成」按钮、拒绝回复的展示分支                                                                         |
+| [`src/components/messages/AssistantMessage.tsx`](src/components/messages/AssistantMessage.tsx)     | 编辑入口、「继续生成」按钮、「已注入思维链」展示与拒绝回复分支                                                         |
 | [`deepseekv4.1 and v4.1-1017.md`](<./deepseekv4.1 and v4.1-1017.md>)                               | 破限规则文本，构建时内联                                                                                               |
 | [`mcp-server/`](mcp-server/README.md)                                                              | 本地 EasyJailbreak MCP 后端                                                                                            |
 | [`src/components/lab/`](src/components/lab/LabView.tsx)                                            | 越狱实验台页面                                                                                                         |
@@ -498,8 +673,10 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 ## 8. 数据、隐私与网络
 
 - API Key、各项设置：浏览器 localStorage（键名见第 5 节）；
+- 搜索投毒配置（时间、替换 / 过滤规则、自定义结果）只存 localStorage，启用后会作为 system 上下文发送给你配置的 API 地址；
+- 附件投毒配置只存 localStorage；原始附件在本机，上传的是处理后的副本，伴随文本附件会作为普通文件随消息发送；
 - 会话与附件原件：IndexedDB，按浏览器用户配置与站点源隔离；
-- 出站请求只有你配置的 API 地址（默认 `https://api.deepseek.com`）：`/models` 校验 Key、`/anthropic/v1/messages` 对话、`/anthropic/v1/files` 附件、ASR / TTS 语音接口。OpenCode Bridge 模式下页面改为通过 `chrome.runtime`（Chrome）或 content script 中继（Safari，`window.postMessage`）把消息交给本地扩展，由扩展访问 `https://opencode.ai/inference[/go]`，页面不接触 OpenCode Key；
+- 出站请求只有你配置的 API 地址（默认 `https://api.deepseek.com`）：`/models` 校验 Key、`/anthropic/v1/messages` 对话、`/anthropic/v1/files` 附件、ASR / TTS 语音接口；
 - 没有统计、没有埋点、没有第三方脚本、没有中转服务器；
 - 历史导入导出为 ZIP，导出包含会话与本地图片原件，不包含 API Key 与设置；归档格式与保留范围见[历史导入导出说明](src/services/chat/history/README.md)。
 
@@ -537,7 +714,27 @@ pnpm build      # 产物在 dist/
 | `pnpm lint`   | oxlint 检查            |
 | `pnpm format` | oxfmt 格式化           |
 
-API 地址在 [`rspack.config.ts`](rspack.config.ts) 的 `createConfig({ apiOrigin })` 里配置，默认 `https://api.deepseek.com`。OpenCode Bridge 模式不走这个地址：OpenCode 的 base URL（Console 或 Go）由扩展自己的选项页选择。
+API 地址在 [`rspack.config.ts`](rspack.config.ts) 的 `createConfig({ apiOrigin })` 里配置，默认 `https://api.deepseek.com`。
+
+### 9.1 Android APK
+
+仓库内置一个原生 WebView 壳，APK 产物为 `android/deepseek-unrestricted-2.6.4.apk`：
+
+- 应用在 `http://127.0.0.1:18765` 启动本地静态服务器，再加载 `assets/public`，给 localStorage / IndexedDB / fetch 一个稳定的安全来源；
+- 支持文件选择、麦克风权限、返回键和外部链接跳转；
+- 构建需要 Android SDK 34、build-tools 34.0.0 与 JDK 17（JDK 27 会让 d8 崩溃）。仓库根目录提供一键脚本，会读取 `package.json` 的版本（当前 2.6.4 / 264），依次构建 Web、APK 并签名：
+  ```sh
+  KS_PASS=... ./构建APK.sh
+  ```
+  也可以手动执行：
+  ```sh
+  export ANDROID_HOME=$HOME/android-sdk
+  export JAVA_HOME=/path/to/jdk-17
+  pnpm build
+  KS_PASS=... KEY_PASS=... ./android/build-apk.sh
+  ```
+- APK 使用 `xiaohuangbo.jks`、别名 `xiaohuangbo` 签名，versionCode 264；
+- **Python 后端不会在 APK 内执行**：`android/assets/backend` 只打包 `mcp-server` 与 EasyJailbreak 源码供参考；实验台仍需在电脑或服务器上运行后端，并在「实验台」里把地址改为 `http://<电脑IP>:8765/mcp`。手机页面的 Origin 是 `http://127.0.0.1:18765`，已在后端允许来源内。
 
 ---
 
@@ -558,6 +755,26 @@ API 地址在 [`rspack.config.ts`](rspack.config.ts) 的 `createConfig({ apiOrig
 13. **自动越狱与变体赛跑会产生额外费用**：每次重试、每个变体都是真实请求，变体赛跑受预算上限约束。
 14. **云端模型列表依赖 API 与网络**：拉取失败时回落到内置两档；未收录到价格表的模型按 Flash 价估算、上下文窗口按 128k 兜底，实际能力以服务端为准。
 15. **切换模型不回溯旧回复**：旧回复保留原模型与费用；续写沿用该回复的模型，只有新回复使用当前选择。
+16. **自动提炼长期记忆会产生额外调用**：每轮一次 Flash 请求；长期记忆与记忆库只存在本机，历史导出包不包含。
+17. **记忆库向量是本地哈希向量**：不是语义 embedding，检索效果有限但无需外部服务；调整向量维度后按新维度重新计算。
+18. **每日用量只统计聊天回复**：MCP 实验台、赛跑、标题生成等独立调用不计入；费用按当前峰谷价估算，与服务端账单可能有细微差异。
+19. **自定义位置与特殊位置只影响 latest_reminder**：不会改变天气、联网搜索或服务端区域判断。
+20. **历史思维链伪装只处理上一轮**：以普通正文形式下发，服务端不会再按 thinking 处理；开启后 token 会略微增加。
+21. **关系图最多绘制 80 个节点**：超出部分不绘制，但检索仍覆盖全部节点；导入「覆盖」会替换当前长期记忆与记忆库，操作前可用导出备份。
+22. **流式输出开关只控制界面渲染**：关闭时仍使用 SSE 接收并完整累积回复，只是不展示中间态；页面隐藏/关闭时会把已累积内容写回，避免丢失。
+23. **搜索投毒不是服务端代理**：服务端搜索在服务端执行，客户端拿到的结果已经是模型本轮看过的内容；关闭接管时只能改写展示，不能撤回本轮结果。
+24. **接管搜索依赖自定义结果**：没有自定义结果时不会自动关闭服务端搜索（黑名单 / 白名单除外）；接管后模型只能看到配置结果，真实搜索不会执行。
+25. **自定义时间 / 知识截止只是提示**：只影响 `latest_reminder` 与注入上下文，不改界面、计费、天气或服务端区域判断；模型也不一定完全遵守知识截止。
+26. **附件投毒只影响新上传 / 重新上传**：已发送的附件服务器文件不会重写；输入框里有本地原件的附件会在下一次发送时按当前配置重新上传，导入且没有原件的附件保持原样，已发送历史附件不重写。
+27. **客户端改写是尽力而为**：图片文字覆盖需要 Canvas，PDF 文件尾与图片元数据是实验性方式，不保证模型一定读取；PDF / Office 建议优先使用伴随文本附件。
+28. **伴随文本附件占用附件名额**：名额不足时不会生成；恢复默认只清理本机配置与草稿中自动生成的伴随附件，不删除服务器或历史附件。
+29. **图片文字覆盖会重新编码**：GIF / 动图会变成静态图，GIF / BMP 等可能转为 PNG；文件尾附加对 ZIP 类 Office 文件自动跳过。
+30. **APK 内的 Python 后端不会执行**：EasyJailbreak / torch 依赖无法放进普通 WebView APK；后端源码只随包附带，实验台必须连接电脑或服务器上的 MCP 服务。
+31. **APK 是 WebView 壳**：文件下载等浏览器能力取决于系统 WebView；本地服务固定占用 18765 端口，被占用时应用会显示启动失败提示。
+32. **自定义思维链是提示词引导，不是真正的 reasoning 通道**：关闭深度思考时，回复上方卡片展示的是你预设的步骤，不是模型实时推理；模型也可能不完全遵守；每轮都会增加输入 token，正文上限 4000 字符。
+33. **开启深度思考时自定义思维链是实验性**：服务端 thinking 优先，可能忽略或重写这些步骤，不保证与直接注入同样效果；此时不重复显示「已注入思维链」卡片，以服务端 thinking 为准。
+34. **自定义思维链只作用于聊天请求**：多路赛跑、变体赛跑、长对话压缩、记忆提炼等独立调用使用各自的系统提示词，不读取该设置；聊天首轮同时生成标题，仍会注入。
+35. **「已注入思维链」卡片只保存在本机会话**：历史导出包不含该展示字段，重新导入后不显示；续写沿用原回复快照，重新生成使用当前设置。
 
 ---
 
@@ -582,4 +799,6 @@ API 地址在 [`rspack.config.ts`](rspack.config.ts) 的 `createConfig({ apiOrig
 - 感谢 [DeepSeek-Agent](https://github.com/Aoan2011/DeepSeek-Agent)：思考强度轨道、上下文占用圆环与会话统计的参考实现。
 - 感谢 [dsh-unrestricted](https://github.com/yexi-by/dsh-unrestricted)：越狱提示词与实验设置的参考。
 - 感谢 [L1B3RT4S](https://github.com/elder-plinius/L1B3RT4S)：GODMODE、Hall of Fame 组合与越狱提示词的上游来源。
+- 感谢 [Operit](https://github.com/AAswordman/Operit)：网状记忆库、向量维度、检索权重与搜索调试的参考实现。
+- 感谢 [DeepChat](https://github.com/YanJiuWeiYuanHui/DeepChat)：长期记忆与每日 Token / 费用提醒的参考实现。
 - `src/services/unrestricted/` 下的引擎代码（输入扰动、AutoTune、STM、赛跑打分、GODMODE 提示词）移植自 [G0DM0D3](https://github.com/elder-plinius/G0DM0D3)，遵循 [AGPL-3.0](src/services/unrestricted/COPYING-AGPL-3.0)；该目录保留原始许可证，与仓库其余 MIT 代码分别适用。

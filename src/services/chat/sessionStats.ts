@@ -80,6 +80,17 @@ const readVoiceMap = (): Record<string, VoiceUsage> => {
   return voiceCache
 }
 
+/** 全部会话的语音用量合计：统计页展示 TTS 字符与 ASR 秒数 */
+export const totalVoiceUsage = (): VoiceUsage => {
+  let chars = 0
+  let seconds = 0
+  for (const entry of Object.values(readVoiceMap())) {
+    chars += entry.chars
+    seconds += entry.seconds
+  }
+  return { chars, seconds }
+}
+
 export const readVoiceUsage = (sessionId: string | null): VoiceUsage => {
   if (!sessionId) {
     return { chars: 0, seconds: 0 }

@@ -1,0 +1,484 @@
+/* 设置 → 统计：卡片式布局，和设置里其它分组保持同一条左对齐基线 */
+.card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 14px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 16px;
+  background-color: var(--dsw-alias-bg-base);
+}
+
+.rangeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rangeTabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+}
+
+.rangeTab {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--dsw-alias-label-primary);
+  }
+}
+
+.rangeTabActive {
+  background-color: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 31, 74, 0.12);
+}
+
+.rangeHint {
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+}
+
+.kpiLabel {
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.kpiValue {
+  color: var(--dsw-alias-label-primary);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blockHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.blockTitle {
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.legend {
+  display: inline-flex;
+  gap: 10px;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background-color: var(--dsw-alias-brand-primary);
+  }
+
+  &[data-tone='cost']::before {
+    background-color: #f2a33c;
+  }
+}
+
+.heatLegend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.heatScale {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.heatSwatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+
+  &[data-level='1'] {
+    background-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 28%, transparent);
+  }
+
+  &[data-level='2'] {
+    background-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 48%, transparent);
+  }
+
+  &[data-level='3'] {
+    background-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 70%, transparent);
+  }
+
+  &[data-level='4'] {
+    background-color: var(--dsw-alias-brand-primary);
+  }
+}
+
+.ringRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.ringLegend {
+  display: flex;
+  flex: 1;
+  min-width: 180px;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ringLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.swatch {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background-color: var(--dsw-alias-brand-primary);
+
+  &[data-index='2'] {
+    background-color: #22b8a0;
+  }
+
+  &[data-index='3'] {
+    background-color: #f2a33c;
+  }
+
+  &[data-index='4'] {
+    background-color: #8b5cf6;
+  }
+
+  &[data-index='5'] {
+    background-color: #64748b;
+  }
+}
+
+.ringLegendLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ringLegendValue {
+  flex-shrink: 0;
+  color: var(--dsw-alias-label-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.modelList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modelRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+}
+
+.modelName {
+  flex-shrink: 0;
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.modelMeta {
+  flex: 1;
+  min-width: 0;
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modelCost {
+  flex-shrink: 0;
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.contextHead {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contextKpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.pressureBar {
+  box-sizing: border-box;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+  overflow: hidden;
+
+  & > span {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background-color: var(--dsw-alias-brand-primary);
+    transition: width 0.3s ease;
+  }
+
+  &[data-warn] > span {
+    background-color: #e2564a;
+  }
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.tableHead,
+.tableRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 0.7fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+}
+
+.tableHead {
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+}
+
+.tableRow {
+  border-radius: 8px;
+
+  &:hover {
+    background-color: var(--dsw-alias-interactive-bg-hover);
+  }
+
+  &:nth-child(odd) {
+    background-color: var(--dsw-alias-interactive-bg-hover);
+  }
+}
+
+.sessionName {
+  min-width: 0;
+  color: var(--dsw-alias-label-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.numeric {
+  color: var(--dsw-alias-label-primary);
+  font-variant-numeric: tabular-nums;
+
+  &[data-warn] {
+    color: #e2564a;
+    font-weight: 600;
+  }
+}
+
+.muted {
+  color: var(--dsw-alias-label-caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rowActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-brand-text);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.textButton {
+  padding: 4px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-brand-text);
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: var(--dsw-alias-interactive-bg-hover);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.empty {
+  padding: 14px 0;
+  color: var(--dsw-alias-label-caption);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.note {
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+@media not all and (min-width: 768px) {
+  .card {
+    padding: 12px;
+  }
+
+  .tableHead,
+  .tableRow {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) auto;
+  }
+
+  /* 手机端只保留会话、上下文与操作列，其余数据在上方 KPI 里已有汇总 */
+  .tableHead > span:nth-child(3),
+  .tableHead > span:nth-child(4),
+  .tableRow > span:nth-child(3),
+  .tableRow > span:nth-child(4) {
+    display: none;
+  }
+}
+
+/* 趋势指标切换：比范围切换更轻，放在标题右侧 */
+.metricTabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+}
+
+.metricTab {
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 11px;
+  line-height: 18px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--dsw-alias-label-primary);
+  }
+}
+
+.metricTabActive {
+  background-color: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+}

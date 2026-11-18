@@ -462,30 +462,40 @@ function obfuscateWord(
   technique: ObfuscationTechnique,
   intensity: 'light' | 'medium' | 'heavy'
 ): string {
-  switch (technique) {
-    case 'leetspeak':
-      return applyLeetspeak(word, intensity)
-    case 'unicode':
-      return applyUnicode(word, intensity)
-    case 'zwj':
-      return applyZWJ(word, intensity)
-    case 'mixedcase':
-      return applyMixedCase(word, intensity)
-    case 'phonetic':
-      return applyPhonetic(word)
-    case 'fullwidth':
-      // 纯中文触发词没有 ASCII 可平移，退化为细空格，避免出现「选了技术却没有变化」
-      return /[!-~]/.test(word) ? applyFullwidth(word) : applySpacing(word, intensity)
-    case 'spacing':
-      return applySpacing(word, intensity)
-    case 'random':
-      return applyRandom(word, intensity)
-    default: {
-      // 33 种上游技术：逐词函数直接来自 techniques.ts
-      const entry = TECHNIQUES[technique]
-      return entry ? entry.apply(word) : word
+  const transform = (): string => {
+    switch (technique) {
+      case 'leetspeak':
+        return applyLeetspeak(word, intensity)
+      case 'unicode':
+        return applyUnicode(word, intensity)
+      case 'zwj':
+        return applyZWJ(word, intensity)
+      case 'mixedcase':
+        return applyMixedCase(word, intensity)
+      case 'phonetic':
+        return applyPhonetic(word)
+      case 'fullwidth':
+        // 纯中文触发词没有 ASCII 可平移，退化为细空格，避免出现「选了技术却没有变化」
+        return /[!-~]/.test(word) ? applyFullwidth(word) : applySpacing(word, intensity)
+      case 'spacing':
+        return applySpacing(word, intensity)
+      case 'random':
+        return applyRandom(word, intensity)
+      default: {
+        // 33 种上游技术：逐词函数直接来自 techniques.ts
+        const entry = TECHNIQUES[technique]
+        return entry ? entry.apply(word) : word
+      }
     }
   }
+
+  const transformed = transform()
+  // leetspeak / unicode / mixedcase 等只改拉丁字母的算法遇到纯中文会原样返回；
+  // 这里统一退化为细空格，保证任何命中触发词的预览都能看到变化。
+  if (transformed === word && [...word].some((ch) => (ch.codePointAt(0) ?? 0) > 0x7f)) {
+    return applySpacing(word, intensity)
+  }
+  return transformed
 }
 
 /**

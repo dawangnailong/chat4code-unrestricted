@@ -67,6 +67,7 @@ export const Select = <T extends string>({
               style={position ?? undefined}
               role="listbox"
               aria-label={ariaLabel}
+              onPointerDown={(event) => event.stopPropagation()}
             >
               {options.map((option) => (
                 <div

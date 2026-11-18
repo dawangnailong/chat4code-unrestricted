@@ -1,0 +1,137 @@
+/* 自定义思维链卡片：与输入扰动浮层同一套位置与外观 */
+.panel {
+  position: fixed;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  gap: 8px;
+  width: 380px;
+  max-width: calc(100vw - 16px);
+  padding: 14px;
+  border: 1px solid var(--dsw-alias-border-inverted);
+  border-radius: 16px;
+  background: var(--dsw-specific-menu);
+  box-shadow:
+    0 0 1px 0 rgba(0, 0, 0, 0.2),
+    0 0 4px 0 rgba(0, 0, 0, 0.02),
+    0 12px 32px 0 rgba(0, 0, 0, 0.08);
+  overflow-y: auto;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 112px;
+  max-height: 220px;
+  padding: 9px 10px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background-color: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  resize: vertical;
+  outline: none;
+
+  &:focus-visible {
+    border-color: var(--dsw-alias-brand-primary);
+  }
+
+  &::placeholder {
+    color: var(--dsw-alias-label-tertiary);
+  }
+}
+
+.meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.status {
+  flex: 1;
+  text-align: right;
+  overflow-wrap: anywhere;
+
+  &[data-experimental] {
+    color: var(--dsw-static-amber-600);
+  }
+
+  &[data-off] {
+    color: var(--dsw-alias-label-tertiary);
+  }
+}
+
+.hint {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.textButton {
+  padding: 2px 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-brand-text);
+  font: inherit;
+  font-size: 11px;
+  line-height: 20px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: var(--dsw-alias-interactive-bg-hover);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.settingsButton {
+  margin-left: auto;
+  gap: 4px;
+}
+
+/* 桌面端齿轮略偏右，往左收一点，避免贴住「打开设置」文案 */
+@media (min-width: 768px) {
+  .settingsButton svg {
+    margin-left: -3px;
+    margin-right: 1px;
+  }
+}
+
+.active {
+  background-color: var(--dsw-alias-button-ghost-active-fill);
+  color: var(--dsw-alias-brand-text);
+  border-color: var(--dsw-alias-button-ghost-active-border);
+}

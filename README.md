@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="./brand.jpg" alt="chat4code-unrestricted — Yes, Sun Xiaochuan Chat" width="760">
+  <img src="./brand.jpg" alt="chat-demo-unrestricted — Yes, Sun Xiaochuan Chat" width="760">
 </p>
-<h1 align="center"><img src="https://github.com/EasyJailbreak/EasyJailbreak/blob/master/image/README/logo.png" alt="EasyJailbreak Logo" height="60"></h1>
+<h1 align="center"><img src="brand_2.jpg" alt="你应该放弃这世间所有的C端客户端，来体验宇宙最强对抗路神作，这是你唯一和顶级开源模型厮杀的机会" width="250"></h1>
 
-<h1 align="center">chat4code-unrestricted</h1>
+<h1 align="center">deepseek unrestricted</h1>
 
 <p align="center">
   Yes, Sun Xiaochuan Chat — a static DeepSeek chat front end with an unrestricted mode, editable replies, and direct control over model parameters<br>
@@ -12,14 +12,13 @@
 
 > This is an **unofficial fork** of the official demo [deepseek-ai/chat-demo](https://github.com/deepseek-ai/chat-demo), MIT licensed.
 > Every change lives in the browser: how the request body is assembled, how replies are stored, and how they are rendered.
-> There is no server-side proxy or relay service. Your API key and conversations stay in your own browser; the optional
-> OpenCode Bridge mode keeps the OpenCode key in a local browser extension (Chrome or Safari) instead.
+> There is no proxy and no relay service. Your API key and conversations stay in your own browser.
 >
 > 🔗Live demo: <https://chat-unrestricted.fur0.com/>
 >
 > 📦Repository: <https://github.com/dawangnailong/chat4code-unrestricted>
 >
-> 🎥Intro video: <https://www.bilibili.com/video/BV1p5sL6LEfd/>
+> 🎥Intro video: <https://www.bilibili.com/video/BV1m3s66WESg/>
 >
 > 📚Reference paper: <https://arxiv.org/pdf/2403.12171>
 
@@ -49,15 +48,17 @@
 
 A fully static DeepSeek chat front end: multiple conversations, streaming replies, deep thinking, web search, link reading, attachments, speech, Markdown / KaTeX / Mermaid, Chinese and English UI, light and dark themes, and history import/export. Every original feature is preserved.
 
-> Current version: **2.5.2**
+> Current version: **2.6.4**
 
 On top of that, this fork turns the hard-coded limits of the original into configurable settings and adds a full set of jailbreak, experiment and context-management features:
 
 - **Unrestricted mode and prompts**: unrestricted mode, the default rules document / GODMODE preset, silent per-round system-prompt injection, and the experimental Chinese translation;
+- **Custom chain of thought**: write reasoning steps in advance and inject them into system, with an injected-steps card above replies when deep thinking is off; experimental guidance when it is on;
 - **Advanced engines**: a 0–4 thinking slider, input perturbation (33 techniques, single technique or tiered variants), AutoTune, STM output shaping, and one-click auto jailbreak that retries with another combo on refusal;
 - **Jailbreak lab**: local MCP + EasyJailbreak attackers, model races, variant races (budget cap + start confirmation), and result import/export;
 - **Chat features**: editable replies, anti-retraction, branch to a new chat (the original is untouched), and long-chat compression (pressure-triggered auto plus manual);
-- **Models and cost**: a model card in the input bar (built-in Flash / V4 Pro plus cloud fetch), a context ring, session statistics, and per-model billing;
+- **Models and cost**: a model card in the input bar (built-in Flash / V4 Pro plus cloud fetch), a context ring, session statistics, per-model billing, and daily token / cost alerts;
+- **Memory**: long-term memory (manual / auto-extracted) and a memory graph (nodes, edges, vector dimension, retrieval weights, search debug) injected into requests;
 - **Data and attachments**: configurable size / count / extension limits, history import/export, and one-click restore-default-settings.
 
 - **Unrestricted mode** — swap the system prompt, automatically skip the safety check, and allow continuing refused replies.
@@ -105,18 +106,23 @@ These are the limit-related behaviours in the upstream code. Paths point at the 
 
 ### 3.1 Settings layout
 
-The settings dialog grows from two groups to eight:
+The settings dialog grows from two groups to thirteen:
 
-| Group           | Contents                                                                                                                          |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| General         | Theme, language, read-aloud voice, location (original, untouched)                                                                 |
-| **Model**       | Current model, temperature, Top P, max output tokens, anti-retraction, auto-compress, skip safety check, continue refused replies |
-| **Prompt**      | Unrestricted mode, per-round prompt injection, custom system prompt, pipeline explanation, full preview                           |
-| **Advanced**    | System prompt preset, Chinese jailbreak prompts, input perturbation, auto jailbreak, AutoTune, output shaping                     |
-| **Attachments** | Limit switch, max size per file, max files per session, extension whitelist                                                       |
-| Data            | API key, import, export, restore default settings, delete all                                                                     |
-| About           | Repository, demo and upstream links                                                                                               |
-| Changelog       | Version history and upstream credits                                                                                              |
+| Group           | Contents                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| General         | Theme, language, TTS voice, location, daily usage and alerts                                                                                     |
+| **Model**       | Current model, stream output, temperature, Top P, max output tokens, anti-retraction, auto-compress, skip safety check, continue refused replies |
+| **Prompt**      | Unrestricted mode, per-round prompt injection, custom system prompt, pipeline explanation, full preview                                          |
+| **Chain of thought** | Settings + composer card: switch, step editor, example / clear, injection preview; injected steps appear above replies when deep thinking is off |
+| **Advanced**    | System prompt preset, Chinese jailbreak prompts, input perturbation, auto jailbreak, AutoTune, output shaping                                    |
+| **Search poison** | Custom current time and knowledge cutoff, search takeover, keyword / regex replacement, blacklist, forced results and whitelist              |
+| **Memory**      | Long-term memory, auto-extraction, memory graph, import/export, relation graph, vector dimension, retrieval weights, search debug                |
+| **Attachments** | Limit switch, max size per file, max files per session, extension whitelist                                                                      |
+| **Attachment poison** | Rewrite attachments before upload: text body / image text / DOCX / metadata / file trailer / filename / companion text attachment          |
+| **Statistics**  | Usage overview with range switch, daily trend bars, 8-week activity heatmap, input composition ring, per-model split, context statistics management |
+| Data            | API key, import, export, restore default settings, delete all                                                                                    |
+| About           | Repository, demo and upstream links                                                                                                              |
+| Changelog       | Version history and upstream credits                                                                                                             |
 
 No existing style rules were modified. New controls only use newly added classes (the switch, slider, and editor each ship their own CSS Module; a few prompt-preview classes are appended to the settings stylesheet), and colours and radii come from the existing design tokens.
 
@@ -235,7 +241,7 @@ The sidebar now has a **Lab** entry: it connects to the local `mcp-server/` over
 
 ### 3.10 Advanced features: prompt presets, perturbation, AutoTune, output shaping, model race
 
-The input bar is responsive: on desktop a single compact row shows the labels (model, auto jailbreak, thinking, search, perturbation) with a thin divider between the model and the toggles; below 768px they collapse to circular icons with horizontal scrolling instead of hiding desktop labels based on width measurement.
+The input bar is responsive: on desktop a single compact row shows the labels (model, auto jailbreak, thinking, search, perturbation) with a thin divider between the model and the toggles; below 768px everything except the model picker collapses to circular icons with horizontal scrolling, instead of hiding desktop labels based on width measurement.
 
 Settings → **Advanced** (everything is off by default, so the out-of-the-box behaviour is unchanged):
 
@@ -255,6 +261,7 @@ Settings → **Advanced** (everything is off by default, so the out-of-the-box b
 
 ### 3.11 Thinking effort, context usage, session statistics and cost estimate
 
+- **Stream output**: a new switch in Settings → Model, on by default; turn it off to hide the intermediate state and render the complete reply at once. Anti-retraction still applies to the final content.
 - **Thinking effort**: the old on/off switch in the input bar becomes a 0–4 slider (Off / Light / Standard / Deep / Max). The level is sent as `thinking: { type: "enabled", budget_tokens }` plus `reasoning_effort` (low / medium / high / max). If the server answers 400 mentioning reasoning / thinking / budget / effort, the client drops the effort fields, retries once with plain `thinking: { type: "enabled" }` and tells you it fell back.
 - **Context usage**: the ring in the input corner converts the last request's context (`input + cache_read + cache_creation`) into a share of the model window (1M); amber past 60%, red past 85%. The tooltip shows the exact numbers, the compaction threshold (80% of the window after a 64k headroom and the output reserve) and, after compression, the effective usage and tokens saved.
 - **Session statistics** (the stats button next to the ring): rounds, steps (replies + tool calls), output speed, average first token, model time, cache hit rate, plus uncached input / cache read / cache write / output tokens; a live section shows the current run while it streams.
@@ -277,6 +284,8 @@ Settings → **Attachments**:
 ---
 
 ### 3.13 Variant race (third lab tab)
+
+> Model race and variant race call the API directly and **need no MCP backend**; only the attackers tab uses MCP.
 
 The standalone app's Parseltongue v4 now lives in the lab: **33 perturbation techniques**, selected by tier (light 11 / standard 22 / heavy 33), rewrite each trigger word in the question, fire requests in parallel batches and keep the best composite score.
 
@@ -301,6 +310,7 @@ Chinese support: `spaced / zwj / dotted / underscored / reversed / brackets / st
 | ---------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Inject the system prompt every round     | Settings → Prompt                               | Silently appends the current system prompt to `latest_reminder` on every request so long chats keep the setup; it is not stored in history snapshots, and input tokens clearly increase.                                                                                                                                                                                                                                     |
 | Chinese jailbreak prompts (experimental) | Settings → Advanced                             | Replaces the built-in GODMODE and depth directive with Chinese translations. Phrasing and training-data differences may weaken the jailbreak, so it is off by default. L1B3RT4S combos stay in English.                                                                                                                                                                                                                      |
+| Disguise historical thinking             | Settings → Prompt                               | Folds the **previous** reply’s thinking into the historical assistant text so the server does not drop it; only the last historical round is converted and token usage rises slightly.                                                                                                                                                                                                                                       |
 | Long-chat compression                    | Settings → Model (auto) + stats dialog (manual) | Auto: once context pressure reaches 80% of the window (after the 64k headroom and output reserve) with at least 2 new rounds since the last compression, older content is summarised in the background. Manual: "Compress older messages" in the stats dialog, always keeping the last 2 rounds verbatim. The summary is injected as a `latest_reminder`; local history is untouched and the summary can be cleared anytime. |
 
 ---
@@ -326,6 +336,7 @@ The leftmost control in the input toolbar is the model card, with **DeepSeek Fla
 - "Fetch from cloud" calls `GET /models`, then the Anthropic prefix `/anthropic/v1/models`; fetched models are cached for an hour and their ids are passed through to requests;
 - A switch affects only new replies: old replies keep their own model, continuations keep the original model, and statistics/cost are computed per reply;
 - The context ring uses the current model's window; models without a price entry fall back to Flash rates and a 128k window;
+- On mobile the model picker stays expanded with the current model name and dropdown arrow; only the other input controls collapse to circles;
 - Settings → Model shows the current model; restoring defaults resets it to DeepSeek Flash.
 
 Prices (yuan per million tokens, off-peak; peak ×2):
@@ -337,7 +348,130 @@ Prices (yuan per million tokens, off-peak; peak ×2):
 
 The billing section in the stats dialog gains a "By model" breakdown with reply counts and cost per model.
 
-### 3.17 OpenCode Bridge provider (optional)
+### 3.17 Long-term memory and daily usage
+
+**Long-term memory** (Settings → Memory):
+
+- Add / edit / enable / delete / clear entries manually; enabled entries are injected into every request's `system`;
+- With **auto-extract** on, one extra Flash call after each turn turns stable facts, identity and long-term preferences into JSON operations (small extra cost, off by default);
+- Memories stay on this device and are not part of history exports; enabled entries also sync into the memory graph as `saved` nodes.
+
+**Daily usage and alerts** (Settings → General):
+
+- Tracks today's `input + cache_read + cache_creation + output` tokens and cost at each model's peak/off-peak rates;
+- Optional daily token and cost limits; crossing one shows a toast once per day and never blocks requests;
+- The stats dialog shows today's tokens and cost, with a reset button.
+
+### 3.18 Memory graph (ported from Operit)
+
+Settings → Memory → **Memory graph**:
+
+- Nodes carry a title, content, tags, importance and credibility; a new node is auto-linked to up to 3 similar nodes by local hashed-vector cosine similarity;
+- Retrieval combines keyword, tag, vector and weighted edge expansion; all four weights, the relevance threshold and the number of results are configurable;
+- Vector dimension can be 64 / 128 / 256 / 384 / 768 (default 256), generated locally without an embedding service;
+- **Search debug** shows each candidate's keyword / tag / vector / edge score, total, pass flag, plus node/edge counts, match counts and edges traversed;
+- At request time the top N matches are injected into `system` together with long-term memory; no matches means no injection;
+- Import/export a JSON archive of long-term memories plus graph nodes/edges; import can merge (content-deduplicated) or replace;
+- The relation graph draws nodes and weighted edges; click a node to inspect its content and tags; on mobile it keeps a readable size and scrolls horizontally;
+- Shows the current vector dimension, node count, average degree and estimated Float32 footprint; search debug adds dimension, query-token count and top score;
+- Chat statistics and the input context ring show memory nodes/edges/dimension/last injected hits; restoring defaults resets retrieval settings and daily alerts but keeps saved memory data;
+- On mobile the weights become single-column, the search-debug table scrolls horizontally, and nodes/tags wrap.
+
+### 3.19 Locations: clear, custom and off-world
+
+Settings → General → Location:
+
+- When a location is set, a **Clear location** button removes it;
+- A free-form input next to the selects accepts any place (for example “Paris” or “Zhongshan Station, Antarctica”); press Enter or leave the field to apply;
+- A custom location takes precedence over administrative and special choices and is written directly into `latest_reminder`;
+- Special locations: Space Station (Satellite / Station), Moon (Near Side / Far Side) and Mars (Spacetime Management Center);
+- Special locations override the administrative selection; custom and special locations only affect `latest_reminder`, not weather, web search or server-side region detection.
+
+### 3.20 Search poisoning
+
+Settings → Search poisoning. This group exposes every search input the client can control:
+
+| Capability | Behaviour |
+| --- | --- |
+| Current time | A `datetime-local` value injected as the model’s date and weekday; empty uses the real time |
+| Knowledge cutoff | Declares the model database / training-data cutoff; empty means no declaration |
+| Search takeover | With custom results, `deepseek_web_search` is not declared and the model only sees the filtered local results; turn it off to keep real search |
+| Replacement | Keyword or regex replacement by URL / title / snippet / all fields; regex supports `$1` groups |
+| Blacklist | Matching results are removed from the UI, exports and model context; forces takeover |
+| Forced results | Custom results are injected and shown as search results regardless of real search hits |
+| Whitelist | Only custom results matching the whitelist are returned; all server results are withheld |
+
+- The engine lives in [`src/services/searchPoison.ts`](src/services/searchPoison.ts): replacement, blacklist and whitelist run before injection; at most 50 rules and 20 custom results;
+- Custom results go into `system`, so long snippets increase input tokens; each snippet is capped at 4000 characters;
+- Takeover mode: `tools` only keeps `deepseek_read_url`, `system` gains a `[LOCAL SEARCH LAYER]` block, and a “poisoned search” step is added to the reply timeline; the bottom web summary opens it;
+- Non-takeover mode: real server search stays; result blocks are replaced / filtered as they reach the client and citation markers follow, but results already consumed by the server cannot be retracted;
+- The custom time goes into the `latest_reminder` date, weekday and location; the knowledge cutoff and search results go into `system`; UI time, billing, weather and geolocation stay unchanged;
+- Compatible with anti-retraction and stream output: only request context and result display change; refusal handling is untouched, and with streaming off the poisoned step appears once at completion;
+- Everything is stored under `chat-demo:search-poison` and reset by Restore default settings; takeover means no real web search, so turn it off (or clear blacklist / whitelist) when real search is needed.
+
+### 3.21 Attachment poisoning
+
+Settings → Attachment poisoning. Off by default; when enabled, attachments are rewritten locally before upload so the model sees your text when it reads them.
+
+| Method | File types | Behaviour |
+| --- | --- | --- |
+| Text body injection | TXT / MD / CSV / code / HTML / JSON | Inserts text with an `[ATTACHMENT NOTE]` marker before or after the body |
+| DOCX body injection | `.docx` | Unzips the file and appends a paragraph to the end of `word/document.xml` |
+| Image text overlay | PNG / JPG / WebP / GIF and other raster images | Draws a text panel at the top or bottom for vision / OCR |
+| Image metadata (experimental) | JPEG / PNG | Writes a JPEG COM or PNG tEXt comment; some extractors read it |
+| File trailer (experimental) | PDF / unknown binary | Appends text at the end; ZIP-based Office files are skipped |
+| Filename injection | Any format | Puts the first 40 characters into the upload filename; works when the model can see it |
+| Companion text attachment | PDF / Office / any format | Adds a separate `.txt` to the message; most reliable, but uses one attachment slot |
+
+- Methods can be combined; only those that fit the file type are applied, and failures fall back to the original file without blocking the upload;
+- Content is capped at 4000 characters and wrapped in an `[ATTACHMENT NOTE]` marker; text, DOCX and the image panel go before or after the body;
+- The original file stays in IndexedDB and the processed copy is uploaded; re-uploading can apply a new configuration;
+- After a settings change, the next send re-uploads attachments in the input box that still have a local original; attachments already sent are not rewritten, and imported files without a local original stay as-is;
+- Enabling / disabling or toggling the companion attachment immediately re-uploads the originals in the input box; companion text attachments sync when enabled / disabled, and should be re-selected after content changes;
+- Restoring defaults disables and clears the config and removes automatically generated companion attachments from drafts;
+- Image text overlay re-encodes the image: GIF / animations become static and GIF / BMP may become PNG; prefer the companion text attachment for PDF / Office.
+
+### 3.22 Custom chain of thought
+
+**Where:** Settings → **Chain of thought**. Off by default. When enabled, the reasoning steps you write are injected as a separate system block on every request, so the model follows your order instead of a vague “think step by step”.
+
+| Deep thinking | Injected block | Behaviour | Stability |
+| --- | --- | --- | --- |
+| Off (level 0) | `[CUSTOM CHAIN OF THOUGHT]` | The model reasons internally through the steps; an “Injected chain of thought” card appears above the reply, followed by the final answer | Standard |
+| On (levels 1-4) | `[CUSTOM CHAIN OF THOUGHT · EXPERIMENTAL]` | Guidance for server-side reasoning; the server may ignore, adjust or rewrite the steps | Experimental |
+
+- The composer is now two rows: model / auto jailbreak / perturbation on the first, chain of thought / web search / deep thinking on the second; mobile keeps a single horizontal row.
+- The composer **Chain** button is a card, sharing the same config as the settings page: toggle, edit, insert an example, clear, or open the full settings for the system preview.
+- **With deep thinking off, an “Injected chain of thought” card is rendered above the reply** (expanded by default, collapsible). It shows the exact steps written into system for that turn instead of showing only the final answer; it is user-defined input, not server-side thinking.
+- With deep thinking on, the card is not repeated; server-side thinking is shown as usual, and the custom chain remains experimental guidance.
+- Each reply stores a snapshot of the injected chain: continue reuses it, regenerate reads the current settings, so changing settings mid-conversation cannot make one turn inconsistent.
+- The block sits after the Persona / unrestricted rules and before long-term memory and search context. The first request also asks for a title, and still gets the block; otherwise the first reply in a new chat would not use it.
+- The text is capped at 4000 characters and stored locally in `chat-demo:custom-cot` and `chat-demo:custom-cot-enabled`; every request increases input tokens.
+- Turning the switch off keeps the text for later; restoring defaults clears it and disables the feature.
+- Only `system` changes. Streaming / non-streaming, continue, regenerate, title generation, attachments, search poisoning and history import/export stay compatible.
+
+### 3.23 Statistics, charts and context management
+
+**Where:** Settings → **Statistics**, plus the stats dialog in the composer toolbar.
+
+- **Usage ledger** (`usageLedger`): every finished request is written into a day / model bucket with uncached input, cache read, cache write, output, estimated cost, request count and web searches. The ledger keeps the last 400 days in localStorage, never stores message text, and is separate from the today-only daily usage that drives the quota reminders.
+- **Range switch**: today / 7 days / 30 days; missing days are filled with zeros so the chart always has a continuous axis.
+- **KPI band**: total tokens, estimated cost, cache hit rate, requests, days with usage, web searches.
+- **Daily trend bars**: switchable metric — tokens (with cost as the second bar), cost, or request count — one bar pair per day, with a hover tooltip carrying the exact numbers.
+- **Activity heatmap**: the last 8 weeks, one cell per day, four intensity steps relative to the busiest day in the window.
+- **Hourly distribution**: all 24 hours of the range on one axis, so you can see when you actually chat; the note names the busiest hour.
+- **Input composition ring**: uncached input / cached input / cache write / output, each with tokens and share, so it is obvious which part drives the bill.
+- **Per-model split**: requests, tokens and cost for each model seen in the range; unknown ids fall back to Flash prices.
+- **Session ranking**: the busiest sessions in the range by tokens, with cost and request count; **Open** jumps straight into that session (disabled once the session is gone).
+- **Auxiliary usage**: web searches, parsed document pages, TTS characters and ASR seconds — the parts of the bill that token counts do not cover.
+- **Context statistics management**: the current session's context against the model window and the compaction threshold, then a table of tracked sessions with context size, window share and last request time. Clear a single record, clear all records, export the ledger as JSON or CSV, or wipe the ledger entirely.
+- **Ledger v2**: per-day records now also carry an hourly histogram and a per-session breakdown. Older v1 ledgers are read with the missing fields defaulted, so upgrading never needs a migration script; corrupt JSON is treated as an empty ledger instead of crashing the page.
+
+**The composer stats dialog** now also carries the per-session output trend (sparkline plus latest / average / longest), the last-7-days app-wide trend for comparison, the input composition ring, an auxiliary card (searches, fetches, parsed files and pages, TTS characters, ASR seconds), and a pressure gauge with remaining window and compaction threshold; its footer jumps straight into Settings → Statistics.
+
+**API key masking:** the jailbreak lab no longer renders the full key. It shows `sk-****` plus the last four characters, and a “Change in Settings” link that opens Settings → Data, matching how the data section itself masks the saved key.
+
+### 3.24 OpenCode Bridge provider (optional)
 
 Settings → **Data** → **Inference provider** adds a second, opt-in transport:
 
@@ -364,6 +498,7 @@ Bridge mode sends standard Anthropic Messages only: DeepSeek-specific fields (`s
 
 ## 4. Behaviour matrix
 
+
 | Scenario                    | Original                    | This fork, defaults (all switches off)                                               | Unrestricted mode on                                      |
 | --------------------------- | --------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------- |
 | `system` field              | Official identity sentence  | Same                                                                                 | Persona + unrestricted rules block                        |
@@ -376,6 +511,8 @@ Bridge mode sends standard Anthropic Messages only: DeepSeek-specific fields (`s
 | Sampling parameters         | Not sent                    | Adjustable                                                                           | Adjustable                                                |
 | Export of refused reply     | `CONTENT_FILTER` + template | Same (normal finish when content was kept)                                           | Same as default                                           |
 | Other original features     | —                           | Search, attachments, branches, import/export, read-aloud, themes, i18n all preserved | Same                                                      |
+| Web search                  | Server-side                 | Kept by default; search poisoning can take over or rewrite the display                | Same as default                                           |
+| Custom chain of thought     | Not available               | Off by default; injected into system; the “Injected chain of thought” card shows above replies when deep thinking is off | Same as default                                           |
 
 ---
 
@@ -391,6 +528,8 @@ Bridge mode sends standard Anthropic Messages only: DeepSeek-specific fields (`s
 | Model       | Continue refused replies             | off               | `chat-demo:continue-refused`               | Forced on, disabled             |
 | Prompt      | Unrestricted mode                    | off               | `chat-demo:unrestricted`                   | —                               |
 | Prompt      | Custom system prompt                 | empty (assembled) | `chat-demo:system-prompt`                  | Overrides the assembled result  |
+| Chain of thought | Enable custom chain of thought  | off               | `chat-demo:custom-cot-enabled`             | Unaffected                      |
+| Chain of thought | Chain text                      | empty             | `chat-demo:custom-cot`                     | Unaffected                      |
 | Advanced    | System prompt preset                 | `deepseek`        | `chat-demo:prompt-preset`                  | Unaffected                      |
 | Advanced    | Input perturbation                   | off               | `chat-demo:parseltongue`                   | Unaffected                      |
 | Advanced    | Perturbation technique               | `leetspeak`       | `chat-demo:parseltongue-technique`         | Unaffected                      |
@@ -408,8 +547,20 @@ Bridge mode sends standard Anthropic Messages only: DeepSeek-specific fields (`s
 | Lab         | Variant race budget                  | 1 yuan            | `chat-demo:variant-race-budget`            | Unaffected                      |
 | Lab         | Variant race confirm dismissed       | off               | `chat-demo:variant-race-confirm-dismissed` | Unaffected                      |
 | Prompt      | Inject the system prompt every round | off               | `chat-demo:inject-prompt-every-turn`       | Unaffected                      |
+| Prompt      | Disguise historical thinking         | off               | `chat-demo:thinking-as-body`               | Unaffected                      |
+| Model       | Stream output                        | on                | `chat-demo:stream-output`                  | Unaffected                      |
 | Model       | Auto-compress long chats             | off               | `chat-demo:auto-compress`                  | Unaffected                      |
+| Search poison | Enable search poisoning            | off               | `chat-demo:search-poison`                  | Unaffected                      |
+| Attachment poison | Enable attachment poisoning    | off               | `chat-demo:attachment-poison`              | Unaffected                      |
 | Advanced    | Chinese jailbreak prompts            | off               | `chat-demo:translate-jailbreak-zh`         | Unaffected                      |
+| General     | Daily limit alerts                   | off               | `chat-demo:daily-limit-enabled`            | Unaffected                      |
+| General     | Daily token limit                    | 1000000           | `chat-demo:daily-token-limit`              | Unaffected                      |
+| General     | Daily cost limit (yuan)              | 10                | `chat-demo:daily-cost-limit`               | Unaffected                      |
+| Memory      | Long-term memory                     | on                | `chat-demo:saved-memory-enabled`           | Unaffected                      |
+| Memory      | Auto-extract memory                  | off               | `chat-demo:auto-extract-memory`            | Unaffected                      |
+| Memory      | Memory-graph retrieval               | on                | `chat-demo:memory-bank-enabled`            | Unaffected                      |
+| Memory      | Results to inject                    | 4                 | `chat-demo:memory-bank-limit`              | Unaffected                      |
+| Memory      | Vector dimension                     | 256               | `chat-demo:memory-bank-dimension`          | Unaffected                      |
 
 Your individual switch values apply again once unrestricted mode is turned off.
 
@@ -439,6 +590,12 @@ A normal request (all switches at defaults):
 
 (`title` appears only while the conversation has no title yet, `thinking` follows the DeepThink toggle, and `max_tokens` appears only when set.)
 
+With custom chain of thought enabled, `system` gains a `[CUSTOM CHAIN OF THOUGHT]` block between the Persona / unrestricted rules and the memory / search context; with deep thinking on it becomes `[CUSTOM CHAIN OF THOUGHT · EXPERIMENTAL]`. The first request also carries `title`, and still gets the block; every other field and the message structure stay unchanged. With deep thinking off, the client additionally renders an “Injected chain of thought” card above the reply; the card is not part of the request and is not written into `blocks`.
+
+With search poisoning enabled and takeover active, `tools` only keeps `deepseek_read_url`, `system` gains a `[LOCAL SEARCH LAYER]` block, and `latest_reminder` uses the custom date and location; with takeover off or no custom results the real-search request above is unchanged.
+
+Attachment poisoning changes only the uploaded file bytes sent to the Files API, not the request shape; attachments are still referenced by `file_id`.
+
 Unrestricted mode with adjusted parameters (only fields that differ are shown):
 
 ```json
@@ -462,19 +619,37 @@ Only three things differ: `system` is the assembled pipeline, the whole `safety_
 | File                                                                                               | Purpose                                                                                                              |
 | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | [`src/services/chat/systemPrompt.ts`](src/services/chat/systemPrompt.ts)                           | System prompt pipeline: Persona + unrestricted rules block, with custom override                                     |
-| [`src/services/chat/store.ts`](src/services/chat/store.ts)                                         | Request assembly (system / parameters / safety_check / tools), refusal settling, continuation guard                  |
+| [`src/services/chat/customCot.ts`](src/services/chat/customCot.ts)                                 | Custom chain normalization, injection snapshot and system-block generation (direct / experimental wording)           |
+| [`src/components/chatInput/CustomCotPanel.tsx`](src/components/chatInput/CustomCotPanel.tsx)       | Composer Chain card: toggle, edit, example / clear, open settings                                                    |
+| [`src/components/messages/InjectedCot.tsx`](src/components/messages/InjectedCot.tsx)               | Collapsible “Injected chain of thought” card above replies                                                          |
+| [`src/services/chat/usageLedger.ts`](src/services/chat/usageLedger.ts)                             | Day / model usage ledger (400 days) behind the statistics charts                                                    |
+| [`src/components/settings/StatsSettings.tsx`](src/components/settings/StatsSettings.tsx)           | Settings → Statistics: KPI, trend bars, heatmap, composition ring, context management                                |
+| [`src/components/stats/charts.tsx`](src/components/stats/charts.tsx)                               | Hand-rolled SVG/CSS charts: bars, heatmap, ring, sparkline, pressure gauge                                            |
+| [`src/services/api/mask.ts`](src/services/api/mask.ts)                                             | API key masking (`sk-****` + last four) shared by the lab and other read-only displays                                |
+| [`src/services/chat/store.ts`](src/services/chat/store.ts)                                         | Request assembly (system / parameters / safety_check / tools), custom chain injection, refusal settling, continuation guard |
+| [`src/components/chatInput/ChatInput.tsx`](src/components/chatInput/ChatInput.tsx)                 | Composer Chain shortcut, active state and settings entry                                                             |
 | [`src/services/chat/reply.ts`](src/services/chat/reply.ts)                                         | `settleReply` (keep refused content), `hasReplyContent`, `rewriteReplyBlocks` (write edits back), `canContinueReply` |
 | [`src/services/chat/describe.ts`](src/services/chat/describe.ts)                                   | Refusal notices: a hint line when content was kept, the template otherwise                                           |
 | [`src/services/chat/history/toArchive.ts`](src/services/chat/history/toArchive.ts)                 | Export status and template handling for refused replies                                                              |
 | [`src/services/settings.ts`](src/services/settings.ts)                                             | New settings, defaults, and persistence                                                                              |
+| [`src/services/searchPoison.ts`](src/services/searchPoison.ts)                                     | Search-poison engine: replacement / blacklist / whitelist, context injection, result and citation rewriting          |
+| [`src/services/attachmentPoison.ts`](src/services/attachmentPoison.ts)                             | Attachment-poison engine: text / DOCX / image text / metadata / trailer / filename / companion attachment            |
+| [`src/components/settings/AttachmentPoisonSettings.tsx`](src/components/settings/AttachmentPoisonSettings.tsx) | Attachment-poison settings UI and method descriptions                                                              |
+| [`src/components/settings/SearchPoisonSettings.tsx`](src/components/settings/SearchPoisonSettings.tsx) | Search-poison settings UI: time, takeover, rules and result editing                                                  |
+| [`src/services/location.ts`](src/services/location.ts)                                             | Location normalization and custom places                                                                             |
 | [`src/services/api/types.ts`](src/services/api/types.ts)                                           | Request types: `temperature` / `top_p` / `max_tokens` / optional `safety_check`                                      |
-| [`src/components/settings/SettingsDialog.tsx`](src/components/settings/SettingsDialog.tsx)         | Settings page: Model group, Prompt group, switches and preview                                                       |
+| [`src/components/settings/SettingsDialog.tsx`](src/components/settings/SettingsDialog.tsx)         | Settings page: Model / Prompt / Chain of thought groups, switches and preview                                        |
 | [`src/components/settings/ParamControls.tsx`](src/components/settings/ParamControls.tsx)           | Slider + number input control                                                                                        |
 | [`src/services/chat/sessionStats.ts`](src/services/chat/sessionStats.ts)                           | Session aggregates, timings and cost estimate                                                                        |
 | [`src/services/chat/contextUsage.ts`](src/services/chat/contextUsage.ts)                           | Context usage cached per session                                                                                     |
 | [`src/components/chatInput/ThinkingSlider.tsx`](src/components/chatInput/ThinkingSlider.tsx)       | Thinking effort 0–4 track                                                                                            |
 | [`src/components/session/StatsDialog.tsx`](src/components/session/StatsDialog.tsx)                 | Statistics and billing dialog                                                                                        |
 | [`src/services/chat/compression.ts`](src/services/chat/compression.ts)                             | Long-chat compression: structured summary, auto trigger and savings                                                  |
+| [`src/services/chat/savedMemory.ts`](src/services/chat/savedMemory.ts)                             | Long-term memory: CRUD, auto-extraction, system injection                                                            |
+| [`src/services/chat/memoryBank.ts`](src/services/chat/memoryBank.ts)                               | Memory graph: nodes / edges / hashed vectors / weighted search / debug                                               |
+| [`src/services/chat/memoryArchive.ts`](src/services/chat/memoryArchive.ts)                         | Memory archive JSON import/export: merge or replace                                                                  |
+| [`src/services/chat/dailyUsage.ts`](src/services/chat/dailyUsage.ts)                               | Daily token and cost tracking with limit alerts                                                                      |
+| [`src/components/settings/MemorySettings.tsx`](src/components/settings/MemorySettings.tsx)         | Memory settings and search debug                                                                                     |
 | [`src/services/chat/contextPressure.ts`](src/services/chat/contextPressure.ts)                     | Context pressure and compaction reserve (matching DSH)                                                               |
 | [`src/services/chat/feedbackStore.ts`](src/services/chat/feedbackStore.ts)                         | Reply ratings and the AutoTune EMA profile                                                                           |
 | [`src/services/api/models.ts`](src/services/api/models.ts)                                         | Built-in models, cloud `/models` fetch and cache                                                                     |
@@ -488,7 +663,7 @@ Only three things differ: `system` is the assembled pipeline, the whole `safety_
 | [`src/components/lab/VariantView.tsx`](src/components/lab/VariantView.tsx)                         | Variant race UI and start confirmation                                                                               |
 | [`src/components/base/Switch.tsx`](src/components/base/Switch.tsx)                                 | Switch component                                                                                                     |
 | [`src/components/messages/ReplyEditor.tsx`](src/components/messages/ReplyEditor.tsx)               | Reply editor (thinking / body)                                                                                       |
-| [`src/components/messages/AssistantMessage.tsx`](src/components/messages/AssistantMessage.tsx)     | Edit entry point, Continue button, refusal rendering branch                                                          |
+| [`src/components/messages/AssistantMessage.tsx`](src/components/messages/AssistantMessage.tsx)     | Edit entry point, Continue button, injected-chain card and refusal rendering branch                                  |
 | [`deepseekv4.1 and v4.1-1017.md`](<./deepseekv4.1 and v4.1-1017.md>)                               | Unrestricted rules text, inlined at build time                                                                       |
 | [`mcp-server/`](mcp-server/README.md)                                                              | Local EasyJailbreak MCP backend                                                                                      |
 | [`src/components/lab/`](src/components/lab/LabView.tsx)                                            | Jailbreak lab page                                                                                                   |
@@ -499,8 +674,10 @@ Only three things differ: `system` is the assembled pipeline, the whole `safety_
 ## 8. Data, privacy, and network
 
 - API key and settings: browser localStorage (keys listed in section 5).
+- Search-poison settings (time, replacement / filter rules, custom results) live only in localStorage; when enabled they are sent as system context to the API origin you configured.
+- Attachment-poison settings live only in localStorage; original attachments stay on this device, the processed copies are uploaded, and companion text attachments are sent as ordinary files.
 - Conversations and original attachments: IndexedDB, isolated per browser profile and site origin.
-- The only outbound traffic goes to the API origin you configured (default `https://api.deepseek.com`): `/models` for key validation, `/anthropic/v1/messages` for chat, `/anthropic/v1/files` for attachments, and the ASR / TTS endpoints for speech. In OpenCode Bridge mode the page instead sends messages to the local extension over `chrome.runtime` (Chrome) or a content-script relay over `window.postMessage` (Safari); the extension talks to `https://opencode.ai/inference[/go]` and the page never sees the OpenCode key.
+- The only outbound traffic goes to the API origin you configured (default `https://api.deepseek.com`): `/models` for key validation, `/anthropic/v1/messages` for chat, `/anthropic/v1/files` for attachments, and the ASR / TTS endpoints for speech.
 - No analytics, no telemetry, no third-party scripts, no relay server.
 - History import/export uses ZIP archives; exports contain conversations and locally available image originals, but no API keys or settings. See the [history archive documentation](src/services/chat/history/README.md) for the format and retention rules.
 
@@ -538,7 +715,27 @@ pnpm build      # output in dist/
 | `pnpm lint`   | Lint with oxlint             |
 | `pnpm format` | Format with oxfmt            |
 
-The API origin is set in [`rspack.config.ts`](rspack.config.ts) via `createConfig({ apiOrigin })`; it defaults to `https://api.deepseek.com`. OpenCode Bridge mode does not use this origin: the extension chooses the OpenCode base URL (Console or Go) in its own options page.
+The API origin is set in [`rspack.config.ts`](rspack.config.ts) via `createConfig({ apiOrigin })`; it defaults to `https://api.deepseek.com`.
+
+### 9.1 Android APK
+
+A native WebView shell is included; the built artifact is `android/deepseek-unrestricted-2.6.4.apk`:
+
+- The app starts a local static server on `http://127.0.0.1:18765` and loads `assets/public`, giving localStorage / IndexedDB / fetch a stable secure origin;
+- File selection, microphone permission, the back key and external links are wired up;
+- Building requires Android SDK 34, build-tools 34.0.0 and JDK 17 (JDK 27 crashes d8). A one-click script at the repo root reads the `package.json` version (currently 2.6.4 / 264), builds the web app and the signed APK:
+  ```sh
+  KS_PASS=... ./构建APK.sh
+  ```
+  The manual path still works:
+  ```sh
+  export ANDROID_HOME=$HOME/android-sdk
+  export JAVA_HOME=/path/to/jdk-17
+  pnpm build
+  KS_PASS=... KEY_PASS=... ./android/build-apk.sh
+  ```
+- The APK is signed with `xiaohuangbo.jks`, alias `xiaohuangbo`, versionCode 264;
+- **The Python backend is not executed inside the APK**: `android/assets/backend` bundles the `mcp-server` and EasyJailbreak sources for reference only; the lab still needs a backend on a PC or server, with its endpoint set to `http://<PC-IP>:8765/mcp`. The phone page origin is `http://127.0.0.1:18765`, which the backend already allows.
 
 ---
 
@@ -559,6 +756,26 @@ The API origin is set in [`rspack.config.ts`](rspack.config.ts) via `createConfi
 13. **Auto jailbreak and variant races cost extra**: every retry and every variant is a real request; variant races are bounded by the budget cap.
 14. **Cloud model lists depend on the API and network**: a failed fetch falls back to the two built-ins; models without a price entry are estimated at Flash rates with a 128k window, and actual capabilities come from the server.
 15. **Switching models does not rewrite old replies**: old replies keep their model and cost; continuations keep that reply's model, and only new replies use the current choice.
+16. **Auto-extraction costs an extra call**: one Flash request per turn; long-term memory and the memory graph stay on this device and are not exported.
+17. **The memory graph uses local hashed vectors**, not semantic embeddings: retrieval is approximate but needs no external service; changing the dimension recomputes vectors.
+18. **Daily usage only counts chat replies**: MCP lab, races and title generation are not included; costs are estimated from current peak/off-peak rates and may differ slightly from the bill.
+19. **Custom and special locations only affect `latest_reminder`**: they do not change weather, web search or server-side regional behaviour.
+20. **Disguised thinking only covers the previous round**: it is sent as ordinary text, so the server no longer treats it as thinking; token usage rises slightly.
+21. **The relation graph draws at most 80 nodes**: extra nodes are still searched, just not drawn; importing in Replace mode overwrites current long-term memories and graph data, so export a backup first.
+22. **The stream-output switch only controls rendering**: when off, replies are still received over SSE and accumulated, just not shown mid-flight; accumulated content is written back when the page is hidden or closed to avoid loss.
+23. **Search poisoning is not a server-side proxy**: server search runs on the server and the client only sees what the model already consumed; with takeover off it can rewrite display only, not retract this turn’s results.
+24. **Takeover depends on custom results**: with no custom results it does not disable server search (unless a blacklist / whitelist is present); with takeover on the model only sees the configured results and real search does not run.
+25. **Custom time / knowledge cutoff are hints**: they only affect `latest_reminder` and the injected context, not the UI, billing, weather or server region detection, and the model may not fully obey the cutoff.
+26. **Attachment poisoning only affects new / re-uploaded attachments**: server files for messages already sent are not rewritten; attachments in the input box with a local original are re-uploaded on the next send with the current config, while imported files without an original stay as-is and sent history is never rewritten.
+27. **Client-side rewriting is best-effort**: image text overlay needs Canvas, while PDF trailers and image metadata are experimental and not guaranteed to be read; prefer the companion text attachment for PDF / Office.
+28. **Companion text attachments use an attachment slot**: none are generated when the limit is full; restoring defaults only clears the local config and generated companions in drafts, not server or historical attachments.
+29. **Image text overlay re-encodes the image**: GIF / animations become static and GIF / BMP may become PNG; the file trailer skips ZIP-based Office files.
+30. **The Python backend does not run inside the APK**: EasyJailbreak / torch cannot be packed into a normal WebView APK; the bundled backend sources are for reference and the lab must connect to an MCP service on a PC or server.
+31. **The APK is a WebView shell**: browser capabilities such as file downloads depend on the system WebView; the local server occupies port 18765 and shows a startup error if the port is taken.
+32. **Custom chain of thought is prompt guidance, not a real reasoning channel**: with deep thinking off, the card above the reply shows the steps you wrote, not live model reasoning; the model may not follow every step; each request increases input tokens and the text is capped at 4000 characters.
+33. **With deep thinking on the custom chain is experimental**: server-side thinking takes priority and may ignore or rewrite the steps, so results are not guaranteed to match direct injection; the injected card is not repeated and server-side thinking is shown instead.
+34. **Custom chain of thought only applies to chat requests**: race, variant race, long-chat compression and memory extraction use their own system prompts and ignore it; the first chat request that also generates a title still receives it.
+35. **The “Injected chain of thought” card is local display data**: history export does not include it, so an imported archive does not show the card; continue reuses the reply’s snapshot and regenerate reads the current settings.
 
 ---
 
@@ -583,4 +800,6 @@ The API origin is set in [`rspack.config.ts`](rspack.config.ts) via `createConfi
 - Thanks to [DeepSeek-Agent](https://github.com/Aoan2011/DeepSeek-Agent) for the reference implementation of the thinking slider, context ring and session statistics.
 - Thanks to [dsh-unrestricted](https://github.com/yexi-by/dsh-unrestricted) for the reference jailbreak prompts and experiment settings.
 - Thanks to [L1B3RT4S](https://github.com/elder-plinius/L1B3RT4S), the upstream source for GODMODE, the Hall of Fame combos and jailbreak prompts.
+- Thanks to [Operit](https://github.com/AAswordman/Operit) for the memory graph, vector dimensions, retrieval weights and search-debug reference.
+- Thanks to [DeepChat](https://github.com/YanJiuWeiYuanHui/DeepChat) for the long-term memory and daily token / cost alert reference.
 - The engines under `src/services/unrestricted/` (input perturbation, AutoTune, STM, race scoring, GODMODE prompt) are ported from [G0DM0D3](https://github.com/elder-plinius/G0DM0D3) and licensed [AGPL-3.0](src/services/unrestricted/COPYING-AGPL-3.0); that directory keeps its own license, separate from the MIT-licensed rest of the repo.

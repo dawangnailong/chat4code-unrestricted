@@ -24,7 +24,7 @@ const CACHE_KEY = 'chat-demo:context-usage'
 /** 只保留最近 200 个会话，避免键无限增长 */
 const MAX_ENTRIES = 200
 
-type Usage = { tokens: number; at: number }
+export type Usage = { tokens: number; at: number }
 type ContextState = { byId: Record<string, Usage> }
 
 const readCache = (): Record<string, Usage> => {
@@ -84,3 +84,26 @@ export const noteContextUsage = (sessionId: string, usage: MessageUsage | undefi
   useContextUsage.setState({ byId })
   writeCache(byId)
 }
+
+/** 清除某个会话的上下文记录；不传 id 时清空全部，供统计页的「上下文统计管理」使用 */
+export const clearContextUsage = (sessionId?: string) => {
+  const current = useContextUsage.getState().byId
+  if (sessionId === undefined) {
+    useContextUsage.setState({ byId: {} })
+    writeCache({})
+    return
+  }
+  if (!Object.hasOwn(current, sessionId)) {
+    return
+  }
+  // 用过滤重建而不是 delete：避免动态键删除把对象打进字典模式
+  const byId = Object.fromEntries(Object.entries(current).filter(([id]) => id !== sessionId))
+  useContextUsage.setState({ byId })
+  writeCache(byId)
+}
+
+/** 上下文记录条目，按最近使用时间从新到旧 */
+export const contextUsageEntries = (byId: Record<string, Usage>) =>
+  Object.entries(byId)
+    .map(([id, usage]) => ({ id, ...usage }))
+    .sort((a, b) => b.at - a.at)

@@ -245,3 +245,167 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 输出趋势：迷你折线 + 右侧三个数字 */
+.trendRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+}
+
+.trendSpark {
+  flex: 1;
+  min-width: 140px;
+  height: 52px;
+}
+
+.trendStats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 输入构成：环形 + 图例 */
+.compositionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.compositionLegend {
+  display: flex;
+  flex: 1;
+  min-width: 180px;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compositionItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.compositionLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compositionValue {
+  flex-shrink: 0;
+  color: var(--dsw-alias-label-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.swatch {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background-color: var(--dsw-alias-brand-primary);
+
+  &[data-index='2'] {
+    background-color: #22b8a0;
+  }
+
+  &[data-index='3'] {
+    background-color: #f2a33c;
+  }
+
+  &[data-index='4'] {
+    background-color: #8b5cf6;
+  }
+
+  &[data-index='5'] {
+    background-color: #64748b;
+  }
+}
+
+/* 上下文：压力表 + 右侧数字 */
+.contextRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.contextStats {
+  display: flex;
+  flex: 1;
+  min-width: 190px;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contextLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.contextLabel {
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.contextValue {
+  color: var(--dsw-alias-label-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.empty {
+  padding: 12px 0;
+  color: var(--dsw-alias-label-caption);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* 底部：说明 + 跳转统计设置 */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.footerNote {
+  flex: 1;
+  min-width: 180px;
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.footerButton {
+  flex-shrink: 0;
+}

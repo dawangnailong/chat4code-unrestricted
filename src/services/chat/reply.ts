@@ -7,6 +7,7 @@ import type {
   TextBlockParam,
 } from '../api/types.js'
 import { translate } from '../../i18n/index.js'
+import { isPoisonToolId } from '../searchPoison.js'
 import type {
   AssistantMessage,
   FileAttachment,
@@ -281,8 +282,8 @@ export const canContinueReply = (reply: AssistantMessage, allowRefused = false):
     reply.stopReason === 'tool_use' ||
     reply.blocks.some(
       (block) =>
-        block.type === 'server_tool_use' ||
-        block.type === 'web_search_tool_result' ||
+        (block.type === 'server_tool_use' && !isPoisonToolId(block.id)) ||
+        (block.type === 'web_search_tool_result' && !isPoisonToolId(block.tool_use_id)) ||
         block.type === 'web_fetch_tool_result' ||
         (block.type === 'text' && block.isTemplate)
     )
@@ -329,7 +330,8 @@ const toUserParam = ({ content, files }: UserMessage): MessageParam => {
 const toAssistantParam = (
   { blocks }: AssistantMessage,
   prefix = false,
-  thinking = false
+  thinking = false,
+  disguiseThinking = false
 ): Extract<MessageParam, { role: 'assistant' }> => {
   const content: AssistantBlockParam[] = []
   // 成功阅读的网页靠签名恢复正文；缺少有效签名时，调用与结果都不回传。
@@ -348,6 +350,17 @@ const toAssistantParam = (
   for (const block of blocks) {
     // 空思考不改变续写位置，也不应把两段正文隔开，导致后端额外插入空行。
     if (prefix && block.type === 'thinking' && !block.thinking.trim()) {
+      continue
+    }
+    // 历史 thinking 默认被服务端丢弃；开启开关后把它并入助手正文，随历史一起下发。
+    // 只在最后一条历史回复上传入 disguiseThinking，避免整段历史重复放大 token。
+    if (!prefix && disguiseThinking && block.type === 'thinking' && block.thinking.trim()) {
+      const converted: TextBlockParam = {
+        type: 'text',
+        text: `${translate('thinkingDisguiseHeader')}\n${block.thinking}\n\n`,
+      }
+      content.push(converted)
+      text = converted
       continue
     }
     if (block.type === 'text') {
@@ -412,7 +425,8 @@ export const toRequestMessages = (
   prefix?: AssistantMessage,
   thinking = prefix?.thinking ?? false,
   latestReminder?: string,
-  compression?: SessionCompression
+  compression?: SessionCompression,
+  disguiseThinking = false
 ): MessageParam[] => {
   const messages: MessageParam[] = []
   let previousReminder: string | undefined
@@ -436,14 +450,18 @@ export const toRequestMessages = (
       })
     }
   }
-  for (const [user, reply] of rounds) {
+  const lastRound = rounds.length - 1
+  rounds.forEach(([user, reply], index) => {
     // 历史提问没有文字、附件也都没有 serverId 时，提问为空，连同回答一起省略。
     if (!user.content && toFileBlocks(user.files).length === 0) {
-      continue
+      return
     }
     appendReminder(reply.latestReminder)
-    messages.push(toUserParam(user), toAssistantParam(reply))
-  }
+    messages.push(
+      toUserParam(user),
+      toAssistantParam(reply, false, thinking, disguiseThinking && index === lastRound)
+    )
+  })
   appendReminder(latestReminder)
   messages.push(toUserParam(question))
   if (prefix?.prefix) {

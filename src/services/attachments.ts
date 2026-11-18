@@ -2,6 +2,11 @@ import { create } from 'zustand'
 import type { LinkedMessage, TranslationMessage } from '../i18n/index.js'
 import { ApiError, uploadFile } from './api/client.js'
 import { isBridgeMode } from './api/provider.js'
+import {
+  applyAttachmentPoison,
+  attachmentPoisonSignature,
+  type AttachmentPoisonConfig,
+} from './attachmentPoison.js'
 import { classifyApiError, getUploadErrorInfo, isRetryableApiError } from './api/errors.js'
 import type { FilePurpose } from './api/types.js'
 import { ACCEPT_FILE_EXTS } from './uploadExts.js'
@@ -174,7 +179,7 @@ const enqueueUpload = (
  */
 export type UploadTask =
   | { status: 'uploading' }
-  | { status: 'done'; serverId: string }
+  | { status: 'done'; serverId: string; poison: string }
   | { status: 'error'; error: TranslationMessage; retryable: boolean }
 
 type UploadState = { tasks: Record<string, UploadTask> }
@@ -196,7 +201,8 @@ export const uploadAttachment = (
   id: string,
   blob: Blob,
   name: string,
-  isImage: boolean
+  isImage: boolean,
+  options?: { skipPoison?: boolean }
 ): Promise<string> => {
   if (isBridgeMode()) {
     // OpenCode Bridge 不提供 DeepSeek Files API；附件上传在 bridge 模式禁用
@@ -208,9 +214,24 @@ export const uploadAttachment = (
   }
   const controller = new AbortController()
   setTask(id, { status: 'uploading' })
-  const promise = enqueueUpload(apiKey, blob, name, isImage, controller.signal)
+  const config: AttachmentPoisonConfig = useSettings.getState().attachmentPoison
+  const poison = options?.skipPoison ? 'skip' : attachmentPoisonSignature(config)
+  const promise = (async () => {
+    let prepared = blob
+    let uploadName = name
+    if (!options?.skipPoison) {
+      try {
+        const result = await applyAttachmentPoison(blob, name, isImage, config)
+        prepared = result.blob
+        uploadName = result.name
+      } catch {
+        // 投毒失败不阻断上传，回退为原文件
+      }
+    }
+    return enqueueUpload(apiKey, prepared, uploadName, isImage, controller.signal)
+  })()
     .then((serverId) => {
-      setTask(id, { status: 'done', serverId })
+      setTask(id, { status: 'done', serverId, poison })
       return serverId
     })
     .catch((error: unknown) => {
@@ -239,6 +260,29 @@ export const uploadAttachment = (
 export const cancelUpload = (id: string) => {
   pending.get(id)?.controller.abort()
   setTask(id, null)
+}
+
+/** 中止旧任务并按当前设置重新上传；用于启用/关闭附件投毒后刷新草稿附件 */
+export const restartUpload = (
+  apiKey: string,
+  id: string,
+  blob: Blob,
+  name: string,
+  isImage: boolean,
+  options?: { skipPoison?: boolean }
+) => {
+  const current = pending.get(id)
+  const start = () => {
+    if (!pending.has(id)) {
+      void uploadAttachment(apiKey, id, blob, name, isImage, options).catch(() => {})
+    }
+  }
+  if (!current) {
+    start()
+    return
+  }
+  current.controller.abort()
+  void current.promise.catch(() => {}).finally(start)
 }
 
 /** 各扩展名对应的 MIME：部分系统（如 Windows）给不出 file.type，按扩展名补齐 */

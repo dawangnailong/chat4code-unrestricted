@@ -1,0 +1,70 @@
+/* 已注入思维链卡片：与模型返回的 thinking 区分开，默认展开 */
+.box {
+  margin: 0 0 10px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  background-color: var(--dsw-alias-bg-skeleton);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--ds-transition-duration) var(--ds-ease-in-out);
+
+  &:hover {
+    background-color: var(--dsw-alias-interactive-bg-hover);
+  }
+}
+
+.icon {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--dsw-alias-brand-primary);
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.badge {
+  padding: 0 6px;
+  border-radius: 6px;
+  background-color: var(--dsw-alias-button-ghost-active-fill);
+  color: var(--dsw-alias-brand-text);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.chevron {
+  display: flex;
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.body {
+  max-height: 240px;
+  margin: 0;
+  padding: 0 12px 10px 32px;
+  overflow-y: auto;
+  color: var(--dsw-alias-label-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 21px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

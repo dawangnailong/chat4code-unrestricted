@@ -1,4 +1,4 @@
-import { getRegionName, provinces, type UserLocation } from '../location.js'
+import { getRegionName, provinces, specialPlaceName, type UserLocation } from '../location.js'
 import type { Locale } from '../settings.js'
 import { formatDate } from '../../utils/format.js'
 import { translate } from '../../i18n/index.js'
@@ -6,6 +6,12 @@ import { translate } from '../../i18n/index.js'
 const locationName = (location: UserLocation | null, locale: Locale): string => {
   if (!location) {
     return ''
+  }
+  if (location.custom) {
+    return location.custom
+  }
+  if (location.place) {
+    return specialPlaceName(location.place, locale)
   }
   if (location.region === 'CN' && locale === 'zh-CN') {
     const province = provinces.find((item) => item.code === location.province)

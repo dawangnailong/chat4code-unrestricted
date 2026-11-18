@@ -13,6 +13,8 @@ import { applyParseltongue } from '../../services/unrestricted/parseltongue.js'
 import { RaceView } from './RaceView.js'
 import { readAttackFile } from '../../services/lab/ioValidation.js'
 import { modelLabel } from '../../services/api/models.js'
+import { NO_API_KEY, maskApiKey } from '../../services/api/mask.js'
+import { openSettings } from '../settings/settingsDialogState.js'
 import { VariantView } from './VariantView.js'
 import styles from './LabView.module.css'
 
@@ -392,6 +394,8 @@ export const LabView = () => {
         </button>
       </div>
 
+      {tab !== 'attack' ? <div className={styles.directNote}>{t('labDirectApiNote')}</div> : null}
+
       {error && tab === 'attack' ? <div className={styles.error}>{error}</div> : null}
 
       {tab === 'race' ? (
@@ -490,12 +494,18 @@ export const LabView = () => {
 
             <div className={styles.field}>
               <span className={styles.label}>{t('labApiKey')}</span>
-              <input
-                className={styles.input}
-                value={apiKey}
-                readOnly
-                placeholder={t('labApiKeyPlaceholder')}
-              />
+              {/* 只读展示一律脱敏，避免把完整密钥留在页面上 */}
+              <div className={styles.keyRow}>
+                <code className={styles.keyMask}>{apiKey ? maskApiKey(apiKey) : NO_API_KEY}</code>
+                <button
+                  type="button"
+                  className={styles.keyLink}
+                  onClick={() => openSettings('data')}
+                >
+                  {t('labApiKeyManage')}
+                </button>
+              </div>
+              <span className={styles.hint}>{t('labApiKeyHint')}</span>
             </div>
 
             <div className={styles.field}>

@@ -8,12 +8,26 @@ import type { SessionCompression } from './types.js'
 import { extractFileIds, getFileErrorCode, isRetryableApiError } from '../api/errors.js'
 import { cancelUpload, describeUploadError, uploadAttachment, useUploads } from '../attachments.js'
 import { reasoningEffortValue, thinkingBudget, useSettings } from '../settings.js'
+import { attachmentPoisonSignature } from '../attachmentPoison.js'
+import {
+  attachPoisonResults,
+  formatSearchPoisonContext,
+  parsePoisonNow,
+  poisonStreamEvent,
+  sanitizePoisonedReply,
+  shouldTakeoverSearch,
+} from '../searchPoison.js'
 import { composeSystemPrompt } from './systemPrompt.js'
+import { customCotSnapshot, formatCustomCotContext } from './customCot.js'
 import { noteContextUsage } from './contextUsage.js'
 import { noteAutoTune, useFeedback } from './feedbackStore.js'
 import { beginLiveRun, finishLiveRun, noteDelta, noteUsage } from './liveStats.js'
-import { noteRunTiming } from './sessionStats.js'
+import { estimatePages, noteRunTiming } from './sessionStats.js'
 import { autoCompressNeeded, compressSession } from './compression.js'
+import { extractMemoriesFromTurn, formatSavedMemories } from './savedMemory.js'
+import { formatMemoryBankContext } from './memoryBank.js'
+import { noteDailyUsage } from './dailyUsage.js'
+import { noteLedgerUsage } from './usageLedger.js'
 import { contextWindowFor, useContextUsage } from './contextUsage.js'
 import { showToast } from '../../components/base/toastState.js'
 import { computeAutoTuneParams } from '../unrestricted/autotune.js'
@@ -53,6 +67,15 @@ import {
 
 /** deepseek-flash 同时支持深度思考与图片输入 */
 const MODEL: ChatModel = 'deepseek-flash'
+
+/** 文档解析计费按页算，客户端拿不到页数，这里与会话统计用同一套体积估算 */
+const PARSE_EXTS = new Set(['pdf', 'doc', 'docx', 'ppt', 'pptx'])
+const parsedPages = (files: { name: string; size: number }[]): number =>
+  files.reduce((sum, file) => {
+    const dot = file.name.lastIndexOf('.')
+    const ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : ''
+    return PARSE_EXTS.has(ext) ? sum + estimatePages(file.size) : sum
+  }, 0)
 
 /**
  * 自动越狱的临时状态：
@@ -299,13 +322,15 @@ export const bindChatPersistence = () => {
 
 /** 按当前开关创建回复：深度思考对应 thinking，智能搜索控制 deepseek_web_search。 */
 const createReply = (): AssistantMessage => {
-  const { thinking, search, model } = useSettings.getState()
+  const { thinking, search, model, customCotEnabled, customCot } = useSettings.getState()
   return {
     id: createId(),
     role: 'assistant',
     createdAt: Date.now(),
     model,
     thinking,
+    // 快照本轮注入的思维链，之后续写 / 展示都以它为准，不受设置改动影响
+    customCot: customCotSnapshot(customCotEnabled, customCot),
     search,
     prefix: true,
     status: 'pending',
@@ -815,13 +840,15 @@ export const sendMessage = (targetSessionId: string | null) => {
     id: createId(),
     role: 'user',
     content,
-    files: files.map(({ id, serverId, name, size, isImage, mimeType }) => ({
+    files: files.map(({ id, serverId, name, size, isImage, mimeType, poison, generated }) => ({
       id,
       serverId,
       name,
       size,
       isImage,
       mimeType,
+      ...(poison !== undefined ? { poison } : {}),
+      ...(generated ? { generated: true } : {}),
     })),
     createdAt: now,
   }
@@ -997,12 +1024,14 @@ export const continueReply = (sessionId: string, messageId: string) => {
   ) {
     return
   }
-  const { thinking, search } = useSettings.getState()
+  const { thinking, search, customCotEnabled, customCot } = useSettings.getState()
   const reply: AssistantMessage = {
     ...previous,
     // 未记录请求配置的回复，续写时使用默认模型和当前开关。
     model: previous.model ?? MODEL,
     thinking: previous.thinking ?? thinking,
+    // 续写沿用原回复注入过的思维链；旧回复没有快照时才用当前设置。
+    customCot: previous.customCot ?? customCotSnapshot(customCotEnabled, customCot),
     search: previous.search ?? search,
     status: 'pending',
     stopReason: undefined,
@@ -1037,7 +1066,13 @@ export const retryUpload = (sessionId: string, messageId: string) => {
   ) {
     return
   }
-  const reply: AssistantMessage = { ...previous, status: 'pending', error: undefined }
+  const { customCotEnabled, customCot } = useSettings.getState()
+  const reply: AssistantMessage = {
+    ...previous,
+    status: 'pending',
+    error: undefined,
+    customCot: previous.customCot ?? customCotSnapshot(customCotEnabled, customCot),
+  }
   updateReply(sessionId, reply)
   persist(sessionId)
   void streamReply(sessionId, reply, { history: path.slice(0, index - 1), question })
@@ -1045,20 +1080,25 @@ export const retryUpload = (sessionId: string, messageId: string) => {
 
 type Request = { history: Message[]; question: UserMessage; prefix?: AssistantMessage }
 
-/** 把补传得到的 serverId 写回会话里所有引用同一附件的消息（编辑、重新生成会共用附件） */
-const saveServerIds = (sessionId: string, serverIds: Map<string, string>) => {
-  if (serverIds.size === 0) {
+type UploadedFile = { serverId: string; poison: string }
+
+/** 把补传得到的 serverId 与投毒指纹写回会话里所有引用同一附件的消息（编辑、重新生成会共用附件） */
+const saveServerIds = (sessionId: string, uploads: Map<string, UploadedFile>) => {
+  if (uploads.size === 0) {
     return
   }
   updateSession(sessionId, (session) => ({
     ...session,
     messages: session.messages.map((message) =>
-      message.role === 'user' && message.files.some((file) => serverIds.has(file.id))
+      message.role === 'user' && message.files.some((file) => uploads.has(file.id))
         ? {
             ...message,
-            files: message.files.map((file) =>
-              serverIds.has(file.id) ? { ...file, serverId: serverIds.get(file.id) ?? null } : file
-            ),
+            files: message.files.map((file) => {
+              const uploaded = uploads.get(file.id)
+              return uploaded
+                ? { ...file, serverId: uploaded.serverId, poison: uploaded.poison }
+                : file
+            }),
           }
         : message
     ),
@@ -1067,22 +1107,37 @@ const saveServerIds = (sessionId: string, serverIds: Map<string, string>) => {
 }
 
 /**
- * 附件的服务端 id：已有直接用；正在上传的等待同一任务；否则读取本地原件补传。
- * 本地也没有原件（导入的文档附件只有元数据）时返回 null，该附件只展示、不进入请求。
+ * 附件的服务端 id：已有且投毒指纹匹配时直接用；正在上传的等待同一任务；
+ * 否则读取本地原件按当前投毒配置补传。本地没有原件时保留旧 serverId（只展示旧文件）。
  */
-const ensureServerId = async (apiKey: string, file: FileAttachment): Promise<string | null> => {
-  if (file.serverId) {
-    return file.serverId
+const ensureServerId = async (
+  apiKey: string,
+  file: FileAttachment
+): Promise<UploadedFile | null> => {
+  const signature = attachmentPoisonSignature(useSettings.getState().attachmentPoison)
+  if (file.serverId && (file.poison === signature || file.poison === 'skip')) {
+    return { serverId: file.serverId, poison: file.poison }
+  }
+  // 旧版本/导入附件没有指纹：关闭投毒时直接复用；开启时尝试用本地原件重新上传
+  if (file.serverId && file.poison === undefined && signature === 'off') {
+    return { serverId: file.serverId, poison: 'off' }
   }
   const task = useUploads.getState().tasks[file.id]
-  if (task?.status === 'done') {
-    return task.serverId
+  if (task?.status === 'done' && (task.poison === signature || task.poison === 'skip')) {
+    return { serverId: task.serverId, poison: task.poison }
   }
   const blob = await db.loadFile(file.id)
   if (!blob) {
-    return null
+    return file.serverId ? { serverId: file.serverId, poison: file.poison ?? 'off' } : null
   }
-  return uploadAttachment(apiKey, file.id, blob, file.name, file.isImage)
+  const serverId = await uploadAttachment(apiKey, file.id, blob, file.name, file.isImage, {
+    skipPoison: file.poison === 'skip',
+  })
+  const uploaded = useUploads.getState().tasks[file.id]
+  return {
+    serverId,
+    poison: uploaded?.status === 'done' ? uploaded.poison : signature,
+  }
 }
 
 /** 用会话里的最新消息替换请求快照：重传前会重置附件的 serverId，快照必须跟着更新 */
@@ -1117,16 +1172,16 @@ const prepareFiles = async (sessionId: string, request: Request, signal: AbortSi
     return { history: request.history, question: request.question, prefix: request.prefix }
   }
   const apiKey = useSettings.getState().apiKey ?? ''
-  const serverIds = new Map<string, string>()
+  const serverIds = new Map<string, UploadedFile>()
   // 停止生成立即生效；上传本身不取消（输入框与其他消息可能共用同一任务），完成后照常写回 serverId
   const aborted = new Promise<never>((_, reject) => {
     signal.addEventListener('abort', () => reject(signal.reason), { once: true })
   })
   const uploads = Promise.allSettled(
     request.question.files.map(async (file) => {
-      const serverId = await ensureServerId(apiKey, file)
-      if (serverId) {
-        serverIds.set(file.id, serverId)
+      const uploaded = await ensureServerId(apiKey, file)
+      if (uploaded) {
+        serverIds.set(file.id, uploaded)
       }
     })
   )
@@ -1152,10 +1207,10 @@ const prepareFiles = async (sessionId: string, request: Request, signal: AbortSi
   for (const file of pending.values()) {
     signal.throwIfAborted()
     try {
-      const serverId = await Promise.race([ensureServerId(apiKey, file), aborted])
-      if (serverId) {
-        serverIds.set(file.id, serverId)
-        saveServerIds(sessionId, new Map([[file.id, serverId]]))
+      const uploaded = await Promise.race([ensureServerId(apiKey, file), aborted])
+      if (uploaded) {
+        serverIds.set(file.id, uploaded)
+        saveServerIds(sessionId, new Map([[file.id, uploaded]]))
       }
     } catch {
       signal.throwIfAborted()
@@ -1307,18 +1362,25 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
   }
   set((state) => ({ streaming: { ...state.streaming, [sessionId]: controller } }))
   let reply = initial
+  // 本轮是否逐字渲染；关闭时只累积到结束，避免中间态暴露
+  const streamOutput = useSettings.getState().streamOutput
+  // 搜索投毒在请求开始时取快照，生成过程中修改设置不会让同一轮上下文前后不一致
+  const poisonConfig = useSettings.getState().searchPoison
   let frame = 0
   // 首 token 时间与整轮耗时用于会话统计；服务端拒绝思考强度时退回普通思考请求
   const runStartedAt = Date.now()
   let firstTokenAt: number | null = null
   let fallbackNoReasoning = false
   beginLiveRun(sessionId, initial.model ?? MODEL)
-  const flush = () => {
+  const flush = (force = false) => {
     cancelAnimationFrame(frame)
     frame = 0
-    updateReply(sessionId, reply)
+    // 非流式模式不展示中间态；页面隐藏/关闭时仍强制写回，避免丢内容
+    if (streamOutput || force) {
+      updateReply(sessionId, reply)
+    }
   }
-  streamFlushes.set(sessionId, flush)
+  streamFlushes.set(sessionId, () => flush(true))
 
   try {
     for (let attempt = 0; ; attempt += 1) {
@@ -1331,7 +1393,10 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
         // 附件就绪后获取本轮信息；续写沿用原回答快照，重新生成的快照独立保存。
         const latestReminder = prepared.prefix
           ? prepared.prefix.latestReminder
-          : createLatestReminder(useSettings.getState())
+          : createLatestReminder(
+              useSettings.getState(),
+              poisonConfig.enabled ? (parsePoisonNow(poisonConfig.now) ?? new Date()) : new Date()
+            )
         reply = { ...reply, latestReminder }
         updateReply(sessionId, reply)
         persist(sessionId)
@@ -1350,17 +1415,60 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
           autoJailbreak,
           injectPromptEveryTurn,
           translateJailbreakZh,
+          thinkingAsBody,
+          savedMemoryEnabled,
+          memoryBankEnabled,
+          memoryBankLimit,
+          memoryBankThreshold,
+          memoryBankDimension,
+          memoryBankKeywordWeight,
+          memoryBankTagWeight,
+          memoryBankVectorWeight,
+          memoryBankEdgeWeight,
         } = useSettings.getState()
         // 组装流水线：自动重试的组合 > 会话级提示词（实验台组合）> 自动越狱的 GODMODE > 默认预设
-        const systemText =
+        const baseSystemText =
           takeAutoRetryOverride() ??
           getSession(sessionId)?.systemPrompt ??
           (autoJailbreak
             ? `${jailbreakSystemPrompt(translateJailbreakZh)}${depthDirective(translateJailbreakZh)}`
             : composeSystemPrompt(unrestricted, systemPrompt, promptPreset, translateJailbreakZh))
+        // 长期记忆与网状记忆库检索结果追加到 system；标题请求不需要
+        const poisonContext = formatSearchPoisonContext(poisonConfig)
+        const memoryContext = titleRequests.has(controller)
+          ? ''
+          : [
+              savedMemoryEnabled ? formatSavedMemories() : '',
+              memoryBankEnabled
+                ? formatMemoryBankContext(prepared.question.content, {
+                    dimension: memoryBankDimension,
+                    limit: memoryBankLimit,
+                    threshold: memoryBankThreshold,
+                    keywordWeight: memoryBankKeywordWeight,
+                    tagWeight: memoryBankTagWeight,
+                    vectorWeight: memoryBankVectorWeight,
+                    edgeWeight: memoryBankEdgeWeight,
+                  })
+                : '',
+            ]
+              .filter(Boolean)
+              .join('\n\n')
+        const systemText = [
+          baseSystemText,
+          // 自定义思维链放在角色 / 破限规则之后、记忆与搜索上下文之前；
+          // 首轮同时携带标题生成请求，也必须带上，否则新会话的第一条回复不会生效。
+          // 使用回复创建时的快照，续写 / 重新生成不会因中途改设置而前后不一致。
+          initial.customCot
+            ? formatCustomCotContext(initial.customCot, initial.thinking ?? false)
+            : '',
+          memoryContext,
+          poisonContext,
+        ]
+          .filter(Boolean)
+          .join('\n\n')
         // 每轮注入：只加在本次请求的 latest_reminder 里，不写入历史快照，避免存储膨胀
         const requestReminder = injectPromptEveryTurn
-          ? `${latestReminder}\n\n${systemText}`
+          ? `${latestReminder}\n\n${baseSystemText}`
           : latestReminder
         const messages = toRequestMessages(
           prepared.history,
@@ -1368,7 +1476,8 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
           prepared.prefix,
           initial.thinking ?? false,
           requestReminder,
-          getSession(sessionId)?.compression
+          getSession(sessionId)?.compression,
+          thinkingAsBody
         )
         const effort = initial.thinking ? reasoningEffort : 0
         // 自动调参只覆盖 temperature 与 top_p：Anthropic 兼容接口不接受其余采样参数。
@@ -1406,14 +1515,16 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
             top_p: autoTuned?.params.top_p ?? topP,
             ...(maxTokens === null ? {} : { max_tokens: maxTokens }),
             safety_check: safetyCheck(unrestricted || autoJailbreak, skipSafetyCheck),
-            tools: serverTools(initial.search ?? false),
+            // 接管搜索时只保留阅读链接工具，模型只能看到本地注入的结果
+            tools: serverTools((initial.search ?? false) && !shouldTakeoverSearch(poisonConfig)),
             ...(titleRequests.has(controller) ? { title: { enabled: true } } : {}),
           },
           controller.signal,
           sessionId
         )
         const blockIndexes = new Map<number, number>()
-        for await (const event of events) {
+        for await (const rawEvent of events) {
+          const event = poisonStreamEvent(rawEvent, poisonConfig)
           receivedContent ||= event.type === 'content_block_start'
           if (event.type === 'message_start') {
             noteContextUsage(sessionId, event.message.usage)
@@ -1442,10 +1553,12 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
             titleRequests.delete(controller)
           }
           reply = applyEvent(reply, event, Date.now(), blockIndexes)
-          if (document.visibilityState === 'hidden') {
-            flush()
-          } else {
-            frame ||= requestAnimationFrame(flush)
+          if (streamOutput) {
+            if (document.visibilityState === 'hidden') {
+              flush()
+            } else {
+              frame ||= requestAnimationFrame(() => flush())
+            }
           }
         }
         reply = settle(reply, 'done', Date.now())
@@ -1524,6 +1637,40 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
       controller.signal.aborted
     )
     finishLiveRun(sessionId)
+    // 每日用量与费用：标题请求不计入用户可见的日用量
+    if (reply.usage && !titleRequests.has(controller)) {
+      noteDailyUsage(reply.model ?? MODEL, reply.usage)
+      // 账本同时留档，统计页的趋势图、热力图、小时分布与会话排行读它
+      noteLedgerUsage(reply.model ?? MODEL, reply.usage, new Date(), {
+        sessionId,
+        pages: parsedPages(request.question.files),
+      })
+    }
+    if (
+      reply.status === 'done' &&
+      reply.stopReason !== 'refusal' &&
+      !titleRequests.has(controller) &&
+      reply.usage &&
+      useSettings.getState().savedMemoryEnabled &&
+      useSettings.getState().autoExtractMemory
+    ) {
+      const memoryKey = useSettings.getState().apiKey ?? ''
+      const userText = request.question.content
+      void extractMemoriesFromTurn({
+        apiKey: memoryKey,
+        userText,
+        assistantText: getReplyAnswerText(reply),
+      }).then((changed) => {
+        if (changed) {
+          showToast({ key: 'memoryUpdatedToast' })
+        }
+      })
+    }
+    // 自定义结果在没有真实搜索步骤时补一个投毒步骤；错误与拒绝轮次不展示
+    if (poisonConfig.enabled && reply.status !== 'error' && reply.stopReason !== 'refusal') {
+      reply = attachPoisonResults(reply, poisonConfig)
+    }
+    reply = sanitizePoisonedReply(reply, poisonConfig)
     titleRequests.delete(controller)
     streamFlushes.delete(sessionId)
     cancelAnimationFrame(frame)

@@ -114,7 +114,8 @@ export const ModelPicker = () => {
         ref={anchorRef}
         type="button"
         className={clsx(styles.trigger, open && styles.open)}
-        aria-label={t('modelSelect')}
+        aria-label={`${t('modelSelect')}: ${modelLabel(model)}`}
+        title={modelLabel(model)}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}

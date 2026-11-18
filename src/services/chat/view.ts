@@ -7,6 +7,7 @@ import type {
   WebSearchToolResultBlock,
 } from '../api/types.js'
 import type { AssistantMessage, ThinkingPart } from './types.js'
+import { isPoisonToolId } from '../searchPoison.js'
 
 /**
  * 由回复的内容块推导界面需要的结构：思考与工具步骤的时间线、带引用角标的正文、可引用的来源列表。
@@ -43,6 +44,8 @@ export type SearchStep = {
   queries: string[]
   results: Source[]
   status: ToolStatus
+  /** 客户端搜索投毒补出的搜索结果步骤 */
+  poisoned?: boolean
 }
 
 export type PageItem = {
@@ -295,6 +298,7 @@ export const buildReplyView = (reply: AssistantMessage, streaming: boolean): Rep
           queries: [...queries],
           results: found,
           status,
+          poisoned: isPoisonToolId(block.id),
         }
         steps.push(step)
         if (!isDeepSearchKind(kind)) {

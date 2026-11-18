@@ -225,16 +225,18 @@ const SearchRow = ({
       <span>{t(isDeepSearchKind(step.kind) ? 'toolSearchNoResult' : 'messageSearchNoResult')}</span>
     )
   } else {
-    const text = t(
-      isDeepSearchKind(step.kind)
-        ? count === 1
-          ? 'toolSearch1Result'
-          : 'toolSearchResults'
-        : count === 1
-          ? 'messageSearchResult'
-          : 'messageSearchResults',
-      { count }
-    )
+    const text = step.poisoned
+      ? t(count === 1 ? 'poisonSearchResultOne' : 'poisonSearchResults', { count })
+      : t(
+          isDeepSearchKind(step.kind)
+            ? count === 1
+              ? 'toolSearch1Result'
+              : 'toolSearchResults'
+            : count === 1
+              ? 'messageSearchResult'
+              : 'messageSearchResults',
+          { count }
+        )
     body = (
       <>
         <span className={styles.summary}>{text}</span>
@@ -253,7 +255,7 @@ const SearchRow = ({
       onClick={clickable ? () => toggleSearchPanel(panelEntry, step.results) : undefined}
     >
       <span className={styles.rowIcon}>
-        {failed ? <IconSearchWarningOutline16 /> : <IconSearchOutline16 />}
+        {failed || step.poisoned ? <IconSearchWarningOutline16 /> : <IconSearchOutline16 />}
       </span>
       {body}
     </div>

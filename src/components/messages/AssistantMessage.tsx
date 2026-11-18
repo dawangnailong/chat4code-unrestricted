@@ -30,6 +30,7 @@ import { SiteThumbnails } from '../search/SiteLogo.js'
 import { toggleSearchPanel, useSearchPanel } from '../search/searchPanelState.js'
 import { ReadAloudButton } from './ReadAloudButton.js'
 import { CopyButton } from './CopyButton.js'
+import { InjectedCot } from './InjectedCot.js'
 import { ReplyArea } from './ReplyArea.js'
 import { ReplyEditor } from './ReplyEditor.js'
 import { useReplyView } from './useReplyView.js'
@@ -125,6 +126,9 @@ export const AssistantMessage = memo(function AssistantMessage({
   }
   return (
     <div className={styles.message}>
+      {message.customCot && message.thinking === false ? (
+        <InjectedCot text={message.customCot} />
+      ) : null}
       {refused ? null : (
         <ReplyArea
           message={message}

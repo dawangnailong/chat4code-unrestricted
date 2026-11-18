@@ -309,6 +309,19 @@
   background-color: var(--dsw-alias-border-l2);
 }
 
+/* 桌面端在扰动后强制换行：思维链 + 智能搜索 + 深度思考占第二排 */
+.toolbarBreak {
+  flex: 0 0 100%;
+  height: 0;
+  margin: 0;
+}
+
+@media not all and (min-width: 768px) {
+  .toolbarBreak {
+    display: none;
+  }
+}
+
 .right {
   display: flex;
   flex-shrink: 0;

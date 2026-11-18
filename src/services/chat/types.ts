@@ -23,6 +23,10 @@ export type FileAttachment = {
   isImage: boolean
   /** 具体 MIME；导入时没有原件或无法识别的为空字符串，不影响图片身份。 */
   mimeType: string
+  /** 上传时使用的附件投毒指纹；off 为干净文件，skip 为伴随文本附件 */
+  poison?: string
+  /** 自动生成的伴随文本附件 */
+  generated?: boolean
 }
 
 /** 本地消息的分支关系；字段缺省时按线性消息列表处理。 */
@@ -79,6 +83,8 @@ export type AssistantMessage = MessageBranch & {
   model: ChatModel | null
   /** 请求时是否开启深度思考 */
   thinking?: boolean
+  /** 本轮请求注入的自定义思维链快照；关闭深度思考时在回复上方展示 */
+  customCot?: string
   /** 请求时是否声明 deepseek_web_search；关闭时仍声明 deepseek_read_url */
   search?: boolean
   /** 本轮请求的系统信息快照；各回答版本独立保存，续写沿用。历史消息中缺省的快照保持为空。 */

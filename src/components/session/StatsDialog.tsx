@@ -19,11 +19,17 @@ import {
   reserveGeometry,
 } from '../../services/chat/contextPressure.js'
 import { useSettings } from '../../services/settings.js'
+import { syncDailyUsageDate, useDailyUsage } from '../../services/chat/dailyUsage.js'
 import { modelLabel } from '../../services/api/models.js'
+import { useMemoryBank, useMemorySearchStats } from '../../services/chat/memoryBank.js'
 import { Button } from '../base/Button.js'
 import { showToast } from '../base/toastState.js'
 import { Modal } from '../base/Modal.js'
 import { Switch } from '../base/Switch.js'
+import { PressureGauge, RingChart, Sparkline } from '../stats/charts.js'
+import { ledgerSeries, ledgerTotals, useLedger } from '../../services/chat/usageLedger.js'
+import { readVoiceUsage } from '../../services/chat/sessionStats.js'
+import { openSettings } from '../settings/settingsDialogState.js'
 import { closeStats, useStatsDialog } from './statsDialogState.js'
 import styles from './StatsDialog.module.css'
 
@@ -69,6 +75,10 @@ const StatsContent = () => {
   const apiKey = useSettings((state) => state.apiKey) ?? ''
   const maxTokens = useSettings((state) => state.maxTokens)
   const model = useSettings((state) => state.model)
+  const memoryDimension = useSettings((state) => state.memoryBankDimension)
+  const memoryNodes = useMemoryBank((state) => state.nodes.length)
+  const memoryEdges = useMemoryBank((state) => state.edges.length)
+  const lastMemorySearch = useMemorySearchStats((state) => state.last)
   const usage = useContextUsage((state) => (activeId ? state.byId[activeId] : undefined))
   // 与输入框圆环同一套压力口径：压缩后按摘要节省量折算
   const contextTokens = effectiveContextTokens(
@@ -82,6 +92,10 @@ const StatsContent = () => {
     () => estimateCost(session, { holiday, voiceDiscount: discount }),
     [session, holiday, discount]
   )
+  const daily = useDailyUsage()
+  useEffect(() => {
+    syncDailyUsageDate()
+  }, [])
   const run = useLiveStats((state) => state.run)
   const active = run?.active ?? false
   // 生成中每秒重渲染一次，让用时、速度、估算是新值
@@ -95,6 +109,36 @@ const StatsContent = () => {
     session?.messages.some(
       (message) => message.role === 'assistant' && message.usage !== undefined
     ) ?? false
+  // 每条回复的输出 token 走势：用来判断这一轮比之前更长还是更短
+  const replyOutputs = useMemo(
+    () =>
+      (session?.messages ?? [])
+        .filter((message) => message.role === 'assistant' && message.usage !== undefined)
+        .map((message) => (message.role === 'assistant' ? (message.usage?.output_tokens ?? 0) : 0)),
+    [session]
+  )
+  // 输入构成：命中缓存的输入最便宜，输出最贵，比例能直接解释费用来源
+  const composition = useMemo(() => {
+    const segments = [
+      { key: 'statsInputUncached', label: t('statsInputUncached'), value: totals.inputUncached },
+      { key: 'statsCacheRead', label: t('statsCacheRead'), value: totals.cacheRead },
+      { key: 'statsCacheWrite', label: t('statsCacheWrite'), value: totals.cacheWrite },
+      { key: 'statsOutput', label: t('statsOutput'), value: totals.outputTokens },
+    ].filter((segment) => segment.value > 0)
+    const total = segments.reduce((sum, segment) => sum + segment.value, 0)
+    return { segments, total }
+  }, [t, totals])
+  const contextPercent = pressurePercent(contextTokens, contextWindow)
+  const contextRemaining = Math.max(0, contextWindow - contextTokens)
+  // 跨会话的最近 7 天用量：给单个会话的数字一个参照
+  const ledgerDays = useLedger((state) => state.days)
+  const week = useMemo(() => ledgerSeries(ledgerDays, 7), [ledgerDays])
+  const weekTotals = useMemo(() => ledgerTotals(week), [week])
+  const weekTokens = useMemo(
+    () => week.map((day) => day.input + day.cacheRead + day.cacheWrite + day.output),
+    [week]
+  )
+  const voice = useMemo(() => readVoiceUsage(session?.id ?? null), [session])
 
   const liveItems: MetricItem[] = liveMetrics
     ? [
@@ -118,6 +162,8 @@ const StatsContent = () => {
 
   const sessionItems: MetricItem[] = [
     { key: 'statsRounds', value: String(totals.rounds) },
+    { key: 'dailyUsageTokens', value: formatTokens(daily.totalTokens) },
+    { key: 'dailyUsageCost', value: formatMoney(daily.cost) },
     { key: 'statsSteps', value: String(totals.steps) },
     { key: 'statsSpeed', value: `${totals.outputSpeed.toFixed(1)} ${t('statsUnitSpeed')}` },
     {
@@ -154,6 +200,22 @@ const StatsContent = () => {
       onClose={closeStats}
       className={styles.dialog}
       mainClassName={styles.main}
+      footer={
+        <div className={styles.footer}>
+          <span className={styles.footerNote}>{t('statsDialogNote')}</span>
+          <Button
+            variant="outlined"
+            size="m"
+            className={styles.footerButton}
+            onClick={() => {
+              closeStats()
+              openSettings('stats')
+            }}
+          >
+            {t('statsOpenStatsSettings')}
+          </Button>
+        </div>
+      }
     >
       {liveItems.length > 0 ? (
         <section className={styles.section}>
@@ -186,12 +248,171 @@ const StatsContent = () => {
       </section>
 
       <section className={styles.section}>
-        <div className={styles.sectionTitle}>{t('compressTitle')}</div>
+        <div className={styles.sectionTitle}>{t('statsTrendSessionTitle')}</div>
+        {replyOutputs.length > 1 ? (
+          <div className={styles.trendRow}>
+            <Sparkline
+              values={replyOutputs}
+              ariaLabel={t('statsTrendSessionTitle')}
+              className={styles.trendSpark}
+            />
+            <div className={styles.trendStats}>
+              <span>
+                {t('statsTrendSessionLatest', {
+                  tokens: formatTokens(replyOutputs.at(-1) ?? 0),
+                })}
+              </span>
+              <span>
+                {t('statsTrendSessionAvg', {
+                  tokens: formatTokens(
+                    Math.round(
+                      replyOutputs.reduce((sum, value) => sum + value, 0) / replyOutputs.length
+                    )
+                  ),
+                })}
+              </span>
+              <span>
+                {t('statsTrendSessionMax', {
+                  tokens: formatTokens(Math.max(...replyOutputs)),
+                })}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.empty}>{t('statsTrendSessionEmpty')}</div>
+        )}
+        <div className={styles.note}>{t('statsTrendSessionHint')}</div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionTitle}>{t('statsCompositionTitle')}</div>
+        {composition.total > 0 ? (
+          <div className={styles.compositionRow}>
+            <RingChart
+              segments={composition.segments.map((segment) => ({
+                key: segment.key,
+                label: segment.label,
+                value: segment.value,
+              }))}
+              centerLabel={t('statsUnitTokens')}
+              centerValue={formatTokens(composition.total)}
+              ariaLabel={t('statsCompositionTitle')}
+            />
+            <ul className={styles.compositionLegend}>
+              {composition.segments.map((segment, index) => (
+                <li key={segment.key} className={styles.compositionItem}>
+                  <span className={styles.swatch} data-index={(index % 5) + 1} aria-hidden />
+                  <span className={styles.compositionLabel}>{segment.label}</span>
+                  <span className={styles.compositionValue}>
+                    {formatTokens(segment.value)} ·{' '}
+                    {((segment.value / composition.total) * 100).toFixed(1)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className={styles.empty}>{t('statsEmpty')}</div>
+        )}
+        <div className={styles.note}>{t('statsCompositionHint')}</div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionTitle}>{t('statsWeekTitle')}</div>
+        {weekTotals.requests > 0 ? (
+          <>
+            <div className={styles.trendRow}>
+              <Sparkline
+                values={weekTokens}
+                ariaLabel={t('statsWeekTitle')}
+                className={styles.trendSpark}
+              />
+              <div className={styles.trendStats}>
+                <span>
+                  {t('statsWeekTokens', {
+                    tokens: formatTokens(
+                      weekTotals.requests > 0
+                        ? weekTokens.reduce((sum, value) => sum + value, 0)
+                        : 0
+                    ),
+                  })}
+                </span>
+                <span>{t('statsWeekCost', { cost: formatMoney(weekTotals.cost) })}</span>
+                <span>{t('statsWeekRequests', { requests: weekTotals.requests })}</span>
+              </div>
+            </div>
+            <div className={styles.note}>{t('statsWeekHint')}</div>
+          </>
+        ) : (
+          <div className={styles.empty}>{t('statsWeekEmpty')}</div>
+        )}
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionTitle}>{t('statsExtrasTitle')}</div>
+        <div className={styles.liveRow}>
+          <div className={styles.liveItem}>
+            <span className={styles.liveLabel}>{t('statsToolSearches')}</span>
+            <span className={styles.liveValue}>{totals.searchCount}</span>
+          </div>
+          <div className={styles.liveItem}>
+            <span className={styles.liveLabel}>{t('statsToolFetches')}</span>
+            <span className={styles.liveValue}>{totals.fetchCount}</span>
+          </div>
+          <div className={styles.liveItem}>
+            <span className={styles.liveLabel}>{t('statsToolFiles')}</span>
+            <span className={styles.liveValue}>
+              {totals.parsedFiles} · {totals.parsedPages}
+            </span>
+          </div>
+          <div className={styles.liveItem}>
+            <span className={styles.liveLabel}>{t('statsExtrasTtsChars')}</span>
+            <span className={styles.liveValue}>{formatTokens(voice.chars)}</span>
+          </div>
+          <div className={styles.liveItem}>
+            <span className={styles.liveLabel}>{t('statsExtrasAsrSeconds')}</span>
+            <span className={styles.liveValue}>{Math.round(voice.seconds)}</span>
+          </div>
+        </div>
+        <div className={styles.note}>{t('statsExtrasDialogHint')}</div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionTitle}>{t('statsContextTitle')}</div>
+        <div className={styles.contextRow}>
+          <PressureGauge
+            percent={contextPercent}
+            label={`${Math.round(contextPercent)}%`}
+            ariaLabel={t('statsContextPressure')}
+          />
+          <div className={styles.contextStats}>
+            <div className={styles.contextLine}>
+              <span className={styles.contextLabel}>{t('statsContextActive')}</span>
+              <span className={styles.contextValue}>
+                {formatTokens(contextTokens)} / {formatTokens(contextWindow)}
+              </span>
+            </div>
+            <div className={styles.contextLine}>
+              <span className={styles.contextLabel}>{t('statsRemainingLabel')}</span>
+              <span className={styles.contextValue}>{formatTokens(contextRemaining)}</span>
+            </div>
+            <div className={styles.contextLine}>
+              <span className={styles.contextLabel}>{t('compressThresholdLabel')}</span>
+              <span className={styles.contextValue}>
+                {formatTokens(reserve?.threshold ?? contextWindow)}
+              </span>
+            </div>
+            <div className={styles.contextLine}>
+              <span className={styles.contextLabel}>{t('statsModelTime')}</span>
+              <span className={styles.contextValue}>{formatSeconds(totals.modelTime)}</span>
+            </div>
+          </div>
+        </div>
         <div className={styles.compressInfo}>
           {t('compressPressureInfo', {
             used: formatTokens(contextTokens),
             threshold: formatTokens(reserve?.threshold ?? 0),
-            percent: Math.round(pressurePercent(contextTokens, contextWindow)),
+            percent: Math.round(contextPercent),
           })}
         </div>
         {session?.compression ? (
@@ -250,6 +471,30 @@ const StatsContent = () => {
               {t('compressClear')}
             </Button>
           ) : null}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionTitle}>{t('memoryStatsTitle')}</div>
+        <div className={styles.liveRow}>
+          <div className={styles.liveItem}>
+            <span className={styles.liveLabel}>{t('memoryStatsNodes')}</span>
+            <span className={styles.liveValue}>{memoryNodes}</span>
+          </div>
+          <div className={styles.liveItem}>
+            <span className={styles.liveLabel}>{t('memoryStatsEdges')}</span>
+            <span className={styles.liveValue}>{memoryEdges}</span>
+          </div>
+          <div className={styles.liveItem}>
+            <span className={styles.liveLabel}>{t('memoryStatsDimension')}</span>
+            <span className={styles.liveValue}>{memoryDimension}</span>
+          </div>
+          <div className={styles.liveItem}>
+            <span className={styles.liveLabel}>{t('memoryStatsLastHits')}</span>
+            <span className={styles.liveValue}>
+              {lastMemorySearch ? lastMemorySearch.passed : t('memoryStatsNoSearch')}
+            </span>
+          </div>
         </div>
       </section>
 

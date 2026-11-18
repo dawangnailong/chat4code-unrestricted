@@ -17,8 +17,10 @@ import {
   getDraft,
   prepareDraftMessage,
   removeDraftAttachment,
+  restartDraftAttachment,
   retryDraftAttachment,
   setDraftText,
+  syncDraftSidecars,
   useDrafts,
 } from '../../services/chat/drafts.js'
 import { stopReadAloud } from '../../services/speech/readAloud.js'
@@ -33,6 +35,7 @@ import { DraftAttachments } from './DraftAttachments.js'
 import { useVoiceInput } from './useVoiceInput.js'
 import { VoiceButton } from './VoiceButton.js'
 import { ParseltongueButton } from './ParseltonguePanel.js'
+import { CustomCotButton } from './CustomCotPanel.js'
 import { ModelPicker } from './ModelPicker.js'
 import { ThinkingSlider } from './ThinkingSlider.js'
 import { ContextRing } from './ContextRing.js'
@@ -60,6 +63,13 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   const search = useSettings((state) => state.search)
   const bridgeMode = useBridgeMode()
   const autoJailbreak = useSettings((state) => state.autoJailbreak)
+  const attachmentPoisonEnabled = useSettings((state) => state.attachmentPoison.enabled)
+  const attachmentPoisonSidecar = useSettings((state) =>
+    state.attachmentPoison.methods.includes('sidecar')
+  )
+  // 只跟随启用状态与伴随附件开关，避免在设置里每敲一个字都重传伴随附件
+  const sidecarMode = `${attachmentPoisonEnabled ? 1 : 0}:${attachmentPoisonSidecar ? 1 : 0}`
+  const lastSidecarMode = useRef(sidecarMode)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -117,6 +127,21 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
 
   // 移动端录音时用频谱替代输入框内容
   const recording = voice.status === 'recording'
+
+  // 附件投毒启用状态或伴随附件开关变化时：同步伴随附件，并按当前配置重新上传原附件
+  useEffect(() => {
+    if (lastSidecarMode.current === sidecarMode) {
+      return
+    }
+    lastSidecarMode.current = sidecarMode
+    const apiKey = useSettings.getState().apiKey ?? ''
+    syncDraftSidecars(sessionId, apiKey)
+    for (const attachment of getDraft(sessionId).attachments) {
+      if (!attachment.generated) {
+        restartDraftAttachment(sessionId, attachment.id, apiKey)
+      }
+    }
+  }, [sessionId, sidecarMode])
 
   // 排队、上传中或上传失败的附件都留在输入框，全部上传成功后才能发送
   const canSend = !importingHistory && !streaming && voice.status === 'idle' && draftReady
@@ -191,7 +216,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
         </div>
       </div>
       <div className={styles.functionRow}>
-        {/* 思考强度 / 智能搜索 / 输入扰动，tooltip 在按钮上方 */}
+        {/* 第一排：模型 / 自动越狱 / 扰动；第二排：思维链 / 智能搜索 / 深度思考 */}
         <div className={styles.toggles}>
           <ModelPicker />
           <span className={styles.toolbarDivider} aria-hidden />
@@ -207,7 +232,21 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
               <span className={styles.toggleLabel}>{t('autoJailbreak')}</span>
             </button>
           </Tooltip>
-          <ThinkingSlider />
+          <Tooltip content={t('parseltongueToggleTooltip')}>
+            <ParseltongueButton
+              text={text}
+              triggerClassName={styles.toggle}
+              selectedClassName={styles.selected}
+              labelClassName={styles.toggleLabel}
+            />
+          </Tooltip>
+          {/* 桌面端在此换行：思维链、智能搜索与深度思考占第二排；手机端仍是一行横向滚动 */}
+          <span className={styles.toolbarBreak} aria-hidden />
+          <CustomCotButton
+            triggerClassName={styles.toggle}
+            selectedClassName={styles.selected}
+            labelClassName={styles.toggleLabel}
+          />
           {bridgeMode ? null : (
             <Tooltip content={t('deactivatedSearchTooltip')}>
               <button
@@ -222,14 +261,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
               </button>
             </Tooltip>
           )}
-          <Tooltip content={t('parseltongueToggleTooltip')}>
-            <ParseltongueButton
-              text={text}
-              triggerClassName={styles.toggle}
-              selectedClassName={styles.selected}
-              labelClassName={styles.toggleLabel}
-            />
-          </Tooltip>
+          <ThinkingSlider />
         </div>
         <div className={styles.right}>
           <ContextRing sessionId={sessionId} streaming={streaming} onOpen={openStats} />

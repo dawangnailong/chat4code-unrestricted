@@ -2,6 +2,16 @@ import { create } from 'zustand'
 import type { TtsVoice } from './api/speech.js'
 import type { ApiProvider, ChatModel } from './api/types.js'
 import { normalizeLocation, type UserLocation } from './location.js'
+import {
+  defaultAttachmentPoison,
+  normalizeAttachmentPoison,
+  type AttachmentPoisonConfig,
+} from './attachmentPoison.js'
+import {
+  defaultSearchPoison,
+  normalizeSearchPoison,
+  type SearchPoisonConfig,
+} from './searchPoison.js'
 import type { AutoTuneStrategy } from './unrestricted/autotune.js'
 import type { ObfuscationTechnique } from './unrestricted/parseltongue.js'
 import type { PromptPreset } from './unrestricted/prompts.js'
@@ -21,6 +31,8 @@ type Settings = {
   bridgeExtensionId: string
   /** 当前模型：内置 flash / v4-pro，或云端列表里的任意 id */
   model: ChatModel
+  /** 是否逐字渲染回复；关闭后等完整回复生成完再显示 */
+  streamOutput: boolean
   locale: Locale
   themePreference: ThemePreference
   location: UserLocation | null
@@ -28,14 +40,44 @@ type Settings = {
   thinking: boolean
   /** 思考强度 0-4；0 为关闭，与 thinking 保持同步 */
   reasoningEffort: number
+  /** 自定义思维链：预先写好推理步骤，请求前注入 system */
+  customCotEnabled: boolean
+  customCot: string
   /** 自动越狱：GODMODE 提示词 + 自动扰动 + 被拒绝后自动换组合重试 */
   autoJailbreak: boolean
   /** 每轮把系统提示词静默注入 latest_reminder，防止长对话遗忘设定 */
   injectPromptEveryTurn: boolean
   /** 实验性：把内置越狱提示词换成中文翻译 */
   translateJailbreakZh: boolean
+  /** 把上一轮历史 thinking 伪装成助手正文，避免服务端丢弃 */
+  thinkingAsBody: boolean
   /** 长对话自动压缩 */
   autoCompress: boolean
+  /** 保存的长期记忆是否注入 system */
+  savedMemoryEnabled: boolean
+  /** 每轮结束后自动提炼长期记忆（额外一次模型调用） */
+  autoExtractMemory: boolean
+  /** 网状记忆库是否参与检索 */
+  memoryBankEnabled: boolean
+  /** 注入的记忆条数 */
+  memoryBankLimit: number
+  /** 记忆检索阈值 */
+  memoryBankThreshold: number
+  /** 本地向量维度 */
+  memoryBankDimension: number
+  /** 记忆检索权重 */
+  memoryBankKeywordWeight: number
+  memoryBankTagWeight: number
+  memoryBankVectorWeight: number
+  memoryBankEdgeWeight: number
+  /** 搜索投毒：改写时间、接管搜索并替换/过滤结果 */
+  searchPoison: SearchPoisonConfig
+  /** 附件投毒：上传前往附件里写入文本 */
+  attachmentPoison: AttachmentPoisonConfig
+  /** 每日 Token / 费用提醒 */
+  dailyLimitEnabled: boolean
+  dailyTokenLimit: number
+  dailyCostLimit: number
   /** 变体赛跑的预算上限（元） */
   variantRaceBudget: number
   /** 变体赛跑的开跑确认已永久关闭 */
@@ -87,19 +129,38 @@ const KEYS = {
   apiProvider: 'chat-demo:api-provider',
   bridgeExtensionId: 'chat-demo:bridge-extension-id',
   model: 'chat-demo:model',
+  streamOutput: 'chat-demo:stream-output',
   locale: 'chat-demo:locale',
   location: 'chat-demo:location',
   themePreference: 'chat-demo:theme-preference',
   ttsVoice: 'chat-demo:tts-voice',
   thinking: 'chat-demo:thinking',
   reasoningEffort: 'chat-demo:reasoning-effort',
+  customCotEnabled: 'chat-demo:custom-cot-enabled',
+  customCot: 'chat-demo:custom-cot',
   autoJailbreak: 'chat-demo:auto-jailbreak',
   injectPromptEveryTurn: 'chat-demo:inject-prompt-every-turn',
   translateJailbreakZh: 'chat-demo:translate-jailbreak-zh',
+  thinkingAsBody: 'chat-demo:thinking-as-body',
   autoCompress: 'chat-demo:auto-compress',
+  savedMemoryEnabled: 'chat-demo:saved-memory-enabled',
+  autoExtractMemory: 'chat-demo:auto-extract-memory',
+  memoryBankEnabled: 'chat-demo:memory-bank-enabled',
+  memoryBankLimit: 'chat-demo:memory-bank-limit',
+  memoryBankThreshold: 'chat-demo:memory-bank-threshold',
+  memoryBankDimension: 'chat-demo:memory-bank-dimension',
+  memoryBankKeywordWeight: 'chat-demo:memory-bank-keyword-weight',
+  memoryBankTagWeight: 'chat-demo:memory-bank-tag-weight',
+  memoryBankVectorWeight: 'chat-demo:memory-bank-vector-weight',
+  memoryBankEdgeWeight: 'chat-demo:memory-bank-edge-weight',
+  dailyLimitEnabled: 'chat-demo:daily-limit-enabled',
+  dailyTokenLimit: 'chat-demo:daily-token-limit',
+  dailyCostLimit: 'chat-demo:daily-cost-limit',
   variantRaceBudget: 'chat-demo:variant-race-budget',
   variantRaceConfirmDismissed: 'chat-demo:variant-race-confirm-dismissed',
   search: 'chat-demo:search',
+  searchPoison: 'chat-demo:search-poison',
+  attachmentPoison: 'chat-demo:attachment-poison',
   temperature: 'chat-demo:temperature',
   topP: 'chat-demo:top-p',
   maxTokens: 'chat-demo:max-tokens',
@@ -165,6 +226,10 @@ const initialLocation = (): UserLocation | null => {
     if (!location) {
       return null
     }
+    // 自定义位置与空间站 / 月球 / 火星等特殊位置不受浏览器语言和行政区校验影响
+    if (location.custom || location.place) {
+      return location
+    }
     return isChineseBrowser()
       ? location.region === 'CN' && location.province
         ? location
@@ -186,6 +251,9 @@ const initialTtsVoice = (): TtsVoice => (read(KEYS.ttsVoice) === 'tide' ? 'tide'
 
 /** 思考强度档位：0 关闭，1-4 由弱到强 */
 export const EFFORT_LEVELS = 4
+
+/** 自定义思维链最长字符数；每轮都注入 system，过长会明显增加输入 token */
+export const CUSTOM_COT_MAX_CHARS = 4000
 
 /** 1-4 档对应的协议字段值，0 档不下发 */
 const REASONING_EFFORT = ['low', 'medium', 'high', 'max'] as const
@@ -210,6 +278,12 @@ const initialNumber = (key: string, fallback: number, min: number, max: number):
   return Number.isFinite(value) && value >= min && value <= max ? value : fallback
 }
 
+const MEMORY_DIMENSIONS = [64, 128, 256, 384, 768] as const
+const initialDimension = (): number => {
+  const value = Number(read(KEYS.memoryBankDimension))
+  return MEMORY_DIMENSIONS.includes(value as (typeof MEMORY_DIMENSIONS)[number]) ? value : 256
+}
+
 /** 思考强度：优先读新键，旧数据只有 thinking 开关时按标准档恢复 */
 const initialReasoningEffort = (): number => {
   const raw = Number(read(KEYS.reasoningEffort))
@@ -218,6 +292,9 @@ const initialReasoningEffort = (): number => {
   }
   return read(KEYS.thinking) === 'true' ? 2 : 0
 }
+
+/** 自定义思维链：旧数据没有该键或内容超长时按空 / 上限处理 */
+const initialCustomCot = (): string => (read(KEYS.customCot) ?? '').slice(0, CUSTOM_COT_MAX_CHARS)
 
 /** 附件大小：未设置或不是正整数时为 null（使用内置默认值） */
 const initialAttachmentNumber = (key: string): number | null => {
@@ -248,7 +325,23 @@ const initialSystemPrompt = (): string | null => {
   return saved !== null && saved.trim() !== '' ? saved : null
 }
 
-/** 最大输出 Token：未设置或不是正整数时为 null，表示使用服务端默认值 */
+/** 搜索投毒配置：JSON 解析失败或格式不对时回到默认值 */
+const initialSearchPoison = (): SearchPoisonConfig => {
+  try {
+    return normalizeSearchPoison(JSON.parse(read(KEYS.searchPoison) ?? 'null'))
+  } catch {
+    return defaultSearchPoison()
+  }
+}
+
+const initialAttachmentPoison = (): AttachmentPoisonConfig => {
+  try {
+    return normalizeAttachmentPoison(JSON.parse(read(KEYS.attachmentPoison) ?? 'null'))
+  } catch {
+    return defaultAttachmentPoison()
+  }
+}
+
 const initialMaxTokens = (): number | null => {
   const raw = read(KEYS.maxTokens)
   if (raw === null) {
@@ -307,19 +400,38 @@ export const useSettings = create<Settings>(() => ({
   apiProvider: initialEnum(KEYS.apiProvider, API_PROVIDERS, 'deepseek'),
   bridgeExtensionId: (read(KEYS.bridgeExtensionId) ?? '').trim(),
   model: initialModel(),
+  streamOutput: read(KEYS.streamOutput) !== 'false',
   locale: initialLocale(),
   location: initialLocation(),
   themePreference: initialThemePreference(),
   ttsVoice: initialTtsVoice(),
   thinking: initialReasoningEffort() > 0,
   reasoningEffort: initialReasoningEffort(),
+  customCotEnabled: read(KEYS.customCotEnabled) === 'true',
+  customCot: initialCustomCot(),
   autoJailbreak: read(KEYS.autoJailbreak) === 'true',
   injectPromptEveryTurn: read(KEYS.injectPromptEveryTurn) === 'true',
   translateJailbreakZh: read(KEYS.translateJailbreakZh) === 'true',
+  thinkingAsBody: read(KEYS.thinkingAsBody) === 'true',
   autoCompress: read(KEYS.autoCompress) === 'true',
+  savedMemoryEnabled: read(KEYS.savedMemoryEnabled) !== 'false',
+  autoExtractMemory: read(KEYS.autoExtractMemory) === 'true',
+  memoryBankEnabled: read(KEYS.memoryBankEnabled) !== 'false',
+  memoryBankLimit: initialNumber(KEYS.memoryBankLimit, 4, 1, 12),
+  memoryBankThreshold: initialNumber(KEYS.memoryBankThreshold, 0.15, 0, 1),
+  memoryBankDimension: initialDimension(),
+  memoryBankKeywordWeight: initialNumber(KEYS.memoryBankKeywordWeight, 1, 0, 5),
+  memoryBankTagWeight: initialNumber(KEYS.memoryBankTagWeight, 0.5, 0, 5),
+  memoryBankVectorWeight: initialNumber(KEYS.memoryBankVectorWeight, 0.8, 0, 5),
+  memoryBankEdgeWeight: initialNumber(KEYS.memoryBankEdgeWeight, 0.4, 0, 5),
+  dailyLimitEnabled: read(KEYS.dailyLimitEnabled) === 'true',
+  dailyTokenLimit: initialNumber(KEYS.dailyTokenLimit, 1_000_000, 1000, 100_000_000),
+  dailyCostLimit: initialNumber(KEYS.dailyCostLimit, 10, 0.01, 100_000),
   variantRaceBudget: initialNumber(KEYS.variantRaceBudget, 1, 0.01, 1000),
   variantRaceConfirmDismissed: read(KEYS.variantRaceConfirmDismissed) === 'true',
   search: read(KEYS.search) === 'true',
+  searchPoison: initialSearchPoison(),
+  attachmentPoison: initialAttachmentPoison(),
   temperature: initialNumber(KEYS.temperature, 1, 0, 2),
   topP: initialNumber(KEYS.topP, 1, 0.01, 1),
   maxTokens: initialMaxTokens(),
@@ -341,6 +453,11 @@ export const useSettings = create<Settings>(() => ({
   attachmentExts: initialAttachmentExts(),
   siderCollapsed: read(KEYS.siderCollapsed) === 'true',
 }))
+
+export const setStreamOutput = (streamOutput: boolean) => {
+  write(KEYS.streamOutput, String(streamOutput))
+  useSettings.setState({ streamOutput })
+}
 
 export const setModel = (model: ChatModel) => {
   const next = model.trim()
@@ -421,9 +538,39 @@ export const setReasoningEffort = (value: number) => {
   useSettings.setState({ reasoningEffort: effort, thinking: effort > 0 })
 }
 
+/** 开关自定义思维链；正文为空时不注入，但保留开关供之后填写 */
+export const setCustomCotEnabled = (customCotEnabled: boolean) => {
+  write(KEYS.customCotEnabled, String(customCotEnabled))
+  useSettings.setState({ customCotEnabled })
+}
+
+/** 自定义思维链正文；超长部分直接截断，避免每轮 system 无限膨胀 */
+export const setCustomCot = (customCot: string) => {
+  const value = customCot.slice(0, CUSTOM_COT_MAX_CHARS)
+  write(KEYS.customCot, value)
+  useSettings.setState({ customCot: value })
+}
+
 export const setSearch = (search: boolean) => {
   write(KEYS.search, String(search))
   useSettings.setState({ search })
+}
+
+/** 合并式更新搜索投毒配置；数组字段整体替换，写入前统一做边界校验 */
+export const setSearchPoison = (patch: Partial<SearchPoisonConfig>) => {
+  const next = normalizeSearchPoison({ ...useSettings.getState().searchPoison, ...patch })
+  write(KEYS.searchPoison, JSON.stringify(next))
+  useSettings.setState({ searchPoison: next })
+}
+
+/** 合并式更新附件投毒配置；methods 去重、content 截断，写入前统一校验 */
+export const setAttachmentPoison = (patch: Partial<AttachmentPoisonConfig>) => {
+  const next = normalizeAttachmentPoison({
+    ...useSettings.getState().attachmentPoison,
+    ...patch,
+  })
+  write(KEYS.attachmentPoison, JSON.stringify(next))
+  useSettings.setState({ attachmentPoison: next })
 }
 
 export const setTemperature = (temperature: number) => {
@@ -564,9 +711,78 @@ export const setInjectPromptEveryTurn = (injectPromptEveryTurn: boolean) => {
   useSettings.setState({ injectPromptEveryTurn })
 }
 
+export const setThinkingAsBody = (thinkingAsBody: boolean) => {
+  write(KEYS.thinkingAsBody, String(thinkingAsBody))
+  useSettings.setState({ thinkingAsBody })
+}
+
 export const setTranslateJailbreakZh = (translateJailbreakZh: boolean) => {
   write(KEYS.translateJailbreakZh, String(translateJailbreakZh))
   useSettings.setState({ translateJailbreakZh })
+}
+
+export const setSavedMemoryEnabled = (savedMemoryEnabled: boolean) => {
+  write(KEYS.savedMemoryEnabled, String(savedMemoryEnabled))
+  useSettings.setState({ savedMemoryEnabled })
+}
+
+export const setAutoExtractMemory = (autoExtractMemory: boolean) => {
+  write(KEYS.autoExtractMemory, String(autoExtractMemory))
+  useSettings.setState({ autoExtractMemory })
+}
+
+export const setMemoryBankEnabled = (memoryBankEnabled: boolean) => {
+  write(KEYS.memoryBankEnabled, String(memoryBankEnabled))
+  useSettings.setState({ memoryBankEnabled })
+}
+
+export const setMemoryBankLimit = (memoryBankLimit: number) => {
+  const next = Math.min(12, Math.max(1, Math.round(memoryBankLimit)))
+  write(KEYS.memoryBankLimit, String(next))
+  useSettings.setState({ memoryBankLimit: next })
+}
+
+export const setMemoryBankThreshold = (memoryBankThreshold: number) => {
+  const next = Math.min(1, Math.max(0, memoryBankThreshold))
+  write(KEYS.memoryBankThreshold, String(next))
+  useSettings.setState({ memoryBankThreshold: next })
+}
+
+export const setMemoryBankDimension = (memoryBankDimension: number) => {
+  if (!MEMORY_DIMENSIONS.includes(memoryBankDimension as (typeof MEMORY_DIMENSIONS)[number])) {
+    return
+  }
+  write(KEYS.memoryBankDimension, String(memoryBankDimension))
+  useSettings.setState({ memoryBankDimension })
+}
+
+export const setMemoryBankWeight = (key: 'keyword' | 'tag' | 'vector' | 'edge', value: number) => {
+  const next = Math.min(5, Math.max(0, value))
+  const field = {
+    keyword: 'memoryBankKeywordWeight',
+    tag: 'memoryBankTagWeight',
+    vector: 'memoryBankVectorWeight',
+    edge: 'memoryBankEdgeWeight',
+  } as const
+  write(KEYS[field[key]], String(next))
+  useSettings.setState({ [field[key]]: next } as Partial<Settings>)
+}
+
+export const setDailyLimitEnabled = (dailyLimitEnabled: boolean) => {
+  write(KEYS.dailyLimitEnabled, String(dailyLimitEnabled))
+  useSettings.setState({ dailyLimitEnabled })
+}
+
+export const setDailyTokenLimit = (dailyTokenLimit: number) => {
+  const next = Math.min(100_000_000, Math.max(1000, Math.round(dailyTokenLimit)))
+  write(KEYS.dailyTokenLimit, String(next))
+  useSettings.setState({ dailyTokenLimit: next })
+}
+
+export const setDailyCostLimit = (dailyCostLimit: number) => {
+  const next = Math.min(100_000, Math.max(0.01, dailyCostLimit))
+  write(KEYS.dailyCostLimit, String(next))
+  useSettings.setState({ dailyCostLimit: next })
 }
 
 export const setAutoCompress = (autoCompress: boolean) => {
@@ -590,19 +806,38 @@ export const resetSettings = () => {
     apiProvider: 'deepseek',
     bridgeExtensionId: '',
     model: 'deepseek-flash',
+    streamOutput: true,
     locale: isChineseBrowser() ? 'zh-CN' : 'en-US',
     themePreference: 'system',
     location: null,
     ttsVoice: 'stella',
     thinking: false,
     reasoningEffort: 0,
+    customCotEnabled: false,
+    customCot: '',
     autoJailbreak: false,
     injectPromptEveryTurn: false,
     translateJailbreakZh: false,
+    thinkingAsBody: false,
     autoCompress: false,
+    savedMemoryEnabled: true,
+    autoExtractMemory: false,
+    memoryBankEnabled: true,
+    memoryBankLimit: 4,
+    memoryBankThreshold: 0.15,
+    memoryBankDimension: 256,
+    memoryBankKeywordWeight: 1,
+    memoryBankTagWeight: 0.5,
+    memoryBankVectorWeight: 0.8,
+    memoryBankEdgeWeight: 0.4,
+    dailyLimitEnabled: false,
+    dailyTokenLimit: 1_000_000,
+    dailyCostLimit: 10,
     variantRaceBudget: 1,
     variantRaceConfirmDismissed: false,
     search: false,
+    searchPoison: defaultSearchPoison(),
+    attachmentPoison: defaultAttachmentPoison(),
     temperature: 1,
     topP: 1,
     maxTokens: null,

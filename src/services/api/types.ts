@@ -93,6 +93,8 @@ export type WebSearchToolResultBlock = {
   /** 成功且无可见结果时为 []；失败时为只含一个错误项的数组 */
   content: (WebSearchResult | WebSearchToolResultError)[]
   kind: 'search' | 'deep_search' | 'image_search' | 'deep_image_search'
+  /** 客户端搜索投毒已处理过该块；仅本地状态，不回传服务端 */
+  poisoned?: boolean
 }
 
 export type WebFetchResult = {

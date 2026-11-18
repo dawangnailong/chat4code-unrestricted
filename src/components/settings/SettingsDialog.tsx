@@ -1,7 +1,9 @@
 import clsx from 'clsx'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
+  IconBranchOutline16,
   IconBrowseOutline16,
+  IconCustomCotOutline16,
   IconDarkOutline16,
   IconDataOutline16,
   IconDownloadOutline16,
@@ -11,6 +13,8 @@ import {
   IconLinkOutline16,
   IconPaperclipOutline16,
   IconRefreshOutline16,
+  IconSearchWarningOutline16,
+  IconChartOutline16,
   IconSettingsOutline16,
   IconThinkOutline16,
   IconUploadOutline14,
@@ -23,11 +27,21 @@ import {
 } from '../../services/chat/backup.js'
 import { useIsMobile } from '../../app/viewport.js'
 import { modelLabel } from '../../services/api/models.js'
+import { MemorySettings } from './MemorySettings.js'
+import { SearchPoisonSettings } from './SearchPoisonSettings.js'
+import { AttachmentPoisonSettings } from './AttachmentPoisonSettings.js'
 import { useChatStore } from '../../services/chat/store.js'
-import { regionCodes, getRegionName, provinces } from '../../services/location.js'
+import {
+  regionCodes,
+  getRegionName,
+  provinces,
+  specialPlaces,
+  type SpecialPlace,
+} from '../../services/location.js'
 import {
   isChineseBrowser,
   resetSettings,
+  CUSTOM_COT_MAX_CHARS,
   setAttachmentExts,
   setAutoJailbreak,
   setAttachmentLimits,
@@ -36,13 +50,20 @@ import {
   setAutoCompress,
   setAutoTune,
   setAutoTuneStrategy,
+  setCustomCot,
+  setCustomCotEnabled,
   setInjectPromptEveryTurn,
   setContinueRefused,
+  setDailyCostLimit,
+  setDailyLimitEnabled,
+  setDailyTokenLimit,
   setParseltongue,
   setParseltongueIntensity,
   setParseltongueTechnique,
   setPromptPreset,
   setStmModules,
+  setStreamOutput,
+  setThinkingAsBody,
   setTranslateJailbreakZh,
   setKeepReplyContent,
   setLocale,
@@ -59,11 +80,18 @@ import {
   useSettings,
   type ThemePreference,
 } from '../../services/settings.js'
+import {
+  resetDailyUsage,
+  syncDailyUsageDate,
+  useDailyUsage,
+} from '../../services/chat/dailyUsage.js'
+import { formatMoney, formatTokens } from '../../services/chat/sessionStats.js'
 import type { AutoTuneStrategy } from '../../services/unrestricted/autotune.js'
 import type { ObfuscationTechnique } from '../../services/unrestricted/parseltongue.js'
 import type { PromptPreset } from '../../services/unrestricted/prompts.js'
 import { useFeedback } from '../../services/chat/feedbackStore.js'
 import { composeSystemPrompt } from '../../services/chat/systemPrompt.js'
+import { formatCustomCotContext } from '../../services/chat/customCot.js'
 import { useTranslate, type TranslationKey, type TranslationMessage } from '../../i18n/index.js'
 import { Button } from '../base/Button.js'
 import { Modal } from '../base/Modal.js'
@@ -71,6 +99,7 @@ import { Select } from '../base/Select.js'
 import { Switch } from '../base/Switch.js'
 import { showToast } from '../base/toastState.js'
 import { ParamControl } from './ParamControls.js'
+import { StatsSettings } from './StatsSettings.js'
 import paramStyles from './ParamControls.module.css'
 import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
 import { BridgeField, ProviderField } from './BridgeField.js'
@@ -94,16 +123,33 @@ const sections: { value: SettingsSection; label: TranslationKey; icon: ReactNode
   },
   { value: 'model', label: 'settingDialogAsideModelOptionLabel', icon: <IconThinkOutline16 /> },
   { value: 'prompt', label: 'settingDialogAsidePromptOptionLabel', icon: <IconEditOutline16 /> },
+  { value: 'cot', label: 'settingDialogAsideCotOptionLabel', icon: <IconCustomCotOutline16 /> },
   {
     value: 'advanced',
     label: 'settingDialogAsideAdvancedOptionLabel',
     icon: <IconBrowseOutline16 />,
   },
   {
+    value: 'poison',
+    label: 'settingDialogAsidePoisonOptionLabel',
+    icon: <IconSearchWarningOutline16 />,
+  },
+  {
+    value: 'memory',
+    label: 'settingDialogAsideMemoryOptionLabel',
+    icon: <IconBranchOutline16 />,
+  },
+  {
     value: 'attachments',
     label: 'settingDialogAsideAttachmentsOptionLabel',
     icon: <IconPaperclipOutline16 />,
   },
+  {
+    value: 'attachmentPoison',
+    label: 'settingDialogAsideAttachmentPoisonOptionLabel',
+    icon: <IconPaperclipOutline16 />,
+  },
+  { value: 'stats', label: 'settingDialogAsideStatsOptionLabel', icon: <IconChartOutline16 /> },
   { value: 'data', label: 'settingDialogAsideDataOptionLabel', icon: <IconDataOutline16 /> },
   { value: 'about', label: 'settingDialogAsideAboutOptionLabel', icon: <IconLinkOutline16 /> },
   {
@@ -118,6 +164,13 @@ const SettingsContent = () => {
   const isMobile = useIsMobile()
   // 打开时按调用方指定的分组选中，之后在弹窗内切换
   const [section, setSection] = useState(() => useSettingsDialog.getState().section)
+  const navigationRef = useRef<HTMLDivElement>(null)
+  // 手机端导航横向滚动：打开较后的分组时把选中项滚到可视区域
+  useEffect(() => {
+    navigationRef.current
+      ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+      ?.scrollIntoView({ block: 'nearest', inline: 'center' })
+  }, [section])
   // 切换分组不丢失正在输入的 API Key 与导入状态
   const apiKeyEditor = useApiKeyEditor()
   const bridgeMode = useBridgeMode()
@@ -139,7 +192,7 @@ const SettingsContent = () => {
           }
         }}
       >
-        <div role="tablist" className={styles.navigation}>
+        <div ref={navigationRef} role="tablist" className={styles.navigation}>
           {sections.map((item) => (
             <button
               key={item.value}
@@ -161,15 +214,26 @@ const SettingsContent = () => {
               <LocaleSetting />
               <TtsVoiceSetting />
               <LocationSetting />
+              <DailyUsageSetting />
             </>
           ) : section === 'model' ? (
             <ModelSettings />
           ) : section === 'prompt' ? (
             <UnrestrictedSetting />
+          ) : section === 'cot' ? (
+            <CustomCotSetting />
           ) : section === 'advanced' ? (
             <AdvancedSettings />
+          ) : section === 'poison' ? (
+            <SearchPoisonSettings />
+          ) : section === 'memory' ? (
+            <MemorySettings />
           ) : section === 'attachments' ? (
             <AttachmentsSetting />
+          ) : section === 'attachmentPoison' ? (
+            <AttachmentPoisonSettings />
+          ) : section === 'stats' ? (
+            <StatsSettings />
           ) : section === 'about' ? (
             <AboutSetting />
           ) : section === 'changelog' ? (
@@ -335,6 +399,87 @@ const useHistoryDelete = () => {
   }
 }
 
+const DailyUsageSetting = () => {
+  const t = useTranslate()
+  const enabled = useSettings((state) => state.dailyLimitEnabled)
+  const tokenLimit = useSettings((state) => state.dailyTokenLimit)
+  const costLimit = useSettings((state) => state.dailyCostLimit)
+  const usage = useDailyUsage()
+  useEffect(() => {
+    syncDailyUsageDate()
+  }, [])
+  return (
+    <>
+      <div className={styles.groupTitle}>{t('dailyUsageSection')}</div>
+      <SettingCell
+        label={t('dailyLimitEnabledLabel')}
+        description={t('dailyLimitEnabledDesc')}
+        status={null}
+        action={
+          <Switch
+            checked={enabled}
+            onChange={setDailyLimitEnabled}
+            label={t('dailyLimitEnabledLabel')}
+          />
+        }
+      />
+      <SettingCell
+        label={t('dailyUsageTitle')}
+        description={t('dailyUsageText', {
+          tokens: formatTokens(usage.totalTokens),
+          cost: formatMoney(usage.cost),
+        })}
+        status={null}
+        action={
+          <Button
+            variant="outlined"
+            size="m"
+            disabled={usage.totalTokens === 0 && usage.cost === 0}
+            onClick={() => {
+              resetDailyUsage()
+              showToast({ key: 'dailyResetToast' })
+            }}
+          >
+            {t('dailyResetButton')}
+          </Button>
+        }
+      />
+      {enabled ? (
+        <>
+          <SettingCell
+            label={t('dailyTokenLimitLabel')}
+            status={null}
+            action={
+              <ParamControl
+                label={t('dailyTokenLimitLabel')}
+                value={tokenLimit}
+                min={1000}
+                max={100_000_000}
+                step={1000}
+                onChange={(value) => setDailyTokenLimit(value ?? 1_000_000)}
+              />
+            }
+          />
+          <SettingCell
+            label={t('dailyCostLimitLabel')}
+            status={null}
+            action={
+              <ParamControl
+                label={t('dailyCostLimitLabel')}
+                value={costLimit}
+                min={0.01}
+                max={1000}
+                step={0.1}
+                onChange={(value) => setDailyCostLimit(value ?? 10)}
+              />
+            }
+          />
+        </>
+      ) : null}
+    </>
+  )
+}
+
 const LocationSetting = () => {
   const t = useTranslate()
   const locale = useSettings((state) => state.locale)
@@ -343,6 +488,27 @@ const LocationSetting = () => {
     location?.region === 'CN'
       ? provinces.find((item) => item.code === location.province)
       : undefined
+  const [customDraft, setCustomDraft] = useState(location?.custom ?? '')
+  // Esc 取消时不要触发失焦保存
+  const skipCustomCommit = useRef(false)
+
+  // 选择行政区、特殊位置或清除后，自定义输入框跟随设置值同步
+  useEffect(() => {
+    setCustomDraft(location?.custom ?? '')
+  }, [location?.custom])
+
+  const commitCustom = (value: string) => {
+    const next = value.trim()
+    if (next !== '') {
+      if (next !== location?.custom) {
+        setLocation({ region: 'CN', custom: next })
+      }
+      return
+    }
+    if (location?.custom) {
+      setLocation(null)
+    }
+  }
 
   return (
     <SettingCell
@@ -385,7 +551,7 @@ const LocationSetting = () => {
             <Select
               ariaLabel={t('settingsLocationRegion')}
               className={styles.regionSelect}
-              value={location?.region ?? ''}
+              value={location?.place ? '' : (location?.region ?? '')}
               placeholder={t('settingsLocationRegion')}
               options={regionCodes
                 .map((code) => ({ value: code, label: getRegionName(code, locale) }))
@@ -393,6 +559,52 @@ const LocationSetting = () => {
               onChange={(value) => setLocation({ region: value })}
             />
           )}
+          <Select<string>
+            ariaLabel={t('settingsLocationSpecial')}
+            className={styles.specialSelect}
+            value={location?.place ?? ''}
+            placeholder={t('settingsLocationSpecial')}
+            options={[
+              { value: '', label: t('settingsLocationNone') },
+              ...specialPlaces.map((item) => ({
+                value: item.id,
+                label: locale === 'zh-CN' ? item.zh : item.en,
+              })),
+            ]}
+            onChange={(value) => {
+              setLocation(value === '' ? null : { region: 'CN', place: value as SpecialPlace })
+            }}
+          />
+          <input
+            className={styles.locationCustomInput}
+            aria-label={t('settingsLocationCustom')}
+            placeholder={t('settingsLocationCustomPlaceholder')}
+            maxLength={120}
+            value={customDraft}
+            onChange={(event) => setCustomDraft(event.target.value)}
+            onBlur={(event) => {
+              if (skipCustomCommit.current) {
+                skipCustomCommit.current = false
+                return
+              }
+              commitCustom(event.target.value)
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                event.currentTarget.blur()
+              } else if (event.key === 'Escape') {
+                skipCustomCommit.current = true
+                setCustomDraft(location?.custom ?? '')
+                event.currentTarget.blur()
+              }
+            }}
+          />
+          {location ? (
+            <Button variant="outlined" size="s" onClick={() => setLocation(null)}>
+              {t('settingsLocationClear')}
+            </Button>
+          ) : null}
         </div>
       }
     />
@@ -486,6 +698,79 @@ const AboutSetting = () => {
 const ChangelogSetting = () => {
   const t = useTranslate()
   const groups: { title: TranslationKey; items: TranslationKey[] }[] = [
+    {
+      title: 'changelogV264Title',
+      items: [
+        'changelogV264Ledger',
+        'changelogV264Charts',
+        'changelogV264Export',
+        'changelogV264Dialog',
+        'changelogV264Compat',
+        'changelogV264Apk',
+      ],
+    },
+    {
+      title: 'changelogV263Title',
+      items: [
+        'changelogV263LabKey',
+        'changelogV263Stats',
+        'changelogV263Context',
+        'changelogV263Dialog',
+        'changelogV263Apk',
+      ],
+    },
+    {
+      title: 'changelogV262Title',
+      items: [
+        'changelogV262Custom',
+        'changelogV262Modes',
+        'changelogV262Layout',
+        'changelogV262Injected',
+        'changelogV262Compatibility',
+        'changelogV262Apk',
+      ],
+    },
+    {
+      title: 'changelogV261Title',
+      items: ['changelogV261Android', 'changelogV261Backend', 'changelogV261Sign'],
+    },
+    {
+      title: 'changelogV260Title',
+      items: ['changelogV260Attachment', 'changelogV260Compatibility'],
+    },
+    {
+      title: 'changelogV258Title',
+      items: ['changelogV258Poison', 'changelogV258Location', 'changelogV258Consistency'],
+    },
+    {
+      title: 'changelogV257Title',
+      items: ['changelogV257Stream'],
+    },
+    {
+      title: 'changelogV256Title',
+      items: [
+        'changelogV256Archive',
+        'changelogV256ModelMobile',
+        'changelogV256Graph',
+        'changelogV256Dimension',
+        'changelogV256Stats',
+        'changelogV256Reset',
+        'changelogV256Credits',
+      ],
+    },
+    {
+      title: 'changelogV255Title',
+      items: [
+        'changelogV255Preview',
+        'changelogV255Location',
+        'changelogV255Memory',
+        'changelogV255Daily',
+        'changelogV255Bank',
+        'changelogV255Lab',
+        'changelogV255Thinking',
+        'changelogV255Mobile',
+      ],
+    },
     {
       title: 'changelogV252Title',
       items: ['changelogV252Toolbar'],
@@ -615,6 +900,16 @@ const ChangelogSetting = () => {
       note: 'creditLibertasNote',
       href: 'https://github.com/elder-plinius/L1B3RT4S',
     },
+    {
+      label: 'creditOperitLabel',
+      note: 'creditOperitNote',
+      href: 'https://github.com/AAswordman/Operit',
+    },
+    {
+      label: 'creditDeepChatLabel',
+      note: 'creditDeepChatNote',
+      href: 'https://github.com/YanJiuWeiYuanHui/DeepChat',
+    },
   ]
   return (
     <div className={styles.about}>
@@ -653,6 +948,7 @@ const ModelSettings = () => {
   const topP = useSettings((state) => state.topP)
   const maxTokens = useSettings((state) => state.maxTokens)
   const model = useSettings((state) => state.model)
+  const streamOutput = useSettings((state) => state.streamOutput)
   const keepReplyContent = useSettings((state) => state.keepReplyContent)
   const skipSafetyCheck = useSettings((state) => state.skipSafetyCheck)
   const continueRefused = useSettings((state) => state.continueRefused)
@@ -666,6 +962,18 @@ const ModelSettings = () => {
         description={t('settingsModelDescription')}
         status={null}
         action={<span className={styles.modelBadge}>{modelLabel(model)}</span>}
+      />
+      <SettingCell
+        label={t('settingsStreamOutput')}
+        description={t('settingsStreamOutputDescription')}
+        status={null}
+        action={
+          <Switch
+            checked={streamOutput}
+            onChange={setStreamOutput}
+            label={t('settingsStreamOutput')}
+          />
+        }
       />
       <SettingCell
         label={t('settingsTemperature')}
@@ -782,6 +1090,7 @@ const UnrestrictedSetting = () => {
   const promptPreset = useSettings((state) => state.promptPreset)
   const injectPrompt = useSettings((state) => state.injectPromptEveryTurn)
   const translateJailbreak = useSettings((state) => state.translateJailbreakZh)
+  const thinkingAsBody = useSettings((state) => state.thinkingAsBody)
   return (
     <>
       <SettingCell
@@ -805,6 +1114,18 @@ const UnrestrictedSetting = () => {
             checked={injectPrompt}
             onChange={setInjectPromptEveryTurn}
             label={t('settingsInjectPrompt')}
+          />
+        }
+      />
+      <SettingCell
+        label={t('settingsThinkingAsBody')}
+        description={t('settingsThinkingAsBodyDescription')}
+        status={null}
+        action={
+          <Switch
+            checked={thinkingAsBody}
+            onChange={setThinkingAsBody}
+            label={t('settingsThinkingAsBody')}
           />
         }
       />
@@ -889,6 +1210,99 @@ const SystemPromptSetting = () => {
         </Button>
       </div>
     </div>
+  )
+}
+
+/**
+ * 自定义思维链：预先写好推理步骤，请求前作为独立 system 分块注入。
+ * 关闭深度思考时直接约束作答过程；开启时只是实验性引导，服务端可能重写。
+ */
+const CustomCotSetting = () => {
+  const t = useTranslate()
+  const enabled = useSettings((state) => state.customCotEnabled)
+  const text = useSettings((state) => state.customCot)
+  const thinking = useSettings((state) => state.thinking)
+  const [draft, setDraft] = useState(text)
+
+  // 恢复默认或从其他入口修改时同步草稿
+  useEffect(() => {
+    setDraft(text)
+  }, [text])
+
+  const commit = (value: string) => {
+    setDraft(value)
+    setCustomCot(value)
+  }
+  const empty = draft.trim() === ''
+
+  return (
+    <>
+      <SettingCell
+        label={t('settingsCustomCot')}
+        description={t('settingsCustomCotDescription')}
+        status={null}
+        action={
+          <Switch checked={enabled} onChange={setCustomCotEnabled} label={t('settingsCustomCot')} />
+        }
+      />
+      <div className={styles.systemPrompt}>
+        <div className={styles.systemPromptHead}>
+          <div className={styles.systemPromptLabel}>{t('settingsCustomCotEditorLabel')}</div>
+          <div className={styles.systemPromptDescription}>
+            {t('settingsCustomCotEditorDescription')}
+          </div>
+        </div>
+        <textarea
+          className={styles.systemPromptTextarea}
+          aria-label={t('settingsCustomCotEditorLabel')}
+          rows={7}
+          maxLength={CUSTOM_COT_MAX_CHARS}
+          placeholder={t('settingsCustomCotPlaceholder')}
+          value={draft}
+          onChange={(event) => commit(event.target.value)}
+        />
+        <div className={styles.systemPromptActions}>
+          <span className={styles.systemPromptHint}>
+            {t('settingsCustomCotCount', { count: draft.length, max: CUSTOM_COT_MAX_CHARS })}
+          </span>
+          <Button variant="outlined" size="s" onClick={() => commit(t('settingsCustomCotExample'))}>
+            {t('settingsCustomCotInsertExample')}
+          </Button>
+          <Button variant="outlined" size="s" disabled={draft === ''} onClick={() => commit('')}>
+            {t('settingsCustomCotClear')}
+          </Button>
+        </div>
+      </div>
+      <div className={styles.cotStatus} data-experimental={thinking || undefined}>
+        <div className={styles.cotStatusTitle}>
+          {t(
+            thinking ? 'settingsCustomCotStatusThinkingTitle' : 'settingsCustomCotStatusDirectTitle'
+          )}
+        </div>
+        <div className={styles.cotStatusBody}>
+          {t(
+            thinking
+              ? 'settingsCustomCotStatusThinkingDescription'
+              : 'settingsCustomCotStatusDirectDescription'
+          )}
+        </div>
+      </div>
+      <div className={styles.pipeline}>
+        {t(
+          !enabled
+            ? 'settingsCustomCotOffHint'
+            : empty
+              ? 'settingsCustomCotEmpty'
+              : 'settingsCustomCotActiveHint'
+        )}
+      </div>
+      {empty ? null : (
+        <details className={styles.promptPreview}>
+          <summary className={styles.promptPreviewSummary}>{t('settingsCustomCotPreview')}</summary>
+          <pre className={styles.promptPreviewBody}>{formatCustomCotContext(draft, thinking)}</pre>
+        </details>
+      )}
+    </>
   )
 }
 

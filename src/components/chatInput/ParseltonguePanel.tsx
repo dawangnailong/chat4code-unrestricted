@@ -6,6 +6,8 @@ import { IconEditOutline16 } from '../base/icons.js'
 import { Select } from '../base/Select.js'
 import { Switch } from '../base/Switch.js'
 import { useTranslate } from '../../i18n/index.js'
+import { copyText } from '../../utils/clipboard.js'
+import { showToast } from '../base/toastState.js'
 import {
   setParseltongue,
   setParseltongueIntensity,
@@ -63,16 +65,18 @@ export const ParseltongueButton = ({
   ]
 
   const triggers = text.trim() === '' ? [] : detectTriggers(text)
-  // 预览始终按当前配置计算，未开启时也能先看效果
+  // 预览始终按当前配置计算；没有命中触发词时展示原文，避免看起来「没有效果」
   const preview =
-    triggers.length === 0
+    text.trim() === ''
       ? ''
-      : applyParseltongue(text, {
-          enabled: true,
-          technique,
-          intensity,
-          customTriggers: [],
-        }).transformedText
+      : triggers.length === 0
+        ? text
+        : applyParseltongue(text, {
+            enabled: true,
+            technique,
+            intensity,
+            customTriggers: [],
+          }).transformedText
 
   return (
     <>
@@ -126,7 +130,21 @@ export const ParseltongueButton = ({
                   ? t('parseltonguePanelTriggers', { count: triggers.length })
                   : t('parseltonguePanelNoTriggers')}
               </div>
-              <div className={styles.previewLabel}>{t('parseltonguePanelPreview')}</div>
+              <div className={styles.previewHead}>
+                <span className={styles.previewLabel}>{t('parseltonguePanelPreview')}</span>
+                <button
+                  type="button"
+                  className={styles.copy}
+                  disabled={!preview}
+                  onClick={() => {
+                    void copyText(preview).then((ok) => {
+                      showToast({ key: ok ? 'copied' : 'copyFailed' })
+                    })
+                  }}
+                >
+                  {t('copy')}
+                </button>
+              </div>
               <pre className={styles.preview}>{preview || t('parseltonguePanelEmpty')}</pre>
             </div>,
             document.body

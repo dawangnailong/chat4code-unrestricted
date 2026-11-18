@@ -1,0 +1,250 @@
+/* 统计图表样式：颜色全部走 --chart-* 变量，深浅主题各一套 */
+.bars,
+.heatmap,
+.ring,
+.gauge {
+  --chart-1: #3964fe;
+  --chart-2: #22b8a0;
+  --chart-3: #f2a33c;
+  --chart-4: #8b5cf6;
+  --chart-5: #64748b;
+  --chart-warn: #e2564a;
+  --chart-track: rgba(57, 100, 254, 0.12);
+}
+
+body[data-ds-dark-theme] .bars,
+body[data-ds-dark-theme] .heatmap,
+body[data-ds-dark-theme] .ring,
+body[data-ds-dark-theme] .gauge {
+  --chart-1: #7a9aff;
+  --chart-2: #4fd8bd;
+  --chart-3: #ffc470;
+  --chart-4: #b18cff;
+  --chart-5: #94a3b8;
+  --chart-warn: #ff7a6b;
+  --chart-track: rgba(122, 154, 255, 0.16);
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 132px;
+  padding-top: 4px;
+}
+
+.column {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+}
+
+.pair {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.barPrimary,
+.barSecondary {
+  display: block;
+  width: 100%;
+  max-width: 14px;
+  border-radius: 4px 4px 1px 1px;
+  transition: height 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.barPrimary {
+  background-color: var(--chart-1);
+}
+
+.barSecondary {
+  background-color: var(--chart-3);
+  opacity: 0.85;
+}
+
+.barLabel {
+  flex-shrink: 0;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 10px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 热力图：8 列 × 7 行 */
+.heatmap {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-columns: 12px;
+  gap: 3px;
+  width: max-content;
+  max-width: 100%;
+}
+
+.heatCell {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background-color: var(--chart-track);
+
+  &[data-level='1'] {
+    background-color: color-mix(in srgb, var(--chart-1) 28%, transparent);
+  }
+
+  &[data-level='2'] {
+    background-color: color-mix(in srgb, var(--chart-1) 48%, transparent);
+  }
+
+  &[data-level='3'] {
+    background-color: color-mix(in srgb, var(--chart-1) 70%, transparent);
+  }
+
+  &[data-level='4'] {
+    background-color: var(--chart-1);
+  }
+}
+
+.ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
+}
+
+.ringSvg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ringTrack {
+  fill: none;
+  stroke: var(--chart-track);
+  stroke-width: 12;
+}
+
+.ringSegment1,
+.ringSegment2,
+.ringSegment3,
+.ringSegment4,
+.ringSegment5 {
+  fill: none;
+  stroke-width: 12;
+  transition: stroke-dasharray 0.3s ease;
+}
+
+.ringSegment1 {
+  stroke: var(--chart-1);
+}
+
+.ringSegment2 {
+  stroke: var(--chart-2);
+}
+
+.ringSegment3 {
+  stroke: var(--chart-3);
+}
+
+.ringSegment4 {
+  stroke: var(--chart-4);
+}
+
+.ringSegment5 {
+  stroke: var(--chart-5);
+}
+
+.ringCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.ringValue {
+  color: var(--dsw-alias-label-primary);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ringLabel {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 44px;
+  color: var(--chart-1, #3964fe);
+  overflow: visible;
+}
+
+.sparkLine {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 132px;
+  flex-shrink: 0;
+  color: var(--chart-1);
+}
+
+.gauge[data-warn] {
+  color: var(--chart-warn);
+}
+
+.gaugeSvg {
+  width: 100%;
+  height: auto;
+}
+
+.gaugeTrack {
+  stroke: var(--chart-track);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.gaugeFill {
+  stroke: currentColor;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.3s ease;
+}
+
+.gaugeLabel {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}

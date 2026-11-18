@@ -1,7 +1,7 @@
 .dialog {
   --modal-header-gap: 7px;
   width: 760px;
-  height: 500px;
+  height: 560px;
   max-height: calc(100vh - 32px);
   padding: 19px 24px 22px;
 }
@@ -19,8 +19,11 @@
   flex-shrink: 0;
   gap: 4px;
   width: 172px;
+  min-height: 0;
   margin: 6px 12px 0 -12px;
   padding-top: 4px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .navItem {
@@ -119,10 +122,10 @@
 
 .locationSelectors {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 8px 12px;
   min-width: 0;
   max-width: 100%;
 }
@@ -144,6 +147,11 @@
 
 .regionSelect {
   max-width: min(285px, 100%);
+}
+
+.specialSelect {
+  width: 200px;
+  max-width: 100%;
 }
 
 .theme {
@@ -337,6 +345,7 @@
     margin: 6px -4px;
     padding: 4px 0;
     overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .navItem {
@@ -386,8 +395,10 @@
   }
 
   .provinceSelect,
-  .citySelect {
+  .citySelect,
+  .specialSelect {
     flex: 1 1 auto;
+    width: auto;
   }
 
   .apiKey {
@@ -606,6 +617,39 @@
   line-height: 18px;
 }
 
+/* 自定义思维链：深度思考开启时用琥珀色提示“实验性” */
+.cotStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  background-color: var(--dsw-alias-bg-layer-2);
+}
+
+.cotStatusTitle {
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.cotStatusBody {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 19px;
+}
+
+.cotStatus[data-experimental] {
+  border-color: var(--dsw-static-amber-500);
+}
+
+.cotStatus[data-experimental] .cotStatusTitle {
+  color: var(--dsw-static-amber-600);
+}
+
 /* 关于 / 更新日志 / 鸣谢 */
 .about {
   display: flex;
@@ -695,4 +739,252 @@
   color: var(--dsw-alias-label-tertiary);
   font-size: 12px;
   line-height: 20px;
+}
+
+/* 自定义位置输入框：与位置下拉同一行，可换行 */
+.locationCustomInput {
+  box-sizing: border-box;
+  flex: 1 1 100%;
+  width: 200px;
+  max-width: 100%;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 18px;
+  background-color: var(--dsw-specific-selector);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  outline: none;
+  transition:
+    background-color var(--ds-transition-duration) var(--ds-ease-in-out),
+    box-shadow var(--ds-transition-duration) var(--ds-ease-in-out);
+
+  &:hover {
+    background-color: var(--dsw-alias-interactive-bg-hover-accent);
+  }
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--dsw-alias-brand-primary);
+  }
+
+  &::placeholder {
+    color: var(--dsw-alias-label-tertiary);
+  }
+}
+
+/* 搜索投毒：规则列表、自定义结果与预览 */
+.poisonSection {
+  flex-shrink: 0;
+  padding: 2px 0 6px;
+}
+
+/* 时间 / 知识截止这类宽控件放在说明下方，避免把说明文字挤成一条窄列 */
+.poisonCell {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.poisonCell .text {
+  flex: 1 1 100%;
+  padding-right: 0;
+  padding-bottom: 8px;
+}
+
+.poisonCell .poisonInline {
+  margin-left: 0;
+}
+
+.poisonSectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  padding: 10px 0 6px;
+}
+
+.poisonSectionTitle {
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.poisonSectionHint {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.poisonList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.poisonRule {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background-color: var(--dsw-alias-bg-base);
+}
+
+.poisonRuleFields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.poisonInput {
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background-color: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  outline: none;
+  transition: border-color var(--ds-transition-duration) var(--ds-ease-in-out);
+
+  &:focus-visible {
+    border-color: var(--dsw-alias-brand-primary);
+  }
+
+  &::placeholder {
+    color: var(--dsw-alias-label-tertiary);
+  }
+}
+
+.poisonTextarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 64px;
+  padding: 8px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background-color: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+  line-height: 18px;
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--ds-transition-duration) var(--ds-ease-in-out);
+
+  &:focus-visible {
+    border-color: var(--dsw-alias-brand-primary);
+  }
+
+  &::placeholder {
+    color: var(--dsw-alias-label-tertiary);
+  }
+}
+
+.poisonRuleFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.poisonFieldSelect {
+  flex-shrink: 0;
+  width: 132px;
+}
+
+.poisonRegex {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+  user-select: none;
+}
+
+.poisonRemove {
+  margin-left: auto;
+}
+
+.poisonAdd {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0 0 12px;
+}
+
+.poisonEmpty {
+  padding: 2px 0 10px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.poisonResultGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.poisonResultSnippet {
+  grid-column: 1 / -1;
+}
+
+.poisonInline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.poisonDateInput {
+  flex: 0 1 auto;
+  width: 210px;
+}
+
+.poisonCount {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.poisonPreviewHint {
+  padding: 2px 0 12px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+@media not all and (min-width: 768px) {
+  .locationCustomInput {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .poisonRuleFields,
+  .poisonResultGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .poisonInline,
+  .poisonDateInput {
+    width: 100%;
+  }
+
+  .poisonFieldSelect {
+    width: 100%;
+  }
+
+  .poisonRemove {
+    margin-left: 0;
+  }
 }

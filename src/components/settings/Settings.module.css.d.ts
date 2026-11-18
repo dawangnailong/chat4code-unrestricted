@@ -12,6 +12,7 @@ declare const styles: {
   readonly "uploadButton": string;
   readonly "locationCell": string;
   readonly "locationSelectors": string;
+  readonly "locationCustomInput": string;
   readonly "provinceSelect": string;
   readonly "citySelect": string;
   readonly "regionSelect": string;
@@ -55,6 +56,28 @@ declare const styles: {
   readonly "changelogList": string;
   readonly "credit": string;
   readonly "creditNote": string;
+  readonly "poisonSection": string;
+  readonly "poisonCell": string;
+  readonly "poisonSectionHead": string;
+  readonly "poisonSectionTitle": string;
+  readonly "poisonSectionHint": string;
+  readonly "poisonList": string;
+  readonly "poisonRule": string;
+  readonly "poisonRuleFields": string;
+  readonly "poisonInput": string;
+  readonly "poisonTextarea": string;
+  readonly "poisonRuleFoot": string;
+  readonly "poisonFieldSelect": string;
+  readonly "poisonRegex": string;
+  readonly "poisonRemove": string;
+  readonly "poisonAdd": string;
+  readonly "poisonEmpty": string;
+  readonly "poisonResultGrid": string;
+  readonly "poisonResultSnippet": string;
+  readonly "poisonInline": string;
+  readonly "poisonDateInput": string;
+  readonly "poisonCount": string;
+  readonly "poisonPreviewHint": string;
 };
 export = styles;
 
