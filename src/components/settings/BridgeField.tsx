@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslate } from '../../i18n/index.js'
 import { ApiError } from '../../services/api/client.js'
+import { getBridgeTransport } from '../../services/api/bridge.js'
 import { verifyProvider } from '../../services/api/provider.js'
 import type { ApiProvider } from '../../services/api/types.js'
 import {
@@ -72,7 +73,12 @@ export const BridgeField = () => {
     setResult(null)
     try {
       await verifyProvider('')
-      setResult({ ok: true, message: t('bridgeTestConnectionOk') })
+      const transport =
+        getBridgeTransport() === 'relay' ? t('bridgeTransportRelay') : t('bridgeTransportDirect')
+      setResult({
+        ok: true,
+        message: t('bridgeTestConnectionOk', { transport }),
+      })
     } catch (error) {
       setResult({
         ok: false,
@@ -120,6 +126,7 @@ export const BridgeField = () => {
       <div className={styles.systemPromptHint}>
         <strong>{t('bridgeSetupTitle')}</strong>
         <div>{t('bridgeSetupOriginHint', { origin })}</div>
+        <div>{t('bridgeSetupSafariHint')}</div>
         <div>{t('bridgeSetupKeyHint')}</div>
         <div>{t('bridgeSetupUserAgentHint')}</div>
         <div>{t('bridgeSetupBaseUrlHint')}</div>

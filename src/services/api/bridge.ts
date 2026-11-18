@@ -16,8 +16,10 @@ import type {
 
 /**
  * OpenCode Bridge 传输层：把应用现有的 Anthropic Messages 请求体转成
- * bridge 能接受的形状，交给扩展后台 / offscreen document 发出。
- * API Key 由扩展从 chrome.storage.local 注入，这里不接触 Key。
+ * bridge 能接受的形状，交给扩展后台发出。页面侧会自动协商传输方式：
+ * Chrome 走 direct port，Safari 走 content-script relay（window.postMessage）；
+ * 请求最终由扩展 service worker / offscreen document 发出。
+ * API Key 由扩展自行保存并注入，这里不接触 Key。
  */
 
 /** bridge 校验要求 max_tokens 必填；设置里没填时使用该默认值 */
@@ -74,6 +76,9 @@ export const connectBridge = async (extensionId: string): Promise<OpenCodeBridge
   bridgeExtensionId = id
   return next
 }
+
+/** 当前 bridge 协商出的传输方式：direct（Chrome 主路径）或 relay（Safari content script） */
+export const getBridgeTransport = (): 'direct' | 'relay' | null => bridge?.transport ?? null
 
 /** 同一聊天会话复用同一个 bridge conversation，保证 x-opencode-session 稳定 */
 export const getBridgeConversation = async (
@@ -280,13 +285,18 @@ const BRIDGE_ERROR_MAP: Record<string, { kind: ApiErrorKind; key: TranslationKey
   AUTH_MISSING: { kind: 'http', key: 'bridgeErrorAuthMissing' },
   ORIGIN_DENIED: { kind: 'network', key: 'bridgeErrorOriginDenied' },
   NO_CHROME_RUNTIME: { kind: 'network', key: 'bridgeErrorExtensionMissing' },
+  NO_BRIDGE_TRANSPORT: { kind: 'network', key: 'bridgeErrorExtensionMissing' },
+  CONTENT_SCRIPT_MISSING: { kind: 'network', key: 'bridgeErrorContentScriptMissing' },
   EXTENSION_ID_REQUIRED: { kind: 'network', key: 'bridgeErrorExtensionMissing' },
   CONNECT_FAILED: { kind: 'network', key: 'bridgeErrorExtensionMissing' },
   CONNECT_TIMEOUT: { kind: 'network', key: 'bridgeErrorNetwork' },
+  HELLO_TIMEOUT: { kind: 'network', key: 'bridgeErrorNoResponse' },
   NETWORK_ERROR: { kind: 'network', key: 'bridgeErrorNetwork' },
   CLOSED: { kind: 'network', key: 'bridgeErrorNetwork' },
+  BAD_TRANSPORT: { kind: 'network', key: 'bridgeErrorNetwork' },
   SW_DISCONNECTED: { kind: 'protocol', key: 'bridgeErrorDisconnected' },
   OFFSCREEN_DISCONNECTED: { kind: 'protocol', key: 'bridgeErrorDisconnected' },
+  RELAY_CLOSED: { kind: 'protocol', key: 'bridgeErrorDisconnected' },
   BAD_REQUEST: { kind: 'http', key: 'bridgeErrorBadRequest' },
   BODY_TOO_LARGE: { kind: 'http', key: 'bridgeErrorBodyTooLarge' },
   RESPONSE_TOO_LARGE: { kind: 'stream', key: 'bridgeErrorResponseTooLarge' },

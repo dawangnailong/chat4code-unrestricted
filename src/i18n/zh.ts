@@ -618,21 +618,30 @@ export const zh = {
   settingProviderBridgeOptionLabel: 'OpenCode Bridge',
   bridgeExtensionIdLabel: '扩展 ID',
   bridgeExtensionIdDescription:
-    '在 chrome://extensions 打开开发者模式后复制 OpenCode Bridge 的 ID。',
-  bridgeExtensionIdPlaceholder: '例如 abcdefghijklmnopabcdefghijklmnop',
+    'Chrome：在 chrome://extensions 打开开发者模式后复制扩展 ID；Safari：填写扩展选项页显示的 bundle identifier。',
+  bridgeExtensionIdPlaceholder:
+    '例如 abcdefghijklmnopabcdefghijklmnop / com.example.OpenCodeBridge.Extension',
   bridgeExtensionIdMissing: '请先填写 OpenCode Bridge 扩展 ID。',
   bridgeTestConnection: '测试连接',
-  bridgeTestConnectionOk: '连接成功，模型目录已加载。',
+  bridgeTestConnectionOk: '连接成功（{transport}），模型目录已加载。',
   bridgeTestConnectionFailed: '连接失败：{message}',
+  bridgeTransportDirect: '直连',
+  bridgeTransportRelay: 'content script 中继',
   bridgeSetupTitle: 'OpenCode Bridge 使用步骤',
   bridgeSetupOriginHint: '把当前页面 Origin（{origin}）加入扩展选项页的 Allowed origins。',
-  bridgeSetupKeyHint: 'API Key 只保存在扩展的 chrome.storage.local，不要填到本应用里。',
+  bridgeSetupKeyHint: 'API Key 只保存在扩展的本地存储里，不要填到本应用里。',
   bridgeSetupUserAgentHint: '在扩展里把 User-Agent 设为 chat4code-unrestricted/1.0。',
   bridgeSetupBaseUrlHint: '在扩展里选择 Console（按量付费）或 Go 订阅的 Base URL。',
+  bridgeSetupSafariHint:
+    'Safari 需要 16.4+，并在 Safari → 设置 → 扩展 → OpenCode Bridge → 网站访问中允许本站，然后刷新页面；网页会自动通过 content script 中继连接扩展。',
   bridgeErrorAuthMissing: '扩展里还没有保存 OpenCode API Key。',
   bridgeErrorOriginDenied: '扩展拒绝了当前页面 Origin，请把本站 Origin 加入扩展白名单。',
   bridgeErrorExtensionMissing:
-    '没有找到 OpenCode Bridge 扩展，请确认已安装并填写正确的扩展 ID。',
+    '没有找到 OpenCode Bridge 扩展，请确认已安装并填写正确的扩展 ID（Safari 为 bundle identifier）。',
+  bridgeErrorContentScriptMissing:
+    '扩展的 content script 没有在本页运行。请确认扩展已安装并启用；Safari 还需在扩展设置中允许本站访问，然后刷新页面。',
+  bridgeErrorNoResponse:
+    '扩展没有响应，请确认扩展已启用且扩展 ID 正确；Safari 请检查本站访问权限后刷新页面。',
   bridgeErrorNetwork: '无法连接 OpenCode Bridge 扩展或上游服务。',
   bridgeErrorDisconnected: '扩展后台连接中断，本次回复未能完成。',
   bridgeErrorBadRequest: '请求格式不符合 OpenCode 的 Anthropic 兼容接口要求。',

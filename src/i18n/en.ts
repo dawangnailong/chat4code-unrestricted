@@ -683,26 +683,35 @@ export const en = {
   settingProviderBridgeOptionLabel: 'OpenCode Bridge',
   bridgeExtensionIdLabel: 'Extension ID',
   bridgeExtensionIdDescription:
-    'Open chrome://extensions with Developer mode on and copy the OpenCode Bridge ID.',
-  bridgeExtensionIdPlaceholder: 'e.g. abcdefghijklmnopabcdefghijklmnop',
+    'Chrome: open chrome://extensions with Developer mode on and copy the extension ID. Safari: paste the bundle identifier shown on the extension options page.',
+  bridgeExtensionIdPlaceholder:
+    'e.g. abcdefghijklmnopabcdefghijklmnop / com.example.OpenCodeBridge.Extension',
   bridgeExtensionIdMissing: 'Enter the OpenCode Bridge extension ID first.',
   bridgeTestConnection: 'Test connection',
-  bridgeTestConnectionOk: 'Connected. The model catalog has been loaded.',
+  bridgeTestConnectionOk: 'Connected via {transport}. The model catalog has been loaded.',
   bridgeTestConnectionFailed: 'Connection failed: {message}',
+  bridgeTransportDirect: 'direct connection',
+  bridgeTransportRelay: 'content-script relay',
   bridgeSetupTitle: 'OpenCode Bridge setup',
   bridgeSetupOriginHint:
     'Add this page origin ({origin}) to the extension options page Allowed origins.',
   bridgeSetupKeyHint:
-    'The API key is stored only in the extension chrome.storage.local; do not paste it here.',
+    'The API key is stored only in the extension local storage; do not paste it here.',
   bridgeSetupUserAgentHint:
     'Set the extension User-Agent override to chat4code-unrestricted/1.0.',
   bridgeSetupBaseUrlHint:
     'Choose the Console (pay-as-you-go) or Go subscription base URL inside the extension.',
+  bridgeSetupSafariHint:
+    'Safari 16.4+ is required. Allow this site in Safari → Settings → Extensions → OpenCode Bridge → Website Access, then reload the page; the app falls back to the content-script relay automatically.',
   bridgeErrorAuthMissing: 'No OpenCode API key has been saved in the extension yet.',
   bridgeErrorOriginDenied:
     'The extension denied this page origin. Add this site origin to its allowlist.',
   bridgeErrorExtensionMissing:
-    'OpenCode Bridge was not found. Check that it is installed and the extension ID is correct.',
+    'OpenCode Bridge was not found. Check that it is installed and the extension ID is correct (Safari uses the bundle identifier).',
+  bridgeErrorContentScriptMissing:
+    "The extension's content script is not running on this page. Check that the extension is installed and enabled; in Safari, also allow this site under Website Access, then reload the page.",
+  bridgeErrorNoResponse:
+    'The extension did not respond. Check that it is enabled and the extension ID is correct; in Safari, check the site access permission and reload the page.',
   bridgeErrorNetwork: 'Could not reach the OpenCode Bridge extension or the upstream service.',
   bridgeErrorDisconnected: 'The extension background connection closed before the reply finished.',
   bridgeErrorBadRequest: 'The request does not match the OpenCode Anthropic-compatible schema.',

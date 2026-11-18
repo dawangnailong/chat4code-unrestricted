@@ -12,7 +12,7 @@
 
 > 本项目是官方示例 [deepseek-ai/chat-demo](https://github.com/deepseek-ai/chat-demo) 的**非官方修改版**（fork），MIT 许可。
 > 所有改动都在浏览器里完成：请求体怎么拼、回复怎么存、界面怎么显示。没有服务端代理或中转服务，
-> API Key 与对话记录仍只保存在你自己的浏览器里；可选的 OpenCode Bridge 模式把 OpenCode Key 保存在本机 Chrome 扩展中。
+> API Key 与对话记录仍只保存在你自己的浏览器里；可选的 OpenCode Bridge 模式把 OpenCode Key 保存在本机浏览器扩展中（Chrome / Safari）。
 >
 > 🔗在线版：<https://chat-unrestricted.fur0.com/>
 >
@@ -341,14 +341,21 @@ Persona（官方身份分块）
 设置 → **数据管理** → **推理通道** 增加一个默认关闭的第二通道：
 
 - `DeepSeek API`（默认）保持上面描述的浏览器直连行为。
-- `OpenCode Bridge` 通过本地 [OpenCode Bridge](https://github.com/debiandawangnailong7-coder/opencode-bridge) Chrome 扩展，把 Anthropic Messages 转发到 `https://opencode.ai/inference`（Console 按量付费）或 `https://opencode.ai/inference/go`（Go 订阅）；用哪个由扩展内的选项决定。之所以需要扩展，是因为 OpenCode 推理端点不返回 CORS 头、OPTIONS 预检直接 404，网页无法直连。
+- `OpenCode Bridge` 通过本地 [OpenCode Bridge](https://github.com/debiandawangnailong7-coder/opencode-bridge) 浏览器扩展（Chrome / Safari），把 Anthropic Messages 转发到 `https://opencode.ai/inference`（Console 按量付费）或 `https://opencode.ai/inference/go`（Go 订阅）；用哪个由扩展内的选项决定。之所以需要扩展，是因为 OpenCode 推理端点不返回 CORS 头、OPTIONS 预检直接 404，网页无法直连。
 
 配置步骤：
 
-1. 在 `chrome://extensions` 打开开发者模式，加载已解压的 OpenCode Bridge 扩展，在扩展选项里保存 `oc_sk_...` Key。Key 不会进入本页面。
+1. 安装扩展，并在扩展选项页保存 `oc_sk_...` Key。Key 不会进入本页面。
+   - Chrome：在 `chrome://extensions` 打开开发者模式，加载已解压的扩展。
+   - Safari 16.4+：先用 `xcrun safari-web-extension-converter` 转换成 Xcode 工程，选择签名 team 运行一次 App，然后在 Safari → 设置 → 扩展中启用。
 2. 把本页面的确切 Origin（例如 `http://localhost:8090`）加入扩展的 **Allowed origins**，选择 Console 或 Go，并把 User-Agent 覆盖为 `chat4code-unrestricted/1.0`。
 3. 在设置 → 数据管理 → OpenCode Bridge 填入扩展 ID，点「测试连接」。
+   - Chrome 使用 `chrome://extensions` 里的 32 位 ID。
+   - Safari 使用扩展选项页显示的 **bundle identifier**（例如 `com.example.OpenCodeBridge.Extension`）。
 4. 通过 `http://localhost:...` 或其他 `http(s)` Origin 访问本应用；扩展会拒绝 `file://`。
+5. Safari 还需要按站点授权：Safari → 设置 → 扩展 → OpenCode Bridge → **网站访问**，允许本站（或所有网站），然后刷新页面。Chrome 走直连；Safari 页面会自动回退到扩展的 content script 中继（`window.postMessage`）。「测试连接」会显示实际协商出的路径。
+
+Safari 没有 offscreen document，请求在 MV3 service worker 内执行，受其 fetch 计时限制（约 25 秒首字节、单请求 5 分钟）。Chrome 不受影响；Safari 下超长回复可能被中断。
 
 Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safety_check`、`latest_reminder`、`deepseek_*` 服务端工具、`title`、`reasoning_effort`）会被剥离，模型 id `deepseek-flash` 映射为 `deepseek-v4.1-flash`，并按聊天会话派生稳定的 `x-opencode-session`。附件、语音、服务端联网搜索与实验台在该模式下禁用。
 
@@ -492,7 +499,7 @@ Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safet
 
 - API Key、各项设置：浏览器 localStorage（键名见第 5 节）；
 - 会话与附件原件：IndexedDB，按浏览器用户配置与站点源隔离；
-- 出站请求只有你配置的 API 地址（默认 `https://api.deepseek.com`）：`/models` 校验 Key、`/anthropic/v1/messages` 对话、`/anthropic/v1/files` 附件、ASR / TTS 语音接口。OpenCode Bridge 模式下页面改为通过 `chrome.runtime` 把消息交给本地扩展，由扩展访问 `https://opencode.ai/inference[/go]`，页面不接触 OpenCode Key；
+- 出站请求只有你配置的 API 地址（默认 `https://api.deepseek.com`）：`/models` 校验 Key、`/anthropic/v1/messages` 对话、`/anthropic/v1/files` 附件、ASR / TTS 语音接口。OpenCode Bridge 模式下页面改为通过 `chrome.runtime`（Chrome）或 content script 中继（Safari，`window.postMessage`）把消息交给本地扩展，由扩展访问 `https://opencode.ai/inference[/go]`，页面不接触 OpenCode Key；
 - 没有统计、没有埋点、没有第三方脚本、没有中转服务器；
 - 历史导入导出为 ZIP，导出包含会话与本地图片原件，不包含 API Key 与设置；归档格式与保留范围见[历史导入导出说明](src/services/chat/history/README.md)。
 

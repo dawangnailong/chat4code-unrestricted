@@ -1,7 +1,7 @@
 /**
  * Hand-written declarations for the vendored OpenCode Bridge web SDK.
  * Source: https://github.com/debiandawangnailong7-coder/opencode-bridge
- * Commit: deadcb8 (MIT)
+ * Commit: ec91664 (MIT)
  */
 
 export type BridgeHeaders = Record<string, string>
@@ -27,10 +27,18 @@ export type BridgeConversationOptions = {
   sessionId?: string
 }
 
+export type BridgeTransport = 'direct' | 'relay'
+export type BridgeTransportPreference = 'auto' | BridgeTransport
+
 export type BridgeOptions = {
+  /** Chrome extension ID, or the Safari bundle identifier. */
   extensionId: string
   portName?: string
   helloTimeoutMs?: number
+  /** Defaults to "auto": direct port first, content-script relay on failure. */
+  transport?: BridgeTransportPreference
+  directProbeTimeoutMs?: number
+  relayProbeTimeoutMs?: number
 }
 
 export type BridgeStreamBody = { stream: true } & Record<string, unknown>
@@ -38,6 +46,7 @@ export type BridgeNonStreamBody = { stream?: false } & Record<string, unknown>
 
 export class OpenCodeBridgeError extends Error {
   code: string
+  hint?: string
   status?: number
   statusText?: string
   headers?: BridgeHeaders
@@ -91,6 +100,8 @@ export class Conversation {
 export class OpenCodeBridge {
   constructor(options: BridgeOptions)
   readonly extensionId: string
+  /** Negotiated transport after connect(); null until the handshake completes. */
+  readonly transport: BridgeTransport | null
   connect(): Promise<this>
   createConversation(options?: BridgeConversationOptions): Conversation
   readonly models: {
