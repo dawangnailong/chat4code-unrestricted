@@ -668,7 +668,7 @@ const AboutSetting = () => {
       label: 'aboutRepositoryLabel',
       href: 'https://github.com/dawangnailong/chat4code-unrestricted',
     },
-    { label: 'aboutDemoLabel', href: 'https://chat-unrestricted.fur0.com/' },
+    { label: 'aboutDemoLabel', href: 'https://dawangnailong.github.io/chat4code-unrestricted/' },
     { label: 'aboutUpstreamLabel', href: 'https://github.com/deepseek-ai/chat-demo' },
   ]
   return (

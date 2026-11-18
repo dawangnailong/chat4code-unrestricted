@@ -14,7 +14,7 @@
 > Every change lives in the browser: how the request body is assembled, how replies are stored, and how they are rendered.
 > There is no proxy and no relay service. Your API key and conversations stay in your own browser.
 >
-> 🔗Live demo: <https://chat-unrestricted.fur0.com/>
+> 🔗Live demo: <https://dawangnailong.github.io/chat4code-unrestricted/>
 >
 > 📦Repository: <https://github.com/dawangnailong/chat4code-unrestricted>
 >

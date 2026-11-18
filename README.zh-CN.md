@@ -14,7 +14,7 @@
 > 所有改动都在浏览器里完成：请求体怎么拼、回复怎么存、界面怎么显示。没有代理、没有中转服务，
 > API Key 与对话记录仍只保存在你自己的浏览器里。
 >
-> 🔗在线版：<https://chat-unrestricted.fur0.com/>
+> 🔗在线版：<https://dawangnailong.github.io/chat4code-unrestricted/>
 >
 > 📦仓库：<https://github.com/dawangnailong/chat4code-unrestricted>
 >

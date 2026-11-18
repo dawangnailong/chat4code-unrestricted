@@ -133,7 +133,7 @@ curl -s -X POST http://127.0.0.1:8765/mcp \
 
 - `http://127.0.0.1:*`、`http://localhost:*`（`pnpm dev`）
 - `null`（直接双击 `dist/index.html`，`file://` 页面的 Origin 是字符串 `null`）
-- `https://chat-unrestricted.fur0.com`、`https://chat-unrestricted.furries.fun`、`https://xiaohuangbo.github.io`（线上站点）
+- `https://chat-unrestricted.fur0.com`、`https://dawangnailong.github.io`、`https://xiaohuangbo.github.io`（线上站点）
 
 换成别的域名/端口时，用环境变量追加，然后重启后端：
 

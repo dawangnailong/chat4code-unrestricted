@@ -172,7 +172,7 @@ def main() -> None:
     # 浏览器直连本地后端时，Origin 可能是：
     # - http://127.0.0.1:8090 / http://localhost:8090（pnpm dev）
     # - null（直接双击 dist/index.html 的 file:// 页面）
-    # - https://chat-unrestricted.fur0.com 等线上站点
+    # - https://dawangnailong.github.io 等线上站点
     # 线上域名可通过 MCP_ALLOWED_ORIGINS（逗号分隔）追加，避免把任意网站放进白名单。
     extra_origins = [
         item.strip()
@@ -187,7 +187,7 @@ def main() -> None:
             'http://localhost:*',
             'null',
             'https://chat-unrestricted.fur0.com',
-            'https://chat-unrestricted.furries.fun',
+            'https://dawangnailong.github.io',
             'https://xiaohuangbo.github.io',
             *extra_origins,
         ],
