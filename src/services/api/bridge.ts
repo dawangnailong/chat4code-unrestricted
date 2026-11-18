@@ -80,6 +80,18 @@ export const connectBridge = async (extensionId: string): Promise<OpenCodeBridge
 /** 当前 bridge 协商出的传输方式：direct（Chrome 主路径）或 relay（Safari content script） */
 export const getBridgeTransport = (): 'direct' | 'relay' | null => bridge?.transport ?? null
 
+/**
+ * 丢弃当前连接，下一次请求重新握手。
+ * Safari 回收扩展后台后，页面上旧的 direct port 可能已失效却不再触发 onDisconnect；
+ * 继续复用会让之后每次发送都在 postMessage 上失败，只能重新建立连接。
+ */
+export const resetBridgeConnection = () => {
+  bridge?.close()
+  bridge = null
+  bridgeExtensionId = ''
+  conversations.clear()
+}
+
 /** 同一聊天会话复用同一个 bridge conversation，保证 x-opencode-session 稳定 */
 export const getBridgeConversation = async (
   extensionId: string,
@@ -106,7 +118,7 @@ export const listBridgeModels = async (
   try {
     response = await instance.models.list({ signal })
   } catch (error) {
-    throw toBridgeError(error, signal)
+    throw failBridge(error, signal)
   }
   if (response.status < 200 || response.status >= 300) {
     throw new ApiError(
@@ -144,7 +156,7 @@ export async function* streamViaBridge(
       { signal }
     )
   } catch (error) {
-    throw toBridgeError(error, signal)
+    throw failBridge(error, signal)
   }
 
   let sawMessageStop = false
@@ -167,7 +179,7 @@ export async function* streamViaBridge(
     if (signal.aborted) {
       throw signal.reason
     }
-    throw toBridgeError(error, signal)
+    throw failBridge(error, signal)
   }
   if (!sawMessageStop) {
     // 与 DeepSeek 传输层一致：没有 message_stop 就按断流处理
@@ -289,7 +301,8 @@ const BRIDGE_ERROR_MAP: Record<string, { kind: ApiErrorKind; key: TranslationKey
   CONTENT_SCRIPT_MISSING: { kind: 'network', key: 'bridgeErrorContentScriptMissing' },
   EXTENSION_ID_REQUIRED: { kind: 'network', key: 'bridgeErrorExtensionMissing' },
   CONNECT_FAILED: { kind: 'network', key: 'bridgeErrorExtensionMissing' },
-  CONNECT_TIMEOUT: { kind: 'network', key: 'bridgeErrorNetwork' },
+  // Safari 没有 offscreen，扩展在 service worker 里 fetch，首字节超过 25 秒会被中止
+  CONNECT_TIMEOUT: { kind: 'network', key: 'bridgeErrorTimeout' },
   HELLO_TIMEOUT: { kind: 'network', key: 'bridgeErrorNoResponse' },
   NETWORK_ERROR: { kind: 'network', key: 'bridgeErrorNetwork' },
   CLOSED: { kind: 'network', key: 'bridgeErrorNetwork' },
@@ -334,6 +347,23 @@ export const toBridgeError = (error: unknown, signal?: AbortSignal): unknown => 
   if (mapped) {
     return new ApiError(mapped.kind, { key: mapped.key })
   }
-  const message: TranslationMessage = { key: 'bridgeErrorNetwork' }
+  // 未登记的上游/扩展错误码（STREAM_ERROR、CONFIG_ERROR 等）保留原始说明，
+  // 否则用户只会看到「网络异常」，无法判断是配置、超时还是扩展断开。
+  const detail = typeof record?.message === 'string' ? truncate(record.message) : ''
+  const message: TranslationMessage = detail
+    ? { key: 'bridgeErrorUnknown', params: { message: detail } }
+    : { key: 'bridgeErrorNetwork' }
   return new ApiError('network', message)
+}
+
+/**
+ * 映射错误，并在连接/协议类失败后丢弃当前 bridge。
+ * 上游 HTTP 错误说明通道仍然可用，保留连接以便直接重试。
+ */
+function failBridge(error: unknown, signal?: AbortSignal): unknown {
+  const mapped = toBridgeError(error, signal)
+  if (!signal?.aborted && !(mapped instanceof ApiError && mapped.kind === 'http')) {
+    resetBridgeConnection()
+  }
+  return mapped
 }

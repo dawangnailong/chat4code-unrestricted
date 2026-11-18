@@ -713,6 +713,9 @@ export const en = {
   bridgeErrorNoResponse:
     'The extension did not respond. Check that it is enabled and the extension ID is correct; in Safari, check the site access permission and reload the page.',
   bridgeErrorNetwork: 'Could not reach the OpenCode Bridge extension or the upstream service.',
+  bridgeErrorTimeout:
+    'The upstream service did not respond in time. Safari has no offscreen document, so the request runs in the service worker and is aborted when the first byte takes longer than about 25 seconds; retry or lower the thinking effort.',
+  bridgeErrorUnknown: 'The bridge returned an error: {message}',
   bridgeErrorDisconnected: 'The extension background connection closed before the reply finished.',
   bridgeErrorBadRequest: 'The request does not match the OpenCode Anthropic-compatible schema.',
   bridgeErrorBodyTooLarge:

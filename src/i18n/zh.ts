@@ -643,6 +643,9 @@ export const zh = {
   bridgeErrorNoResponse:
     '扩展没有响应，请确认扩展已启用且扩展 ID 正确；Safari 请检查本站访问权限后刷新页面。',
   bridgeErrorNetwork: '无法连接 OpenCode Bridge 扩展或上游服务。',
+  bridgeErrorTimeout:
+    '上游在限定时间内没有响应。Safari 没有 offscreen，请求走 service worker，首字节超过约 25 秒会被中止；请重试或降低思考强度。',
+  bridgeErrorUnknown: '扩展返回错误：{message}',
   bridgeErrorDisconnected: '扩展后台连接中断，本次回复未能完成。',
   bridgeErrorBadRequest: '请求格式不符合 OpenCode 的 Anthropic 兼容接口要求。',
   bridgeErrorBodyTooLarge: '请求体超过 Bridge 的 4 MiB 限制，请压缩对话或减少附件。',

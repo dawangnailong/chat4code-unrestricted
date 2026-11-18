@@ -29,8 +29,15 @@ export const describeReply = (reply: AssistantMessage): Notice | null => {
     if (kind === 'upload') {
       return { text: message || translate('uploadFileStatusFailed') }
     }
+    // Bridge 把扩展侧的具体失败（Origin 未放行、content script 未注入、握手超时等）
+    // 也归入 network；有本地文案时优先展示原因，只有真正的直连网络错误才用通用提示。
     if (kind === 'network') {
-      return { text: translate('commonNetworkErrorToast') }
+      return {
+        text:
+          localMessage && isTranslationKey(localMessage.key)
+            ? message
+            : translate('commonNetworkErrorToast'),
+      }
     }
     switch (classifyStatus(status)) {
       case 'unauthorized':
