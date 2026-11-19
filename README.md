@@ -45,11 +45,11 @@
 
 **“一天聊出几十块”不是空穴来风**：典型长陪伴 V4 Pro 谷时约 18 元/天、峰时约 36 元；重度长陪伴谷时约 121 元/天、峰时约 240 元。Flash 便宜一个量级，但典型长陪伴也要 4.3 元/天（谷时）/ 8.6 元（峰时），重度 29 / 58 元/天。
 
-实际情况只会更差：我们用 agent harness 跑过一次普通的 README 重写任务，3 元多——这不像是我们做法错了，也不像是这个任务本应这么贵。社区里推荐的 [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)（及 [dsh-go](https://github.com/ccch1mneyyy/dsh-go)）本来就不是为聊天设计的，一次简单问答超过几块钱的量级是可能的，日常长对话只会更高。我们想帮的正是这类人——比如被“算力不足”挡在门外的[许肃们](https://www.sina.cn/news/detail/5366018630227784.html)（[聊天截图](http://wx1.sinaimg.cn/middle/6dd57921ly1ij4fu87rejj20te1ks1bl.jpg)）。走 OpenCode Go 的 API 通道，同样的用量，理论上是 1/10 的成本，考虑到缓存策略差异与 API 兼容差距，我们粗略估计成本可以压一些，比如压到约 1/5 的成本，并且不用过中转站。这就是第 1.4 节路径的意义。
+实际情况只会更差：我们用 agent harness 跑过一次普通的 README 重写任务，3 元多——这不像是我们做法错了，也不像是这个任务本应这么贵。社区里推荐的 [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)（及 [dsh-go](https://github.com/ccch1mneyyy/dsh-go)）不是为聊天设计的，简单问答几块钱的量级是可能的，日常长对话只会更高。我们希望服务的场景——比如被“算力不足”挡在门外的[许肃们](https://www.sina.cn/news/detail/5366018630227784.html)（[聊天截图](http://wx1.sinaimg.cn/middle/6dd57921ly1ij4fu87rejj20te1ks1bl.jpg)）。走 OpenCode Go 的 API 通道，同样的用量，理论上是 1/10 的成本，考虑到缓存策略差异与 API 兼容差距，我们粗略估计成本可以压一些，比如压到约 1/5 的成本，并且不用过中转站。这就是第 1.4 节路径的意义。
 
 ### 1.3 “为什么不在谷时用”不是答案
 
-峰时是工作日 09:00–12:00、14:00–18:00；其余时间才是谷时，包括晚上、周末和节假日。要求聊天用户按 API 折扣时段安排生活，不是产品方案。对普通用户来说，“去用 API”和“为什么不在谷时用”都不构成一个可用的方案。
+峰时是工作日 09:00–12:00、14:00–18:00；其余时间才是谷时，包括晚上、周末和节假日。要求聊天用户按 API 折扣时段安排生活，不是产品方案。对用户来说，“为什么不在谷时用”不构成一个可用的方案。
 
 ### 1.4 我们在推的路径：OpenCode Go + opencode-bridge + 聊天？
 
