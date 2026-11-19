@@ -1218,7 +1218,7 @@ export const zh = {
   bridgeSetupTitle: 'OpenCode Bridge 使用步骤',
   bridgeSetupOriginHint: '把当前页面 Origin（{origin}）加入扩展选项页的 Allowed origins。',
   bridgeSetupKeyHint: 'API Key 只保存在扩展的本地存储里，不要填到本应用里。',
-  bridgeSetupUserAgentHint: '在扩展里把 User-Agent 设为 chat4code-unrestricted/1.0。',
+  bridgeSetupUserAgentHint: '在扩展里把 User-Agent 设为 chat4code-unrestricted/1.0.0。',
   bridgeSetupBaseUrlHint: '在扩展里选择 Console（按量付费）或 Go 订阅的 Base URL。',
   bridgeSetupSafariHint:
     'Safari 需要 16.4+，并在 Safari → 设置 → 扩展 → OpenCode Bridge → 网站访问中允许本站，然后刷新页面；网页会自动通过 content script 中继连接扩展。',

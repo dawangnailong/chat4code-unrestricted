@@ -99,7 +99,7 @@ OpenCode Bridge 已经让浏览器接入 OpenCode Console/Go 推理，聊天可�
 1. **在线版（推荐）**：打开 <https://dawangnailong.github.io/chat4code-unrestricted/>，在 设置 → 数据管理 填 DeepSeek API Key。key 只留在浏览器，本前端不经过第三方中转。
 2. **可选：OpenCode Go**：
    - 安装 opencode-bridge 扩展（Chrome 开发者模式加载已解压的扩展；Safari 16.4+ 用 `xcrun safari-web-extension-converter` 转换并启用；Firefox 需 121+）。
-   - 在扩展选项页把当前页面 Origin 加入 Allowed origins，User-Agent 设为 `chat4code-unrestricted/1.0`，选择 Console 或 Go 的 Base URL，并把 OpenCode API Key 保存在扩展里（不要填到应用里）。
+   - 在扩展选项页把当前页面 Origin 加入 Allowed origins，User-Agent 设为 `chat4code-unrestricted/1.0.0`，选择 Console 或 Go 的 Base URL，并把 OpenCode API Key 保存在扩展里（不要填到应用里）。
    - 在 设置 → 数据管理 → 推理通道 选 OpenCode Bridge，填扩展 ID（Chrome 在 `chrome://extensions` 复制，Safari 填 bundle identifier），点“测试连接”。
    - Safari 还需在 设置 → 扩展 → OpenCode Bridge → 网站访问 中允许本站并刷新；`file://` 会被扩展拒绝，请用 http(s) 地址。
 3. Bridge 模式暂不支持文档附件、语音识别/朗读、服务端联网搜索与实验台；图片以 base64 内联，每次请求只内联最近 1–10 张（需扩展 v0.2.0+）。

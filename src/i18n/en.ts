@@ -1321,7 +1321,7 @@ export const en = {
   bridgeSetupKeyHint:
     'The API key is stored only in the extension local storage; do not paste it here.',
   bridgeSetupUserAgentHint:
-    'Set the extension User-Agent override to chat4code-unrestricted/1.0.',
+    'Set the extension User-Agent override to chat4code-unrestricted/1.0.0.',
   bridgeSetupBaseUrlHint:
     'Choose the Console (pay-as-you-go) or Go subscription base URL inside the extension.',
   bridgeSetupSafariHint:
