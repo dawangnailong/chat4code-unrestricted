@@ -8,7 +8,10 @@ import type { NanovmFS } from './fs.js'
  */
 
 /** 虚拟机的可安装工具链（按需加载，不装也能用 busybox） */
-export type ToolchainId = 'python' | 'node' | 'git'
+export type ToolchainId = 'python' | 'node' | 'lua' | 'sqlite' | 'esbuild' | 'make' | 'git'
+
+/** 控制台里的分组：运行时 / 构建 / 工具 */
+export type ToolchainCategory = 'runtime' | 'build' | 'tool'
 
 /** 工具链安装状态 */
 export type ToolchainState = {
@@ -22,6 +25,8 @@ export type ToolchainState = {
   version?: string
   /** 运行时体积（MB），未安装时为预计下载体积 */
   sizeMB: number
+  /** 控制台分组 */
+  category: ToolchainCategory
   /** 0–1，安装中 */
   progress?: number
   /** 安装失败原因 */

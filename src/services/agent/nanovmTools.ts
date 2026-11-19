@@ -158,23 +158,33 @@ const lsTool: AgentTool = {
   },
 }
 
+/**
+ * 可安装工具链的静态清单。
+ *
+ * 与 `src/services/nanovm/packages.ts` 的 TOOLCHAIN_IDS 保持一致：这里只是给模型
+ * 看的 enum，工具真正执行时才动态 import 注册表（避免把 Pyodide / wasmoon 的加载器
+ * 拖进首屏包）。新增工具链时两处都要改。
+ */
+const INSTALLABLE = ['python', 'node', 'lua', 'sqlite', 'esbuild', 'make', 'git'] as const
+
 const installTool: AgentTool = {
   id: 'nanovm_install',
   label: '安装 NanoVM 工具链',
   labelEn: 'Install NanoVM toolchain',
-  summary: '在 NanoVM Slim 里按需安装 Python / Node.js / Git；需要确认。',
-  summaryEn: 'Install Python / Node.js / Git into NanoVM Slim on demand; asks for confirmation.',
+  summary: '在 NanoVM Slim 里按需安装运行时与构建器；需要确认。',
+  summaryEn: 'Install runtimes and builders into NanoVM Slim on demand; asks for confirmation.',
   description:
     '在 NanoVM Slim 虚拟机里安装（启用）一个工具链：python（Pyodide 版 CPython，' +
-    '首次需联网下载约 12MB）、node（浏览器内置，无需下载）、git（内置实现，无需下载）。' +
-    '安装完成后就能在 nanovm_shell 里直接使用对应命令。已安装时直接返回成功。',
+    '首次需联网下载约 12MB）、lua（wasmoon 版 Lua 5.4，约 0.4MB）、sqlite（sql.js 版 SQLite，' +
+    '约 1.3MB）、esbuild（esbuild-wasm 打包器，约 12MB）、node 与 git 与 make（浏览器内置，' +
+    '无需下载）。安装完成后就能在 nanovm_shell 里直接使用对应命令。已安装时直接返回成功。',
   inputSchema: {
     type: 'object',
     properties: {
       tool: {
         type: 'string',
         description: '要安装的工具链',
-        enum: ['python', 'node', 'git'],
+        enum: [...INSTALLABLE],
       },
     },
     required: ['tool'],
@@ -187,7 +197,7 @@ const installTool: AgentTool = {
     // 动态 import：工具链运行时（git / node / Pyodide）不进首屏包
     const packages = await import('../nanovm/packages.js')
     if (!packages.isToolchainId(tool)) {
-      return fail('tool 必须是 python、node、git 之一')
+      return fail(`tool 必须是 ${INSTALLABLE.join('、')} 之一`)
     }
     const usePackages = packages.usePackages
     const current = usePackages.getState().states[tool]
@@ -207,8 +217,7 @@ const installTool: AgentTool = {
     const installed = usePackages.getState().states[tool]
     const sizeMB = packages.toolchainSizeMB(tool)
     const size = sizeMB > 0 ? `约 ${sizeMB} MB` : '内置，无需下载'
-    const example =
-      tool === 'python' ? 'python3 script.py' : tool === 'node' ? 'node script.js' : 'git status'
+    const example = packages.toolchainHint(tool as (typeof INSTALLABLE)[number])
     return ok(
       [
         `已安装 ${installed.label}${installed.version ? ` ${installed.version}` : ''}（${size}）。`,

@@ -1044,17 +1044,34 @@
   line-height: 18px;
 }
 
+/* 工具链总结行：已安装数量与占用体积 */
+.toolchainTotals {
+  padding: 0 0 4px;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 一组工具链：标题 + 说明 + 卡片网格 */
+.toolchainGroup {
+  margin: 8px 0 4px;
+}
+
+/* 卡片网格：桌面两列，窄屏自动退成一列，避免 7 张卡片挤成一条 */
 .toolchains {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 .toolchain {
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
   gap: 4px;
+  min-height: 168px;
   padding: 12px 14px;
   border: 1px solid var(--dsw-alias-border-l2);
   border-radius: 14px;
@@ -1069,24 +1086,79 @@
 }
 
 .toolchainName {
+  min-width: 0;
+  overflow: hidden;
   color: var(--dsw-alias-label-primary);
   font-size: 13px;
   font-weight: 600;
   line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 体积徽标 + 状态点 */
+.toolchainMeta {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
 }
 
 .toolchainSize {
   flex-shrink: 0;
-  color: var(--dsw-alias-label-tertiary);
+  padding: 0 6px;
+  border-radius: 6px;
+  background-color: var(--dsw-alias-interactive-bg-hover-accent);
+  color: var(--dsw-alias-label-secondary);
   font-size: 11px;
-  line-height: 17px;
+  line-height: 16px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .toolchainState {
   color: var(--dsw-alias-label-secondary);
   font-size: 12px;
   line-height: 18px;
+}
+
+/* 已安装后的示例命令：等宽、可点击复制；没有剪贴板 API 时就是一行普通文本 */
+.toolchainTry {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 4px 6px;
+  border: 1px dashed var(--dsw-alias-border-l3);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--dsw-alias-interactive-bg-hover-accent);
+    background-color: var(--dsw-alias-bg-base);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--dsw-alias-button-primary-fill);
+  }
+
+  /* 纯展示（没有剪贴板 API）：不做 hover 与手型，避免看起来可点 */
+  &[data-static='true'] {
+    cursor: default;
+  }
+
+  &[data-static='true']:hover {
+    border-color: var(--dsw-alias-border-l3);
+    background: transparent;
+  }
 }
 
 .toolchainBar {
@@ -1106,7 +1178,8 @@
 .toolchainActions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 6px;
+  margin-top: auto;
+  padding-top: 6px;
 }
 
 .error {
@@ -1129,4 +1202,15 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* 窄屏（设置页 ≤ 480px）：工具链网格退成单列 / 两列，长命令不撑破卡片 */
+@media (max-width: 480px) {
+  .toolchains {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
+
+  .toolchain {
+    min-height: 0;
+  }
 }

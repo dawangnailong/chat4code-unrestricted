@@ -1091,7 +1091,7 @@ export const executeNode = async (options: SandboxOptions): Promise<SandboxOutco
     platform: NODE_PLATFORM,
     arch: 'wasm',
     version: `v${NODE_VERSION}`,
-    versions: { node: NODE_VERSION, nanovm: '2.6.8' },
+    versions: { node: NODE_VERSION, nanovm: '2.7.0' },
     pid: 1,
     exitCode: 0,
     title: 'node',
@@ -1203,7 +1203,7 @@ export const executeNode = async (options: SandboxOptions): Promise<SandboxOutco
       tmpdir: () => '/tmp',
       homedir: () => '/home/user',
       hostname: () => 'nanovm',
-      release: () => '2.6.8',
+      release: () => '2.7.0',
     },
     util: {
       format: (...values: unknown[]): string => formatArgs(values),

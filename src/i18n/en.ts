@@ -1398,7 +1398,25 @@ export const en = {
   nanovmResetDone: 'VM reset',
   nanovmToolchains: 'On-demand toolchains',
   nanovmToolchainsHint:
-    'busybox works without them. Once installed, both you and the model can use them, and they stay cached locally.',
+    'busybox works without installing anything. Runtimes and build tools download on demand and stay cached locally; the built-in Node / Git / make can be switched on and off instantly.',
+  nanovmToolchainsRuntime: 'Runtimes',
+  nanovmToolchainsBuild: 'Build tools',
+  nanovmToolchainsTool: 'Command-line tools',
+  nanovmToolchainsRuntimeHint:
+    'Python / Node / Lua / SQLite — for scripts, databases and everything in between.',
+  nanovmToolchainsBuildHint: 'esbuild and make — bundle and compile right inside the VM.',
+  nanovmToolchainsToolHint: 'Git for version control, built in — nothing to download.',
+  nanovmToolchainSummary: '{installed} of {total} installed · about {size} MB',
+  nanovmToolchainTryHint: 'Try {command}',
+  nanovmToolchainCopy: 'Copy',
+  nanovmToolchainCopied: 'Command copied',
+  nanovmToolchainCopyFailed: 'Copy failed — select the command manually',
+  nanovmBuiltinLabel: 'Built-in',
+  nanovmInstallEnable: 'Enable',
+  nanovmInstallDisable: 'Disable',
+  nanovmInstalledToast: '{label} installed',
+  nanovmUninstalledToast: '{label} uninstalled',
+  nanovmUninstallFailed: 'Uninstall failed: {reason}',
   nanovmInstalledVersion: 'Installed {version}',
   nanovmNotInstalled: 'Not installed',
   nanovmInstalling: 'Installing {percent}%',
@@ -1454,6 +1472,18 @@ export const en = {
   nanovmNetInvalid: 'The proxy URL must start with http:// or https://',
   nanovmNetChecking: 'Testing…',
   settingDialogAsideNanoVMOptionLabel: 'NanoVM Slim',
+  changelogV270Title: 'v2.7.0 · 2026-11',
+  changelogV270Mobile:
+    'Mobile input bar rework: chain-of-thought, web search and deep thinking moved to a second row with visible text labels right above the send button, so no more sideways scrolling and guessing at icon-only buttons. On wider phones the three toggles share the send row. Desktop layout is unchanged',
+  changelogV270Commands:
+    'NanoVM Slim gains 26 commands: sha512sum, strings, hexdump, xxd, od, column, fold, expand / unexpand, numfmt, cmp, base32, a jq subset, zip / unzip, split, shuf, join, comm, basename, dirname, realpath, readlink, mktemp, nproc and timeout',
+  changelogV270Jq:
+    'A built-in jq subset: pipes, `.[]`, map / select / sort_by / to_entries and the usual `-r` / `-c` / `-s` / `--arg` flags, enough to read API responses and rewrite config',
+  changelogV270Toolchains:
+    'New on-demand toolchains in Settings → NanoVM Slim: Lua 5.4 (wasmoon), SQLite 3 (sql.js), esbuild (esbuild-wasm) and the built-in make builder. The console groups them into runtimes / build tools / command-line tools and each card shows size, version and a copyable example command',
+  changelogV270Make:
+    'The built-in make supports variables (= / := / ?= / +=), .PHONY, pattern rules, $(wildcard) / $(patsubst) / $(shell) and automatic variables; recipes run through the shell, with `make -n` / `-B` / `-k` / `-C` / `-f`',
+  changelogV270Apk: 'Builds the 2.7.0 APK (versionCode 270), signed with xiaohuangbo.jks',
   changelogV269Title: 'v2.6.9 · 2026-11',
   changelogV269Update:
     'Settings → About now has “Check for updates”: it reads the latest GitHub release and offers the APK directly on Android (or the release page when there is no asset), so no more manual version hunting',

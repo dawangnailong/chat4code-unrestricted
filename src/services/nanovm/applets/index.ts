@@ -3,6 +3,7 @@ import { CORE_APPLETS } from './core.js'
 import { TEXT_APPLETS } from './text.js'
 import { ARCHIVE_APPLETS } from './archive.js'
 import { NET_APPLETS } from './net.js'
+import { EXTRAS_APPLETS } from './extras.js'
 import { TOOLCHAIN_APPLETS } from './toolchain.js'
 
 /**
@@ -17,6 +18,7 @@ const groups: Applet[][] = [
   TEXT_APPLETS,
   ARCHIVE_APPLETS,
   NET_APPLETS,
+  EXTRAS_APPLETS,
   TOOLCHAIN_APPLETS,
 ]
 

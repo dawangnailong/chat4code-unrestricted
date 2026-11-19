@@ -166,6 +166,34 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
     }
   }
 
+  /*
+   * 思维链 / 智能搜索 / 深度思考三个开关。
+   * 桌面端接在模式胶囊后面（同一排），手机端放进 .advanced 单独一排并显示文字标签，
+   * 这样窄屏也能一眼看到功能名，而不是只看到一个无文字的圆图标。
+   */
+  const advanced = (
+    <>
+      <CustomCotButton
+        triggerClassName={styles.toggle}
+        selectedClassName={styles.selected}
+        labelClassName={styles.toggleLabel}
+      />
+      <Tooltip content={t('deactivatedSearchTooltip')}>
+        <button
+          type="button"
+          className={clsx(styles.toggle, search && styles.selected)}
+          aria-label={t('search')}
+          aria-pressed={search}
+          onClick={() => setSearch(!search)}
+        >
+          <IconGlobeLanguageOutline14 />
+          <span className={styles.toggleLabel}>{t('search')}</span>
+        </button>
+      </Tooltip>
+      <ThinkingSlider />
+    </>
+  )
+
   return (
     <div
       className={clsx(styles.wrapper, sessionId === null ? styles.home : styles.session)}
@@ -214,7 +242,13 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
         </div>
       </div>
       <div className={styles.functionRow}>
-        {/* 第一排：模型 / 自动越狱 / 扰动；第二排：思维链 / 智能搜索 / 深度思考 */}
+        {/*
+          桌面端：第一排模型 / 自动越狱 / 扰动，第二排在 toolbarBreak 之后放模式、
+          思维链、智能搜索与深度思考（和 v2.6.x 完全一致）。
+          手机端：第一排仍是模型 / 模式 / 自动越狱 / 扰动的横向滚动条，
+          思维链 / 智能搜索 / 深度思考单独成排（.advanced），带文字标签，
+          和发送按钮那一排上下相邻——不再藏在滚动条最右端。
+        */}
         <div className={styles.toggles}>
           <ModelPicker />
           <span className={styles.toolbarDivider} aria-hidden />
@@ -238,32 +272,16 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
               labelClassName={styles.toggleLabel}
             />
           </Tooltip>
-          {/* 桌面端在此换行：模式、思维链、智能搜索与深度思考占第二排；手机端仍是一行横向滚动 */}
-          <span className={styles.toolbarBreak} aria-hidden />
+          {/* 桌面端在此换行：下面的模式与三个开关占第二排 */}
+          {isMobile ? null : <span className={styles.toolbarBreak} aria-hidden />}
           <ModePicker
             triggerClassName={styles.toggle}
             selectedClassName={styles.selected}
             labelClassName={styles.toggleLabel}
           />
-          <CustomCotButton
-            triggerClassName={styles.toggle}
-            selectedClassName={styles.selected}
-            labelClassName={styles.toggleLabel}
-          />
-          <Tooltip content={t('deactivatedSearchTooltip')}>
-            <button
-              type="button"
-              className={clsx(styles.toggle, search && styles.selected)}
-              aria-label={t('search')}
-              aria-pressed={search}
-              onClick={() => setSearch(!search)}
-            >
-              <IconGlobeLanguageOutline14 />
-              <span className={styles.toggleLabel}>{t('search')}</span>
-            </button>
-          </Tooltip>
-          <ThinkingSlider />
+          {isMobile ? null : advanced}
         </div>
+        {isMobile ? <div className={styles.advanced}>{advanced}</div> : null}
         <div className={styles.right}>
           <ContextRing sessionId={sessionId} streaming={streaming} onOpen={openStats} />
           <IconButton

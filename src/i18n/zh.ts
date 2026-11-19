@@ -1288,7 +1288,25 @@ export const zh = {
   nanovmResetConfirm: '确定重置 NanoVM Slim？虚拟机里的文件会全部删除。',
   nanovmResetDone: '虚拟机已重置',
   nanovmToolchains: '按需工具链',
-  nanovmToolchainsHint: '不装也能用 busybox；安装后 shell 与模型都能调用，装完缓存在本机。',
+  nanovmToolchainsHint:
+    '不装也能用 busybox；运行时与构建器都按需下载，装完缓存在本机，内置的 Node / Git / make 可直接启停。',
+  nanovmToolchainsRuntime: '运行时',
+  nanovmToolchainsBuild: '构建工具',
+  nanovmToolchainsTool: '命令行工具',
+  nanovmToolchainsRuntimeHint: 'Python / Node / Lua / SQLite：写脚本、查数据库都靠它们。',
+  nanovmToolchainsBuildHint: 'esbuild 与 make：在虚拟机里直接打包、编译。',
+  nanovmToolchainsToolHint: 'Git 版本管理，内置实现，不用下载。',
+  nanovmToolchainSummary: '已安装 {installed} / {total}，占用约 {size} MB',
+  nanovmToolchainTryHint: '试试 {command}',
+  nanovmToolchainCopy: '复制',
+  nanovmToolchainCopied: '已复制命令',
+  nanovmToolchainCopyFailed: '复制失败，请手动选择命令',
+  nanovmBuiltinLabel: '内置',
+  nanovmInstallEnable: '启用',
+  nanovmInstallDisable: '停用',
+  nanovmInstalledToast: '已安装 {label}',
+  nanovmUninstalledToast: '已卸载 {label}',
+  nanovmUninstallFailed: '卸载失败：{reason}',
   nanovmInstalledVersion: '已安装 {version}',
   nanovmNotInstalled: '未安装',
   nanovmInstalling: '安装中 {percent}%',
@@ -1341,6 +1359,18 @@ export const zh = {
   nanovmNetInvalid: '代理地址要以 http:// 或 https:// 开头',
   nanovmNetChecking: '测试中…',
   settingDialogAsideNanoVMOptionLabel: 'NanoVM Slim',
+  changelogV270Title: 'v2.7.0 · 2026-11',
+  changelogV270Mobile:
+    '手机端输入栏改版：思维链 / 智能搜索 / 深度思考挪到第二排并显示文字标签，和发送按钮上下相邻，不用再横向滑动去猜无文字图标；屏幕更宽时三个开关直接和发送按钮同排。桌面端布局完全不变',
+  changelogV270Commands:
+    'NanoVM Slim 新增 26 条命令：sha512sum、strings、hexdump、xxd、od、column、fold、expand / unexpand、numfmt、cmp、base32、jq 子集、zip / unzip、split、shuf、join、comm、basename、dirname、realpath、readlink、mktemp、nproc、timeout',
+  changelogV270Jq:
+    '内置 jq 子集：管道、`.[]`、map / select / sort_by / to_entries 等常用过滤器与 `-r` / `-c` / `-s` / `--arg` 选项，读接口返回、改配置够用',
+  changelogV270Toolchains:
+    '设置 → NanoVM Slim 新增按需工具链：Lua 5.4（wasmoon）、SQLite 3（sql.js）、esbuild（esbuild-wasm）与内置 make 构建器；控制台按「运行时 / 构建工具 / 命令行工具」分组，卡片显示体积、版本与装好后的示例命令，可点击复制',
+  changelogV270Make:
+    '内置 make 支持变量（= / := / ?= / +=）、.PHONY、模式规则、$(wildcard) / $(patsubst) / $(shell) 等函数与自动变量，配方经由 shell 执行，`make -n` / `-B` / `-k` / `-C` / `-f` 都能用',
+  changelogV270Apk: '同步构建 2.7.0 APK（versionCode 270），使用 xiaohuangbo.jks 签名',
   changelogV269Title: 'v2.6.9 · 2026-11',
   changelogV269Update:
     '设置 → 关于新增「检查更新」：读取 GitHub Releases 最新版本，安卓端直接给 APK 下载（没有产物时跳 Release 页），不用再手动对版本号',

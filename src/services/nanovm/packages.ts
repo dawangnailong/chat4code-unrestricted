@@ -3,15 +3,26 @@ import { dirName, resolvePath, type FsEntry, type NanovmFS } from './fs.js'
 import { GIT_VERSION, runGit } from './git.js'
 import { NODE_VERSION, runNode } from './nodeRuntime.js'
 import { nanoVMConfig } from './config.js'
-import type { ToolchainHost, ToolchainId, ToolchainIO, ToolchainState } from './types.js'
+import type {
+  ToolchainCategory,
+  ToolchainHost,
+  ToolchainId,
+  ToolchainIO,
+  ToolchainState,
+} from './types.js'
+import type { RuntimeModule } from './runtimes/types.js'
 
 /**
- * 按需工具链：Python（Pyodide）、Node.js 兼容运行时、Git。
+ * 按需工具链注册表。
  *
- * busybox 自带的那套命令不依赖任何运行时；这里的三样只在用户或模型真正用到的
- * 时候才加载。Python 从 CDN 下载 Pyodide（约 12MB），Node 与 Git 是纯浏览器实现，
- * 安装只是「启用」而已。
+ * busybox 自带的那套命令不依赖任何运行时；这里的运行时只在用户或模型真正用到
+ * 的时候才加载：
  *
+ * - python 从 CDN 下载 Pyodide（约 12MB）；
+ * - lua / sqlite / esbuild 分别从 CDN 加载 wasmoon、sql.js、esbuild-wasm；
+ * - node / git / make 是纯浏览器实现，安装只是「启用」而已。
+ *
+ * 新增运行时只需要两步：在 META 里登记，在 RUNTIMES 里挂上动态 import。
  * 安装状态只存 localStorage（`chat-demo:nanovm-packages`），文件仍然都在虚拟文件
  * 系统里；Pyodide 的产物额外放一份到 Cache Storage，下次安装能少下载一点。
  */
@@ -25,11 +36,19 @@ export const PYODIDE_BASE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/'
 /** Pyodide 的 ES 模块入口，用动态 import 加载，rspack 不会把它打进 bundle */
 export const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.mjs'
 
-/** 工具链展示顺序 */
-export const TOOLCHAIN_IDS: ToolchainId[] = ['python', 'node', 'git']
+/** 工具链展示顺序：控制台与 `vm list` 都按这个顺序排版 */
+export const TOOLCHAIN_IDS: ToolchainId[] = [
+  'python',
+  'node',
+  'lua',
+  'sqlite',
+  'esbuild',
+  'make',
+  'git',
+]
 
-/** 不需要下载、默认启用的两个运行时 */
-const BUNDLED: ToolchainId[] = ['node', 'git']
+/** 不需要下载、默认启用的运行时（可以 `vm uninstall` 关掉） */
+const BUNDLED: ToolchainId[] = ['node', 'git', 'make']
 
 /** 单次同步进 Pyodide / Worker 的内容上限，避免把整块磁盘搬来搬去 */
 const SYNC_LIMIT_BYTES = 16 * 1024 * 1024
@@ -44,6 +63,9 @@ type Meta = {
   summary: string
   sizeMB: number
   version: string
+  category: ToolchainCategory
+  /** 装好之后给用户的第一条示例命令 */
+  hint: string
 }
 
 const META: Record<ToolchainId, Meta> = {
@@ -52,23 +74,109 @@ const META: Record<ToolchainId, Meta> = {
     summary: 'Pyodide 版 CPython，首次使用按需下载',
     sizeMB: 12,
     version: '',
+    category: 'runtime',
+    hint: 'python3 script.py',
   },
   node: {
     label: 'Node.js',
     summary: '浏览器内置的 JS 运行时，无需下载',
     sizeMB: 0,
     version: `v${NODE_VERSION}`,
+    category: 'runtime',
+    hint: 'node script.js',
+  },
+  lua: {
+    label: 'Lua 5.4',
+    summary: 'wasmoon 版 Lua，脚本与 REPL 都能跑，按需下载',
+    sizeMB: 0.4,
+    version: '5.4',
+    category: 'runtime',
+    hint: 'lua script.lua',
+  },
+  sqlite: {
+    label: 'SQLite 3',
+    summary: 'sql.js 版 SQLite，直接读写虚拟机里的 .db 文件',
+    sizeMB: 1.3,
+    version: '3.x',
+    category: 'runtime',
+    hint: 'sqlite3 app.db "create table t(id integer);"',
+  },
+  esbuild: {
+    label: 'esbuild',
+    summary: '浏览器里的 esbuild-wasm，打包 / 转译 TS 与 JS',
+    sizeMB: 12,
+    version: '0.25',
+    category: 'build',
+    hint: 'esbuild main.ts --bundle --outfile=bundle.js',
+  },
+  make: {
+    label: 'GNU make',
+    summary: '内置 Makefile 构建器，无需下载',
+    sizeMB: 0,
+    version: '4.x 兼容',
+    category: 'build',
+    hint: 'make',
   },
   git: {
     label: 'Git',
     summary: '内置 git 实现（对象格式与真 git 一致），无需下载',
     sizeMB: 0,
     version: GIT_VERSION,
+    category: 'tool',
+    hint: 'git status',
   },
 }
 
-export const isToolchainId = (value: string): value is ToolchainId =>
-  value === 'python' || value === 'node' || value === 'git'
+const TOOLCHAIN_SET = new Set<string>(TOOLCHAIN_IDS)
+
+export const isToolchainId = (value: string): value is ToolchainId => TOOLCHAIN_SET.has(value)
+
+/** 控制台分组顺序 */
+export const TOOLCHAIN_CATEGORIES: ToolchainCategory[] = ['runtime', 'build', 'tool']
+
+/** 某分组下的工具链，按 TOOLCHAIN_IDS 的顺序 */
+export const toolchainIdsByCategory = (category: ToolchainCategory): ToolchainId[] =>
+  TOOLCHAIN_IDS.filter((id) => META[id].category === category)
+
+/** 工具链一句话说明（控制台卡片用） */
+export const toolchainSummary = (id: ToolchainId): string => META[id].summary
+
+/** 装好之后给用户的第一条示例命令 */
+export const toolchainHint = (id: ToolchainId): string => META[id].hint
+
+// ---------- 运行时模块（动态 import：没装过就不进首屏包） ----------
+
+/**
+ * 用 RuntimeModule 接口实现的工具链。python / node / git 有自己的历史实现，
+ * 不走这张表；新增运行时在 META 登记之后在这里挂上动态 import 即可。
+ */
+const RUNTIMES: Partial<Record<ToolchainId, () => Promise<RuntimeModule>>> = {
+  lua: () => import('./runtimes/lua.js').then((module) => module.luaRuntime),
+  sqlite: () => import('./runtimes/sqlite.js').then((module) => module.sqliteRuntime),
+  esbuild: () => import('./runtimes/esbuild.js').then((module) => module.esbuildRuntime),
+}
+
+const runtimeCache = new Map<ToolchainId, Promise<RuntimeModule>>()
+
+/** 取运行时模块；没有对应模块（内置运行时）返回 null */
+const runtimeOf = async (id: ToolchainId): Promise<RuntimeModule | null> => {
+  const loader = RUNTIMES[id]
+  if (!loader) {
+    return null
+  }
+  const cached = runtimeCache.get(id)
+  if (cached) {
+    return cached
+  }
+  const pending = loader()
+  runtimeCache.set(id, pending)
+  try {
+    return await pending
+  } catch (error) {
+    runtimeCache.delete(id)
+    throw error
+  }
+}
 
 // ---------- 安装状态 ----------
 
@@ -96,6 +204,7 @@ const emptyState = (id: ToolchainId): ToolchainState => ({
   summary: META[id].summary,
   installed: false,
   sizeMB: META[id].sizeMB,
+  category: META[id].category,
 })
 
 const readStored = (): StoredPackages => {
@@ -166,11 +275,11 @@ const initialState = (id: ToolchainId, stored: StoredPackages): ToolchainState =
 
 const initialStates = (): Record<ToolchainId, ToolchainState> => {
   const stored = readStored()
-  return {
-    python: initialState('python', stored),
-    node: initialState('node', stored),
-    git: initialState('git', stored),
+  const out = {} as Record<ToolchainId, ToolchainState>
+  for (const id of TOOLCHAIN_IDS) {
+    out[id] = initialState(id, stored)
   }
+  return out
 }
 
 export const usePackages = create<PackagesStore>(() => ({
@@ -987,9 +1096,27 @@ export const installToolchain = async (
         sizeMB: META.python.sizeMB,
       })
     } else {
-      report(0.5)
-      patchState(id, { installed: true, version: META[id].version, progress: 1, error: undefined })
-      report(1)
+      const runtime = await runtimeOf(id)
+      if (runtime) {
+        // 需要下载的运行时：下载完成才算装好，进度由运行时的 load 上报
+        const loaded = await runtime.load(report)
+        patchState(id, {
+          installed: true,
+          version: loaded.version || META[id].version,
+          progress: 1,
+          error: undefined,
+        })
+      } else {
+        // 内置运行时：安装只是「启用」
+        report(0.5)
+        patchState(id, {
+          installed: true,
+          version: META[id].version,
+          progress: 1,
+          error: undefined,
+        })
+        report(1)
+      }
     }
     writeStored(usePackages.getState().states)
     return { ok: true }
@@ -998,7 +1125,9 @@ export const installToolchain = async (
     const message =
       id === 'python'
         ? `下载 Python 运行时失败，需要联网（首次安装约 12MB）。${detail ? `原因：${detail}` : ''}`
-        : `启用 ${META[id].label} 失败：${detail}`
+        : RUNTIMES[id]
+          ? `下载 ${META[id].label} 运行时失败，需要联网（约 ${META[id].sizeMB}MB）。${detail ? `原因：${detail}` : ''}`
+          : `启用 ${META[id].label} 失败：${detail}`
     patchState(id, { progress: undefined, error: message })
     return { ok: false, error: message }
   } finally {
@@ -1012,6 +1141,9 @@ export const uninstallToolchain = async (id: ToolchainId): Promise<void> => {
     pythonRuntime = null
     pythonLoading = null
   }
+  const runtime = await runtimeOf(id).catch(() => null)
+  await runtime?.dispose?.()
+  runtimeCache.delete(id)
   patchState(id, {
     installed: false,
     version: undefined,
@@ -1042,7 +1174,14 @@ export const createToolchainHost = (): ToolchainHost => ({
       if (id === 'node') {
         return await runNodeCli(io, argv)
       }
-      return await runGitCli(io, argv)
+      if (id === 'git') {
+        return await runGitCli(io, argv)
+      }
+      const runtime = await runtimeOf(id)
+      if (!runtime) {
+        return { code: 127, error: `${state.label} 没有可执行入口，请用 vm list 查看可用工具链` }
+      }
+      return await runtime.run(argv, io)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       io.stderr(`${id}: ${message}\n`)

@@ -351,6 +351,15 @@
   .toggle {
     padding: 0 9px;
   }
+
+  /* 三个带文字的开关在 320 这种最窄屏也要一次全部露出，收一点内边距与间距 */
+  .advanced {
+    gap: 4px;
+  }
+
+  .advanced .toggle {
+    padding: 0 7px;
+  }
 }
 
 /* 桌面端展开文字标签；空间不够时换行，不再靠测量把文字藏起来 */
@@ -361,26 +370,31 @@
   }
 }
 
-/* 手机端保持圆形图标按钮 */
+/*
+ * 手机端工具行拆成多层：
+ *   1. 第一排：模型 / 模式 / 自动越狱 / 扰动，圆形图标按钮，横向滚动；
+ *   2. 第二排：思维链 / 智能搜索 / 深度思考，带文字标签（.advanced），
+ *      空间够的时候和动作按钮同排，不够就自己占一行；
+ *   3. 最后一排：统计圆环 / 麦克风 / 附件 / 发送，右对齐。
+ *
+ * 这样窄屏也能直接看到功能名，不用先横向滑动再猜无文字图标。
+ */
 @media not all and (min-width: 768px) {
   .toolbarDivider {
     display: none;
   }
 
-  .toggle {
+  /* 只把第一排的 chip 压成圆钮；第二排的三个开关保留文字标签 */
+  .toggles .toggle {
     width: 34px;
     padding: 0;
     border-radius: 50%;
   }
 
-  .toggleLabel {
+  .toggles .toggleLabel {
     display: none;
   }
 
-  /*
-   * 手机端工具行拆成两行：chips 占满第一行并横向滚动，动作按钮第二行右对齐，
-   * 免得 chips 和麦克风 / 附件 / 发送抢同一行宽度（320 下模型卡片会被挤没）。
-   */
   .functionRow {
     flex-wrap: wrap;
     row-gap: 6px;
@@ -390,8 +404,28 @@
     flex: 1 0 100%;
   }
 
-  .right {
+  /* 第二排：三个带文字的开关，放不下就自己占一整行 */
+  .advanced {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 6px;
     order: 2;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .advanced::-webkit-scrollbar {
+    display: none;
+  }
+
+  .advanced > * {
+    flex-shrink: 0;
+  }
+
+  .right {
+    order: 3;
     margin-left: auto;
   }
 }

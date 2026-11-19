@@ -3,6 +3,7 @@ import { nanoVMConfig } from '../config.js'
 import {
   TOOLCHAIN_IDS,
   isToolchainId,
+  toolchainHint,
   toolchainSizeMB,
   uninstallToolchain,
   usePackages,
@@ -11,10 +12,12 @@ import type { Applet, AppletContext, AppletResult, ToolchainIO, ToolchainId } fr
 import { humanSize, needToolchain } from './helpers.js'
 
 /**
- * 按需工具链命令：python3 / python / node / git / npm / pip / vm。
+ * 按需工具链命令：python3 / python / node / lua / sqlite3 / esbuild / make / git /
+ * npm / pip / vm。
  *
- * 这一组命令本身很小，真正的运行时（Pyodide、Worker 沙箱、git 对象库）都在
- * `packages.ts` 里按需加载。没安装时返回 127 + install 提示，UI 会显示「安装」按钮。
+ * 这一组命令本身很小，真正的运行时（Pyodide、wasmoon、sql.js、esbuild-wasm、
+ * Worker 沙箱、git 对象库、Makefile 构建器）都在 `packages.ts` 里按需加载。
+ * 没安装时返回 127 + install 提示，UI 会显示「安装」按钮。
  */
 
 const labelOf = (id: ToolchainId): string => usePackages.getState().states[id].label
@@ -120,7 +123,7 @@ const VM_HELP = [
   '  vm mem             WASM 线性内存用量',
   '  vm df              虚拟磁盘容量与使用率',
   '  vm list            工具链安装状态',
-  '  vm install <id>    安装工具链（python / node / git）',
+  '  vm install <id>    安装工具链（见 vm list，python / node / lua / sqlite / esbuild / make / git）',
   '  vm uninstall <id>  卸载工具链',
   '  vm export          导出虚拟机镜像',
   '  vm help            这份说明',
@@ -182,7 +185,7 @@ const vmInfo = async (ctx: AppletContext): Promise<AppletResult> => {
   }).join(' · ')
   const totalMB = memory.totalMB > 0 ? memory.totalMB : config.memoryMB
   const lines = [
-    `NanoVM Slim ${info?.version ?? '2.6.8'}`,
+    `NanoVM Slim ${info?.version ?? '2.7.0'}`,
     `引擎：${info?.wasm === false ? 'JS 兼容内核' : 'WASM Shell Engine'}（异步 chunk 懒加载）`,
   ]
   if (applets > 0) {
@@ -249,13 +252,9 @@ const vmList = (): AppletResult => {
 }
 
 const progressText = (id: ToolchainId, percent: number): string => {
-  if (id === 'python') {
-    return `正在下载 Python 运行时… ${percent}%`
-  }
-  if (id === 'node') {
-    return `正在启用 Node.js 运行时… ${percent}%`
-  }
-  return `正在启用 Git… ${percent}%`
+  const label = labelOf(id)
+  const sizeMB = toolchainSizeMB(id)
+  return sizeMB > 0 ? `正在下载 ${label} 运行时… ${percent}%` : `正在启用 ${label}… ${percent}%`
 }
 
 const vmInstall = async (ctx: AppletContext): Promise<AppletResult> => {
@@ -295,8 +294,7 @@ const vmInstall = async (ctx: AppletContext): Promise<AppletResult> => {
   if (lines.length === 0) {
     lines.push(progressText(target, 100))
   }
-  const usage =
-    target === 'python' ? 'python3 script.py' : target === 'node' ? 'node script.js' : 'git status'
+  const usage = toolchainHint(target)
   lines.push(`${label} 已就绪${installed.version ? `（${installed.version}）` : ''}，试试 ${usage}`)
   return { code: 0, stdout: `${lines.join('\n')}\n` }
 }
@@ -354,11 +352,107 @@ const vmApplet: Applet = {
   },
 }
 
+/** 通用运行时命令：没安装时给安装提示，装好后交给 packages.ts 里的运行时模块 */
+const runtimeApplet = (
+  name: string,
+  id: ToolchainId,
+  summary: string,
+  summaryEn: string,
+  usage: string,
+  missing: string
+): Applet => ({
+  name,
+  summary,
+  summaryEn,
+  usage,
+  run: async (ctx: AppletContext): Promise<AppletResult> => {
+    if (!ctx.toolchains.installed(id)) {
+      return needToolchain(id, `${name}: ${missing}（执行 vm install ${id}）\n`)
+    }
+    return runToolchain(ctx, id, ctx.argv.slice(1))
+  },
+})
+
+const luaApplet = runtimeApplet(
+  'lua',
+  'lua',
+  'Lua 5.4 运行时（wasmoon），首次使用按需下载',
+  'Lua 5.4 runtime (wasmoon), downloaded on first use',
+  'lua [-v] [-e "代码"] [脚本.lua] [参数...]',
+  '未安装 Lua 运行时（约 0.4MB）'
+)
+
+const sqliteApplet = runtimeApplet(
+  'sqlite3',
+  'sqlite',
+  'SQLite 3 命令行（sql.js），直接读写虚拟机里的 .db 文件',
+  'SQLite 3 CLI (sql.js) reading and writing .db files in the VM',
+  'sqlite3 [数据库.db] [SQL]（用 .tables / .schema / .help 查元信息）',
+  '未安装 SQLite 运行时（约 1.3MB）'
+)
+
+const esbuildApplet = runtimeApplet(
+  'esbuild',
+  'esbuild',
+  'esbuild 打包器（esbuild-wasm），打包或转译 TS / JS',
+  'esbuild bundler (esbuild-wasm) for TS / JS bundle and transform',
+  'esbuild 入口.ts [--bundle] [--outfile=out.js] [--minify] [--target=es2020]',
+  '未安装 esbuild 打包器（约 12MB）'
+)
+
+/**
+ * make：内置 Makefile 构建器。
+ *
+ * 构建配方要用 shell 执行（`$(CC) -o app main.c`），所以它和别的运行时不同：
+ * 不走 ToolchainHost.run，而是直接调 runtimes/make.ts 并把 ctx.shell 传进去。
+ */
+const makeApplet: Applet = {
+  name: 'make',
+  summary: '内置 Makefile 构建器（变量、目标、依赖、配方）',
+  summaryEn: 'Built-in Makefile builder (variables, targets, prerequisites, recipes)',
+  usage: 'make [-f Makefile] [-C 目录] [-n] [-B] [-s] [目标...]',
+  run: async (ctx: AppletContext): Promise<AppletResult> => {
+    if (!ctx.toolchains.installed('make')) {
+      return needToolchain(
+        'make',
+        'make: 未启用内置构建器，执行 vm install make 启用（无需下载）\n'
+      )
+    }
+    let stdout = ''
+    let stderr = ''
+    try {
+      const { runMake } = await import('../runtimes/make.js')
+      const code = await runMake(ctx.argv.slice(1), {
+        fs: ctx.fs,
+        cwd: ctx.cwd,
+        env: ctx.env,
+        stdin: ctx.stdin,
+        signal: ctx.signal,
+        shell: ctx.shell,
+        stdout: (text) => {
+          stdout += text
+        },
+        stderr: (text) => {
+          stderr += text
+        },
+      })
+      return { code, stdout, stderr }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { code: 1, stdout, stderr: `${stderr}make: ${message}\n` }
+    }
+  },
+}
+
 /** 按需工具链命令；顺序即 help 里的展示顺序 */
 export const TOOLCHAIN_APPLETS: Applet[] = [
   pythonApplet('python3'),
   pythonApplet('python'),
   nodeApplet,
+  luaApplet,
+  sqliteApplet,
+  esbuildApplet,
+  makeApplet,
   gitApplet,
   npmApplet,
   pipApplet,

@@ -33,7 +33,7 @@
 - **Unrestricted mode and prompt engineering**: jailbreak mode, system-prompt presets, per-round injection, Chinese jailbreak prompts and custom chain of thought;
 - **Browser agent tools** (off by default, per-tool switches): date & time, location, weather, notifications, clipboard, page fetch, file generation, open link and visualization widgets;
 - **Virtual workspace**: a local file store with any-format import/export, the OPFS file system, and app storage on Android;
-- **NanoVM Slim**: a built-in WASM Shell Engine with 81 busybox commands, docked right on desktop and a bottom panel on phones, with Python / Node.js / Git installed on demand;
+- **NanoVM Slim**: a built-in WASM Shell Engine with 112 busybox commands, docked right on desktop and a bottom panel on phones, with Python / Node.js / Lua / SQLite / esbuild / make / Git installed on demand;
 - **Chat modes**: Chat only / Web agent / PTC / Creator decide which client tools and round limit apply;
 - **Statistics and billing**: usage ledger, context breakdown, per-model pricing and the free server-search switch;
 - **Android**: APK builds, in-app update check and a built-in network proxy for the VM.
@@ -69,6 +69,7 @@ Full details (env vars, signing, fonts, offline behaviour) are in [9. Run and bu
 
 ## Recent versions
 
+- **2.7.0**: the mobile input bar moves chain-of-thought / search / deep thinking to a second row with visible labels (desktop unchanged); 26 new NanoVM commands plus a jq subset; Lua / SQLite / esbuild / make toolchains in settings.
 - **2.6.9**: “Check for updates” in Settings → About (hands Android users the APK link); fixed ghost cursors in the terminal; workspace storage on Android now means app storage with larger quotas; README split into chapters.
 - **2.6.8**: NanoVM Slim (WASM shell + busybox + on-demand toolchains), four chat modes, VM networking (built-in reverse proxy in the APK), keyboard switching and the red reset.
 - Older entries live in the in-app changelog (Settings → Changelog).

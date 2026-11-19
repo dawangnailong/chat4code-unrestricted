@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { useEffect, useRef, useState } from 'react'
-import { useTranslate } from '../../i18n/index.js'
+import { useTranslate, type TranslationKey } from '../../i18n/index.js'
 import { Button } from '../base/Button.js'
 import { Modal } from '../base/Modal.js'
 import { Select } from '../base/Select.js'
@@ -22,12 +22,16 @@ import {
 import { vmFs } from '../../services/nanovm/fs.js'
 import { NetError, fetchNet, netStatus, type NetRoute } from '../../services/nanovm/netProxy.js'
 import {
+  TOOLCHAIN_CATEGORIES,
+  TOOLCHAIN_IDS,
   installToolchain,
+  toolchainHint,
+  toolchainIdsByCategory,
   uninstallToolchain,
   usePackages,
 } from '../../services/nanovm/packages.js'
 import { openNanoVM, resetNanoVMSession } from '../../services/nanovm/session.js'
-import type { ToolchainState } from '../../services/nanovm/types.js'
+import type { ToolchainCategory, ToolchainId, ToolchainState } from '../../services/nanovm/types.js'
 import { closeSettings } from '../settings/settingsDialogState.js'
 import { mbText, useVmUsage } from './usage.js'
 import styles from './NanoVM.module.css'
@@ -222,42 +226,149 @@ const NetCard = () => {
   )
 }
 
-/** 单张工具链卡片：安装 / 卸载、体积与进度 */
-const ToolchainCard = ({ state, busy }: { state: ToolchainState; busy: boolean }) => {
+/** 分组标题文案键：运行时 / 构建工具 / 命令行工具 */
+const categoryTitle = (category: ToolchainCategory): TranslationKey =>
+  category === 'runtime'
+    ? 'nanovmToolchainsRuntime'
+    : category === 'build'
+      ? 'nanovmToolchainsBuild'
+      : 'nanovmToolchainsTool'
+
+/** 每组标题下的一句话说明文案键 */
+const categoryHint = (category: ToolchainCategory): TranslationKey =>
+  category === 'runtime'
+    ? 'nanovmToolchainsRuntimeHint'
+    : category === 'build'
+      ? 'nanovmToolchainsBuildHint'
+      : 'nanovmToolchainsToolHint'
+
+/** 体积文案：整数按 12 MB 显示，0.4 / 1.3 这种小数保留一位 */
+const sizeText = (sizeMB: number): string =>
+  `${Number.isInteger(sizeMB) ? sizeMB : sizeMB.toFixed(1)} MB`
+
+/**
+ * 单张工具链卡片。
+ *
+ * 信息自上而下：名称 + 体积徽标 + 状态点、一句话说明、版本 / 未安装、示例命令（已安装时
+ * 可点击复制）与操作按钮；安装中显示百分比与进度条，失败时显示原因。
+ *
+ * 安装是全局串行的（store 里只有一个 busy），所以别的卡片在装时按钮也要一起禁用；
+ * 本地的 pending 覆盖「刚点下去、store 还没置忙」的那一瞬间。
+ */
+const ToolchainCard = ({
+  state,
+  busyId,
+}: {
+  state: ToolchainState
+  busyId: ToolchainId | null
+}) => {
   const t = useTranslate()
-  const [installing, setInstalling] = useState(false)
-  const pending = busy || installing
+  // 本地动作：覆盖「刚点下去、store 还没置忙」的那一瞬间，并区分装 / 卸
+  const [pending, setPending] = useState<'install' | 'uninstall' | null>(null)
+  const active = busyId === state.id || pending === 'install'
+  const locked = busyId !== null || pending !== null
   const percent = Math.round(Math.min(1, Math.max(0, state.progress ?? 0)) * 100)
+  // sizeMB 为 0 的是内置运行时：按钮语义从「安装 / 卸载」换成「启用 / 停用」
+  const builtin = state.sizeMB === 0
+  const hint = toolchainHint(state.id)
+  // 非安全上下文或老浏览器可能没有剪贴板 API：这时只展示命令，不做成可点
+  const canCopy =
+    typeof navigator !== 'undefined' && typeof navigator.clipboard?.writeText === 'function'
+
+  const copyHint = async () => {
+    try {
+      await navigator.clipboard.writeText(hint)
+      showToast({ key: 'nanovmToolchainCopied' })
+    } catch {
+      // 权限被拒（没给剪贴板授权）时退回提示，避免看起来像复制成功了
+      showToast({ key: 'nanovmToolchainCopyFailed', type: 'error' })
+    }
+  }
 
   const install = async () => {
-    setInstalling(true)
+    setPending('install')
     try {
       const result = await installToolchain(state.id)
-      if (!result.ok) {
+      if (result.ok) {
+        // 安装完不重置虚拟机：运行时是懒加载的，下一条命令自然用上新的
+        showToast({ key: 'nanovmInstalledToast', params: { label: state.label } })
+      } else {
         showToast({
           key: 'nanovmInstallFailed',
           params: { reason: result.error ?? state.label },
           type: 'error',
         })
       }
+    } catch (error) {
+      // installToolchain 自己会兜住下载失败；真抛出来也别让异常静默丢掉
+      showToast({
+        key: 'nanovmInstallFailed',
+        params: { reason: error instanceof Error ? error.message : String(error) },
+        type: 'error',
+      })
     } finally {
-      setInstalling(false)
+      setPending(null)
+    }
+  }
+
+  const remove = async () => {
+    setPending('uninstall')
+    try {
+      await uninstallToolchain(state.id)
+      showToast({ key: 'nanovmUninstalledToast', params: { label: state.label } })
+    } catch (error) {
+      showToast({
+        key: 'nanovmUninstallFailed',
+        params: { reason: error instanceof Error ? error.message : String(error) },
+        type: 'error',
+      })
+    } finally {
+      setPending(null)
     }
   }
 
   return (
-    <div className={styles.toolchain}>
+    <div className={styles.toolchain} data-toolchain={state.id} data-installed={state.installed}>
       <div className={styles.toolchainHead}>
         <span className={styles.toolchainName}>{state.label}</span>
-        <span className={styles.toolchainSize}>{state.sizeMB} MB</span>
+        <span className={styles.toolchainMeta}>
+          <span className={styles.toolchainSize}>
+            {builtin ? t('nanovmBuiltinLabel') : sizeText(state.sizeMB)}
+          </span>
+          {/* 状态点：已安装绿、未安装灰，复用 ShellDock 的状态点样式 */}
+          <span
+            className={styles.statusDot}
+            data-status={state.installed ? 'ready' : 'idle'}
+            aria-hidden
+          />
+        </span>
       </div>
       <div className={styles.hint}>{state.summary}</div>
       <div className={styles.toolchainState}>
         {state.installed
-          ? t('nanovmInstalledVersion', { version: state.version ?? '—' })
+          ? t('nanovmInstalledVersion', { version: state.version || '—' })
           : t('nanovmNotInstalled')}
       </div>
-      {pending ? (
+      {/* 已安装才给示例命令；可点击复制到剪贴板，没有剪贴板 API 时只展示 */}
+      {state.installed ? (
+        canCopy ? (
+          <button
+            type="button"
+            className={styles.toolchainTry}
+            title={t('nanovmToolchainCopy')}
+            aria-label={`${t('nanovmToolchainCopy')}: ${t('nanovmToolchainTryHint', { command: hint })}`}
+            onClick={() => void copyHint()}
+          >
+            {t('nanovmToolchainTryHint', { command: hint })}
+          </button>
+        ) : (
+          // 没有剪贴板 API 的浏览器：同样的样式，但只展示不可点
+          <div className={styles.toolchainTry} data-static="true">
+            {t('nanovmToolchainTryHint', { command: hint })}
+          </div>
+        )
+      ) : null}
+      {active ? (
         <>
           <div className={styles.toolchainState}>{t('nanovmInstalling', { percent })}</div>
           <div className={styles.toolchainBar} aria-hidden>
@@ -265,22 +376,16 @@ const ToolchainCard = ({ state, busy }: { state: ToolchainState; busy: boolean }
           </div>
         </>
       ) : null}
-      {state.error ? (
-        <div className={styles.error}>{t('nanovmInstallFailed', { reason: state.error })}</div>
-      ) : null}
+      {/* 失败原因由 packages 侧写好，直接显示，不再套一层「安装失败」 */}
+      {state.error ? <div className={styles.error}>{state.error}</div> : null}
       <div className={styles.toolchainActions}>
         {state.installed ? (
-          <Button
-            size="s"
-            variant="outlined"
-            disabled={pending}
-            onClick={() => void uninstallToolchain(state.id)}
-          >
-            {t('nanovmUninstall')}
+          <Button size="s" variant="outlined" disabled={locked} onClick={() => void remove()}>
+            {builtin ? t('nanovmInstallDisable') : t('nanovmUninstall')}
           </Button>
         ) : (
-          <Button size="s" disabled={pending} onClick={() => void install()}>
-            {t('nanovmInstallNow')}
+          <Button size="s" disabled={locked} onClick={() => void install()}>
+            {builtin ? t('nanovmInstallEnable') : t('nanovmInstallNow')}
           </Button>
         )}
       </div>
@@ -324,6 +429,18 @@ export const NanoVMConsole = () => {
     100,
     Math.round((usage.bytes / Math.max(1, usage.diskMB * 1024 * 1024)) * 100)
   )
+  // 工具链总结：已安装个数 + 需要下载的那部分占用（内置的不计体积）
+  const installedTotals = TOOLCHAIN_IDS.reduce(
+    (acc, id) => ({
+      count: acc.count + (packages[id].installed ? 1 : 0),
+      diskMB:
+        acc.diskMB + (packages[id].installed && packages[id].sizeMB > 0 ? packages[id].sizeMB : 0),
+    }),
+    { count: 0, diskMB: 0 }
+  )
+  const diskText = Number.isInteger(installedTotals.diskMB)
+    ? String(installedTotals.diskMB)
+    : installedTotals.diskMB.toFixed(1)
 
   /** 改配额：立刻落盘，引擎下一次执行命令时按新配额重建线性内存 */
   const applyQuota = (patch: { memoryMB: number } | { diskMB: number }) => {
@@ -564,11 +681,26 @@ export const NanoVMConsole = () => {
 
       <div className={styles.groupTitle}>{t('nanovmToolchains')}</div>
       <div className={styles.sectionHint}>{t('nanovmToolchainsHint')}</div>
-      <div className={styles.toolchains}>
-        {(['python', 'node', 'git'] as const).map((id) => (
-          <ToolchainCard key={id} state={packages[id]} busy={busy === id} />
-        ))}
+      {/* 总结行：已安装 N / 总数 M，占用约 X MB */}
+      <div className={styles.toolchainTotals}>
+        {t('nanovmToolchainSummary', {
+          installed: installedTotals.count,
+          total: TOOLCHAIN_IDS.length,
+          size: diskText,
+        })}
       </div>
+      {/* 按分组渲染：运行时 / 构建工具 / 命令行工具，组内顺序由注册表决定 */}
+      {TOOLCHAIN_CATEGORIES.map((category) => (
+        <div key={category} className={styles.toolchainGroup} data-category={category}>
+          <div className={styles.groupTitle}>{t(categoryTitle(category))}</div>
+          <div className={styles.sectionHint}>{t(categoryHint(category))}</div>
+          <div className={styles.toolchains}>
+            {toolchainIdsByCategory(category).map((id) => (
+              <ToolchainCard key={id} state={packages[id]} busyId={busy} />
+            ))}
+          </div>
+        </div>
+      ))}
 
       <div className={styles.footer}>
         <Button

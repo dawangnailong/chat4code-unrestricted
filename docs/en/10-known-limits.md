@@ -53,6 +53,8 @@
 51. **All tool calls of one round share that round's usage**: parallel NanoVM commands are billed and counted in context per round trip, not separately.
 52. **The VM has no real ICMP or DNS**: `ping` probes over HTTPS (timing a `HEAD` / `GET`), so a host that answers no HTTP is not necessarily down, and there is no `nslookup` / `dig`.
 53. **Networking cannot bypass the browser security model**: the APK's built-in proxy only serves this app (token-checked, bound to 127.0.0.1), while plain browsers stay limited by CORS. A custom proxy sends the target URL to a third party — decide for yourself whether you trust it.
+54. **The new toolchains need the network too**: Lua (wasmoon, ~0.4 MB), SQLite (sql.js, ~1.3 MB) and esbuild (esbuild-wasm, ~12 MB) are downloaded from jsDelivr on first install and cached afterwards; `make` is built in, so it installs offline.
+55. **Every runtime here is a subset**: esbuild can only bundle files inside the VM (no npm resolution, no plugin ecosystem), SQLite is sql.js (no FTS / extension modules), Lua has no `os.execute` / `io.popen` host access, `make` has no parallel builds, `$(call)` / `$(eval)` or target-specific variables, and `jq` covers the common filters only; `timeout` returns 124 but cannot actually kill the child command.
 
 ---
 
