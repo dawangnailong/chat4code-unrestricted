@@ -1,4 +1,4 @@
-# Android APK（DeepSeek Unrestricted 2.6.9）
+# Android 壳构建（chat4code-unrestricted）
 
 这是纯原生 WebView 壳，不依赖 Capacitor / Cordova：
 
@@ -9,10 +9,8 @@
 
 ## 产物
 
-`android/deepseek-unrestricted-2.6.9.apk`，versionCode 269，使用
-`/home/xiaohuangbo/桌面/xiaohuangbo.jks`（别名 `xiaohuangbo`）签名。
-
-SHA-256：`cdadd3a5c1ede891f27666face09fa5e0d238b4a4d3f4a74b85a84c95f3e6791`（7.3 MB）。
+仓库不再随包存放预构建 APK（历史版本里上游带来的二进制含本 fork 已剔除的
+Agent / NanoVM 功能，已全部移除）。请按下一节自行构建并自行签名。
 
 ## 构建
 
