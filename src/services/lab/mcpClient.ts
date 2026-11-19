@@ -42,7 +42,7 @@ export class McpClient {
       params: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: {},
-        clientInfo: { name: 'chat4code-unrestricted-lab', version: '1.0.0' },
+        clientInfo: { name: 'chat4code-unrestricted-lab', version: '1.1.0' },
       },
     })
     const session = response.headers.get('mcp-session-id')

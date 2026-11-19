@@ -1,6 +1,6 @@
 {
   "name": "chat4code-unrestricted",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "基于 DeepSeek API 与 OpenCode Bridge 的静态聊天前端。",
   "license": "MIT",
   "private": true,

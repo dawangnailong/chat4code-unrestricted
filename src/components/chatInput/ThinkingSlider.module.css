@@ -366,16 +366,20 @@ body[data-ds-dark-theme] .panel {
   --accent: #8bb4ff;
 }
 
+/*
+ * 手机上深度思考入口在输入栏第二排，和思维链 / 智能搜索一起显示文字标签，
+ * 所以这里不再把它压缩成圆形图标（那会让功能名看不见）；内边距跟那两个 chips
+ * 对齐，320 宽度下三个开关也能一次全部露出。
+ */
 @media not all and (min-width: 768px) {
-  .label,
-  .level {
-    display: none;
-  }
-
   .trigger {
-    width: 34px;
-    padding: 0;
-    border-radius: 50%;
+    padding: 0 9px;
+  }
+}
+
+@media not all and (min-width: 400px) {
+  .trigger {
+    padding: 0 7px;
   }
 }
 

@@ -1173,6 +1173,11 @@ export const zh = {
   variantConfirmDismiss: '不再提示',
   variantConfirmStart: '开始赛跑',
   variantConfirmCancel: '取消',
+  changelogV110Title: 'v1.1.0 · 2026-11-19（fork）',
+  changelogV110Mobile:
+    '手机端输入栏改版（移植自上游 2.7.0）：思维链 / 智能搜索 / 深度思考挪到第二排并显示文字标签，和发送按钮上下相邻，不再藏在横向滚动条最右端；bridge 模式下智能搜索仍按原逻辑隐藏。桌面端布局不变',
+  changelogV110Excluded:
+    '上游 2.7.0 的其余内容照 fork 政策不并入：NanoVM 新增 26 条命令与 Lua / SQLite / esbuild / make 按需工具链（包装第三方 WASM 库按需下载）；其 2.7.0 APK 产物亦不入库',
   changelogV100Title: 'v1.0.0 · 2026-11-19（fork 独立版本）',
   changelogV100Version:
     '本 fork 脱离上游 2.6.x 版本号，起用独立的 1.0.0；「检查更新」指向本仓库 dawangnailong/chat4code-unrestricted 的 Releases，不再跟随上游',

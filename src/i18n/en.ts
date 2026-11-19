@@ -1273,6 +1273,11 @@ export const en = {
   variantConfirmDismiss: 'Do not ask again',
   variantConfirmStart: 'Start race',
   variantConfirmCancel: 'Cancel',
+  changelogV110Title: 'v1.1.0 · 2026-11-19 (fork)',
+  changelogV110Mobile:
+    'Mobile input bar redesign (ported from upstream 2.7.0): chain-of-thought, smart search and deep thinking moved to a second row with text labels, right next to the send button instead of hiding at the far end of a horizontal scroller; smart search stays hidden in bridge mode as before. Desktop layout unchanged',
+  changelogV110Excluded:
+    'The rest of upstream 2.7.0 is excluded per fork policy: 26 new NanoVM commands plus the Lua / SQLite / esbuild / make on-demand toolchains (third-party WASM libraries fetched on demand); its 2.7.0 APK artifacts are not carried either',
   changelogV100Title: 'v1.0.0 · 2026-11-19 (fork versioning)',
   changelogV100Version:
     'This fork leaves the upstream 2.6.x scheme behind and starts its own at 1.0.0; “Check for updates” now points at this repo’s releases (dawangnailong/chat4code-unrestricted) instead of upstream',
