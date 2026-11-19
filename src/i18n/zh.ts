@@ -1173,6 +1173,17 @@ export const zh = {
   variantConfirmDismiss: '不再提示',
   variantConfirmStart: '开始赛跑',
   variantConfirmCancel: '取消',
+  changelogV100Title: 'v1.0.0 · 2026-11-19（fork 独立版本）',
+  changelogV100Version:
+    '本 fork 脱离上游 2.6.x 版本号，起用独立的 1.0.0；「检查更新」指向本仓库 dawangnailong/chat4code-unrestricted 的 Releases，不再跟随上游',
+  changelogV100Merge:
+    '并入上游 2.6.5–2.6.9 的纯聊天部分：虚拟工作区（localStorage / OPFS 双存储、任意文件、配额动态计算）、上下文分类统计、自定义思维链提示词、deepseek 计费跟进',
+  changelogV100Security:
+    '并入上游安全修复：内容是 HTML 的 .png 附件不再以 blob: 直接打开，避免同源脚本执行',
+  changelogV100Excluded:
+    '未并入：上游 2.6.5 的网页版 Agent 工具与 2.6.8 的 NanoVM Slim 虚拟机；本 fork 保持纯聊天 + bridge 定位，相关设置页、changelog 条目与 docs 手册一并移除',
+  changelogV100Bridge:
+    'OpenCode Bridge 通道（含 Safari 中继与 base64 图片内联）为 fork 自有功能，不受上游合并影响',
   changelogV269Title: 'v2.6.9 · 2026-11',
   changelogV269Update:
     '设置 → 关于新增「检查更新」：读取 GitHub Releases 最新版本，安卓端直接给 APK 下载（没有产物时跳 Release 页），不用再手动对版本号',
@@ -1181,7 +1192,7 @@ export const zh = {
   changelogV269Storage:
     '安卓端工区改为「应用存储」语义：不再申请浏览器持久化权限（数据本来就不会被站点清理），配额上限放宽到 90%、单文件 2GB、20000 个文件',
   changelogV269Docs:
-    'README 拆成 docs/ 下的分册（中英文各一套），首页只留简介与导航；修好实现位置索引表因 `||` 与分隔行错位导致的无法渲染问题',
+    '上游把 README 拆成 docs/ 分册；本 fork 保留自己的 README 自述，未引入 docs/（分册内容含 Agent / NanoVM 用法，与本 fork 定位不符）',
   changelogV269Security:
     '合并上游安全修复：附件预览按后缀决定类型（伪装成图片的 HTML 不会再以本站 origin 执行）、SVG 用 data URL 预览并改为下载、回复里的引用 / 搜索结果 / 页面链接只接受 http(s)',
   changelogV269Apk: '同步构建 2.6.9 APK（versionCode 269），使用 xiaohuangbo.jks 签名',

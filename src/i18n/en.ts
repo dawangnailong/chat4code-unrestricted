@@ -1273,6 +1273,17 @@ export const en = {
   variantConfirmDismiss: 'Do not ask again',
   variantConfirmStart: 'Start race',
   variantConfirmCancel: 'Cancel',
+  changelogV100Title: 'v1.0.0 · 2026-11-19 (fork versioning)',
+  changelogV100Version:
+    'This fork leaves the upstream 2.6.x scheme behind and starts its own at 1.0.0; “Check for updates” now points at this repo’s releases (dawangnailong/chat4code-unrestricted) instead of upstream',
+  changelogV100Merge:
+    'Merged the chat-only parts of upstream 2.6.5–2.6.9: the virtual workspace (localStorage/OPFS dual storage, arbitrary files, quota based on real allowance), the context breakdown stats, the custom chain-of-thought prompt, and the DeepSeek billing update',
+  changelogV100Security:
+    'Merged the upstream security fix: an attachment named .png whose content is HTML is no longer opened via blob:, preventing same-origin script execution',
+  changelogV100Excluded:
+    'Not merged: upstream 2.6.5 web Agent tools and the 2.6.8 NanoVM Slim VM; this fork stays chat + bridge only, and their settings pages, changelog entries and docs were removed',
+  changelogV100Bridge:
+    'The OpenCode Bridge transport (Safari relay and base64 inline images) is fork-specific and unaffected by the upstream merge',
   changelogV269Title: 'v2.6.9 · 2026-11',
   changelogV269Update:
     'Settings → About now has “Check for updates”: it reads the latest GitHub release and offers the APK directly on Android (or the release page when there is no asset), so no more manual version hunting',
@@ -1281,7 +1292,7 @@ export const en = {
   changelogV269Storage:
     'Workspace storage on Android now means app storage: no browser persistence prompt (site data is not evicted anyway), with quotas raised to 90%, 2 GB per file and 20,000 files',
   changelogV269Docs:
-    'README split into per-chapter files under docs/ (Chinese and English), leaving an index page; fixed the implementation index table that failed to render because of an unescaped `||` and a mismatched separator row',
+    'Upstream split its README into docs/ chapters; this fork keeps its own README and does not carry docs/ (the chapters document the Agent / NanoVM features this fork excludes)',
   changelogV269Security:
     'Merged the upstream security fix: attachment previews are typed by extension (an HTML file disguised as an image can no longer run with this origin), SVGs preview through a data URL and download, and citations / search results / page links only accept http(s)',
   changelogV269Apk: 'Builds the 2.6.9 APK (versionCode 269), signed with xiaohuangbo.jks',
