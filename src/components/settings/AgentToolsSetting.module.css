@@ -1,0 +1,190 @@
+/* 设置 → 浏览器工具：逐项开关列表 */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0 12px;
+}
+
+.capabilities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 0 0 14px;
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.capability {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--dsw-alias-label-tertiary);
+  }
+
+  &[data-ok]::before {
+    background-color: var(--dsw-alias-brand-primary);
+  }
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-brand-text);
+  font: inherit;
+  font-size: 11px;
+  line-height: 18px;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 14px;
+  background-color: var(--dsw-alias-bg-base);
+  opacity: 0.72;
+
+  &[data-enabled] {
+    opacity: 1;
+    border-color: color-mix(
+      in srgb,
+      var(--dsw-alias-brand-primary) 28%,
+      var(--dsw-alias-border-l2)
+    );
+  }
+
+  &[data-off] {
+    opacity: 0.5;
+  }
+}
+
+.toolText {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toolHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolLabel {
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.chip {
+  padding: 0 6px;
+  border-radius: 999px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 10px;
+  line-height: 16px;
+  white-space: nowrap;
+
+  &[data-tone='network'] {
+    color: #b7791f;
+    background-color: rgba(242, 163, 60, 0.16);
+  }
+
+  &[data-tone='write'] {
+    color: #c2410c;
+    background-color: rgba(226, 86, 74, 0.14);
+  }
+
+  &[data-tone='confirm'] {
+    color: var(--dsw-alias-brand-text);
+    background-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 14%, transparent);
+  }
+
+  &[data-tone='off'] {
+    color: var(--dsw-alias-label-tertiary);
+    background-color: var(--dsw-alias-interactive-bg-hover);
+  }
+}
+
+.toolSummary {
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 17px;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  padding-top: 12px;
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 17px;
+}
+
+@media not all and (min-width: 768px) {
+  .tool {
+    padding: 10px 12px;
+  }
+}
+
+/* 工作区工具分组：开关与说明并排，和工作区设置页共用同一个开关 */
+.workspaceGate {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 14px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+}
+
+.workspaceGateText {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.workspaceGateLabel {
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.workspaceGateDesc {
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 17px;
+}

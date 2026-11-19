@@ -141,6 +141,32 @@ export const en = {
   aboutDemoLabel: 'Live demo',
   aboutUpstreamLabel: 'Upstream project',
   changelogTitle: 'Changelog',
+  changelogV267Title: 'v2.6.7 · 2026-11',
+  changelogV267Cot:
+    'The default custom chain of thought now ships the built-in thinking_prompt: a fresh install, “Insert default prompt” and Restore defaults all use it, and it stays editable in settings or the composer card',
+  changelogV267Billing:
+    'New “Server search and fetch are free” billing switch, on by default: per the official policy effective 2026-11-18 12:00 Beijing time, server-side search and page fetch triggered by model calls are no longer billed — only tokens are. Turn it off to estimate at the old rate',
+  changelogV267WorkspaceOpfs:
+    'The workspace now supports two storage backends: browser localStorage (default) and the OPFS file system, switchable at any time with the current files copied over; files survive refreshes and browser restarts',
+  changelogV267Persist:
+    'The workspace can request persistent storage and shows whether it was granted, plus used space and quota, reducing the risk of automatic eviction',
+  changelogV267AnyFiles:
+    'The workspace no longer restricts formats: images, PDFs, archives and any other file can be imported and exported, single downloads keep the original bytes, and ZIP archives can round-trip everything; legacy JSON backups still import',
+  changelogV267Capacity:
+    'Workspace capacity is no longer hard-coded: OPFS derives its limits from the browser quota (up to 80% of it, capped at 64 GB total / 256 MB per file) and grows with the quota; a full local storage now tells you to switch to OPFS or clear files',
+  changelogV267UsageFix:
+    'Fixed clipped and overlapping workspace usage / persistent-storage text under long labels or enlarged font sizes: usage now stacks on two lines and storage status and actions each get their own row',
+  changelogV267Apk: 'Built the matching 2.6.7 APK (versionCode 267), signed with xiaohuangbo.jks',
+  changelogV265Title: 'v2.6.5 · 2026-11',
+  changelogV265Workspace:
+    'New Workspace: a virtual, long-lived file store in browser localStorage — create, edit and delete files, download single files, and import / export the whole archive (merge or replace) for backup',
+  changelogV265Defaults:
+    'Agent capabilities and the workspace now start disabled: both the master switch and the workspace switch begin off, and only then are tools declared; per-tool switches are unchanged',
+  changelogV265Breakdown:
+    'Statistics gained a Context breakdown: the latest request is split into system prompt, tool definitions, user messages, model replies, model thinking, tool calls, tool results and attachments, visible in both settings and the stats dialog',
+  changelogV265Billing:
+    'Statistics gained Billing rates: per-model miss / hit / output prices plus search, document parsing, TTS and ASR rates with the peak-hour rule',
+  changelogV265Apk: 'Built the matching 2.6.5 APK (versionCode 265), signed with xiaohuangbo.jks',
   changelogV264Title: 'v2.6.4 · 2026-11',
   changelogV264Ledger:
     'Usage ledger upgraded to v2: hourly request distribution and per-session aggregates; older ledgers are read with defaults filled in, no migration script needed',
@@ -153,6 +179,14 @@ export const en = {
   changelogV264Compat:
     'Compatibility suite covers Chromium and Firefox, six widths from 320 to 1920, light and dark themes, Chinese and English, plus legacy and corrupted local data',
   changelogV264Apk: 'Built the matching 2.6.4 APK (versionCode 264), signed with xiaohuangbo.jks',
+  changelogV264Tools:
+    'New Browser tools section in settings: one master switch plus ten independent switches for DeepSeek-Agent’s date & time, geolocation, weather, notifications, clipboard read / write, webpage fetch, file generation, opening links and visualization widgets; MCP, subagents and workspace tools are intentionally not ported',
+  changelogV264ToolLoop:
+    'Chat now supports client tool round trips: the model calls a tool, the browser executes it, and the result returns as tool_result before the next generation (up to 4 rounds); replies show tool cards with timings, and artifacts can be previewed, downloaded or rendered in a sandboxed iframe',
+  changelogV264ToolApproval:
+    'Reading the clipboard and generating files ask for confirmation first, with a “allow for this conversation” option; a rejection is reported back as an error result instead of stalling the reply',
+  changelogV264ToolCompat:
+    'Tool cards and the switch list adapt to mobile; notifications / location / clipboard are marked and disabled when unavailable, and a disabled tool is invisible to the model',
   changelogV263Title: 'v2.6.3 · 2026-11',
   changelogV263LabKey:
     'The lab no longer shows the full API key: it renders a masked “sk-****+last 4” value with a “Change in Settings” entry that jumps to Settings → Data',
@@ -268,9 +302,6 @@ export const en = {
   changelogV245Compress:
     'Long-chat compression: auto-compress switch plus manual compression in the stats dialog',
   changelogV245Credits: 'README credits updated',
-  creditDeepseekAgentLabel: 'DeepSeek-Agent',
-  creditDeepseekAgentNote:
-    'Reference implementation for the thinking slider, context ring and session statistics.',
   creditDshUnrestrictedLabel: 'dsh-unrestricted',
   creditDshUnrestrictedNote: 'Upstream reference for jailbreak prompts and experiment settings.',
   creditOperitLabel: 'Operit',
@@ -346,6 +377,132 @@ export const en = {
   creditDeepseekChatNote: 'Upstream chat front end; this repository is an unofficial fork.',
   settingDialogAsideDataOptionLabel: 'Data',
   settingDialogAsideStatsOptionLabel: 'Statistics',
+  settingDialogAsideWorkspaceOptionLabel: 'Workspace',
+  workspaceSectionTitle: 'Virtual file workspace',
+  workspaceStorageMode: 'Storage',
+  workspaceModeLocal: 'Browser storage',
+  workspaceModeOpfs: 'OPFS file system',
+  workspaceModeLocalDesc:
+    'Default: data lives in localStorage, reads and writes are synchronous and compatibility is best, but capacity is bounded (typically 5–10 MB).',
+  workspaceModeOpfsDesc:
+    'A real origin-private file system: separate from localStorage, larger, and it survives refreshes and browser restarts. Switching copies the current files over.',
+  workspaceModeSwitched: 'Storage switched; existing files were copied',
+  workspaceModeUnsupported: 'This browser does not support OPFS; staying on local storage',
+  workspaceModeFailed: 'Failed to switch storage',
+  workspacePersistState: 'Persistent storage',
+  updateCheck: 'Check for updates',
+  updateChecking: 'Checking…',
+  updateCurrent: 'Current version v{version}',
+  updateLatest: 'You are up to date',
+  updateAvailable: 'New version v{version} is available',
+  updateDownload: 'Download',
+  updateFailed: 'Check failed: {reason}',
+  updateAndroidHint:
+    'On Android download the APK and install it over the current app; settings and chats stay',
+  updateNotes: 'Release notes',
+  updatePublishedAt: 'Published {date}',
+  workspacePersistNative: 'App storage (managed by Android; not cleared with browser data)',
+  workspacePersistGranted: 'granted (the browser will not evict it automatically)',
+  workspacePersistNotGranted: 'not granted (may be evicted when space runs low)',
+  workspacePersistUnsupported: 'unsupported',
+  workspacePersistRequest: 'Request persistent storage',
+  workspacePersistGrantedToast: 'Persistent storage granted',
+  workspacePersistDeniedToast: 'The browser did not grant persistent storage; try again later',
+  workspaceStorageUsage: '{usage} used / {quota} quota',
+  workspaceStorageRefresh: 'Refresh',
+  workspacePersistError: 'Storage write failed: {message}',
+  workspaceHydrating: 'Loading the OPFS workspace…',
+  workspaceEnableLabel: 'Enable workspace',
+  workspaceEnableDesc:
+    'Build a virtual file store in browser storage: the agent can read and write it, and you can edit, import and export it. Off by default; only when on are workspace tools declared to the model. Data stays on this device and is not part of history exports.',
+  workspaceUsageTitle: 'Workspace usage',
+  workspaceUsageFiles: '{files} / {max} files',
+  workspaceUsageChars: '{chars} / {max} characters',
+  workspaceUsageBytes: '{used} / {max}',
+  workspaceImportFiles: 'Import files',
+  workspaceImportArchive: 'Import workspace',
+  workspaceExportZip: 'Export ZIP',
+  workspacePreview: 'Preview',
+  workspaceKind_text: 'Text',
+  workspaceKind_image: 'Image',
+  workspaceKind_binary: 'Binary',
+  workspaceBinaryPreview:
+    'Binary file ({mime}, {size}); cannot be previewed inline — download it to inspect.',
+  workspaceBinaryReadonly: 'Binary files cannot be edited inline; download, edit and import again',
+  workspaceNewFile: 'New file',
+  workspaceImport: 'Import',
+  workspaceExport: 'Export',
+  workspaceImportMode: 'Import mode',
+  workspaceImportMerge: 'Merge',
+  workspaceImportReplace: 'Replace',
+  workspaceClear: 'Clear workspace',
+  workspaceCleared: 'Workspace cleared',
+  workspaceExported: 'Workspace exported',
+  workspaceImported: 'Imported {count} files',
+  workspaceImportFailed: 'Import failed: not a workspace file exported by this app',
+  workspaceImportPartial: 'Imported {count} files; skipped {skipped} due to capacity or format',
+  workspaceImportTooLarge:
+    'The file exceeds the current capacity limit and was not imported; switch to OPFS or clear some files',
+  workspacePathPlaceholder: 'Relative path, e.g. notes/todo.md',
+  workspaceContentLabel: 'File content',
+  workspaceContentPlaceholder: 'Write the file content here',
+  workspaceSave: 'Save',
+  workspaceEdit: 'Edit',
+  workspaceDownload: 'Download',
+  workspaceDelete: 'Delete',
+  workspaceEmpty:
+    'The workspace is empty: create a file, or import a previously exported workspace.',
+  workspaceNote:
+    'Any format is supported — text, images, PDFs, archives — and ZIP exports keep binary files intact. Limits depend on the backend (localStorage: 2 MB per file, 3 MB total; OPFS: 10 MB per file, 64 MB total). Export a ZIP before clearing or replacing.',
+  workspaceNoteMobile:
+    'Any format is supported; capacity depends on the storage backend. Export a ZIP backup for anything important.',
+  workspaceFileCreated: 'File created',
+  workspaceFileSaved: 'File saved',
+  workspaceFileDeleted: 'File deleted',
+  workspaceDeleteConfirmTitle: 'Delete file',
+  workspaceDeleteConfirmBody: 'Delete “{path}”? This cannot be undone.',
+  workspaceSaveFailed_path: 'Invalid path: relative paths only, no “..” segments',
+  workspaceSaveFailed_tooLarge: 'File exceeds 200k characters; split it first',
+  workspaceSaveFailed_tooManyFiles: 'File limit reached',
+  workspaceSaveFailed_totalTooLarge: 'Workspace is full; clear some files first',
+  workspaceSaveFailed_quota:
+    'Browser local storage is full: clear some files, or switch to the OPFS file system for much more room',
+  workspaceLimitsDynamic: 'Limits: {file} per file, {total} total',
+  workspaceLimitsQuota: 'Derived from the browser quota of {quota}, using up to {percent}%',
+  workspaceLimitsNative:
+    'Derived from the app quota of {quota}, using up to {percent}% (app storage on Android)',
+  workspaceLimitsLocal:
+    'Browser local storage cannot be expanded (typically 5–10 MB); switch to OPFS for more room',
+  workspaceQuotaRefresh: 'Refresh capacity',
+  workspaceLimitsFallback: 'The browser has not reported a quota yet; showing the default limit',
+  contextBreakdownTitle: 'Context breakdown',
+  contextBreakdownEmpty:
+    'No breakdown yet; send a turn and it will split into system prompt, tool definitions, messages, thinking and more.',
+  contextBreakdownHint:
+    'Counts only the latest request of this session, estimated from character weights; server-reported usage is in the KPI above.',
+  contextCategory_system: 'System prompt',
+  contextCategory_toolDefs: 'Tool definitions',
+  contextCategory_userMessages: 'User messages',
+  contextCategory_assistantText: 'Model replies',
+  contextCategory_thinking: 'Model thinking',
+  contextCategory_toolCalls: 'Tool calls',
+  contextCategory_toolResults: 'Tool results',
+  contextCategory_files: 'Attachments',
+  billingSearchFreeLabel: 'Server search and fetch are free',
+  billingSearchFreeDesc:
+    'Since 2026-11-18 12:00 Beijing time, server-side search and page fetch triggered by model calls are no longer billed — only tokens are. Turn this off to estimate at the old rate (CNY 5 / 1000 calls).',
+  billingSearchFreeValue: 'Free (since 2026-11-18)',
+  billingSearchFreeNote:
+    'Estimated under the new policy: server search and page fetch are free, so cost comes only from tokens, document parsing and voice.',
+  billingRatesTitle: 'Billing rates',
+  billingRateModel: 'Rate ({model}, CNY / million tokens)',
+  billingRateTokens: 'miss {miss} · hit {hit} · output {output}',
+  billingRatePerCall: '{price} CNY / call',
+  billingRatePerPage: '{price} CNY / page',
+  billingRatePerChar: '{price} CNY / char',
+  billingRatePerSecond: '{price} CNY / sec',
+  billingRatesHint:
+    'Estimated from the official price page: weekdays 09:00–12:00 and 14:00–18:00 are peak with double rates; everything else is off-peak. Unknown models fall back to Flash pricing.',
   settingDialogAsideMemoryOptionLabel: 'Memory',
   memorySavedHeader:
     'Here is the user’s long-term memory (personal facts, preferences and requirements; follow them naturally):',
@@ -483,7 +640,7 @@ export const en = {
   settingsCustomCotPlaceholder:
     'For example:\n1. Restate the question and confirm the goal, constraints and deliverable.\n2. List known facts and uncertainties.\n3. Compare at least two approaches and pick the more reliable one.\n4. Derive step by step and check edge cases.\n5. Give the conclusion first, then the structured reasons.',
   settingsCustomCotCount: '{count} / {max} characters',
-  settingsCustomCotInsertExample: 'Insert example',
+  settingsCustomCotInsertExample: 'Insert default prompt',
   settingsCustomCotClear: 'Clear',
   settingsCustomCotExample:
     '1. Restate the question and confirm the goal, constraints and deliverable.\n2. List known facts and unknowns; flag possible factual errors or ambiguity.\n3. Compare at least two approaches and pick the more reliable one.\n4. Derive step by step and check key steps and edge cases.\n5. Give the conclusion first, then a structured rationale.',
@@ -1116,6 +1273,18 @@ export const en = {
   variantConfirmDismiss: 'Do not ask again',
   variantConfirmStart: 'Start race',
   variantConfirmCancel: 'Cancel',
+  changelogV269Title: 'v2.6.9 · 2026-11',
+  changelogV269Update:
+    'Settings → About now has “Check for updates”: it reads the latest GitHub release and offers the APK directly on Android (or the release page when there is no asset), so no more manual version hunting',
+  changelogV269Caret:
+    'Fixed the ghost cursors in the terminal: the leftover blue block after a streamed command is cleared in one go',
+  changelogV269Storage:
+    'Workspace storage on Android now means app storage: no browser persistence prompt (site data is not evicted anyway), with quotas raised to 90%, 2 GB per file and 20,000 files',
+  changelogV269Docs:
+    'README split into per-chapter files under docs/ (Chinese and English), leaving an index page; fixed the implementation index table that failed to render because of an unescaped `||` and a mismatched separator row',
+  changelogV269Security:
+    'Merged the upstream security fix: attachment previews are typed by extension (an HTML file disguised as an image can no longer run with this origin), SVGs preview through a data URL and download, and citations / search results / page links only accept http(s)',
+  changelogV269Apk: 'Builds the 2.6.9 APK (versionCode 269), signed with xiaohuangbo.jks',
   latestReminderLanguage: 'English',
   settingsLocaleZhCN: 'Simplified Chinese',
   settingsLocaleEnUS: 'English',

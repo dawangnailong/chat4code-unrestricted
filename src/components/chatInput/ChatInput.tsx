@@ -254,7 +254,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
               labelClassName={styles.toggleLabel}
             />
           </Tooltip>
-          {/* 桌面端在此换行：思维链、智能搜索与深度思考占第二排；手机端仍是一行横向滚动 */}
+          {/* 桌面端在此换行：模式、思维链、智能搜索与深度思考占第二排；手机端仍是一行横向滚动 */}
           <span className={styles.toolbarBreak} aria-hidden />
           <CustomCotButton
             triggerClassName={styles.toggle}

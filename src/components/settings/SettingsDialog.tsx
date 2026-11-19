@@ -92,6 +92,7 @@ import type { PromptPreset } from '../../services/unrestricted/prompts.js'
 import { useFeedback } from '../../services/chat/feedbackStore.js'
 import { composeSystemPrompt } from '../../services/chat/systemPrompt.js'
 import { formatCustomCotContext } from '../../services/chat/customCot.js'
+import { DEFAULT_CUSTOM_COT } from '../../services/chat/defaultCot.js'
 import { useTranslate, type TranslationKey, type TranslationMessage } from '../../i18n/index.js'
 import { Button } from '../base/Button.js'
 import { Modal } from '../base/Modal.js'
@@ -100,6 +101,8 @@ import { Switch } from '../base/Switch.js'
 import { showToast } from '../base/toastState.js'
 import { ParamControl } from './ParamControls.js'
 import { StatsSettings } from './StatsSettings.js'
+import { WorkspaceSetting } from './WorkspaceSetting.js'
+import { UpdateCard } from './UpdateCard.js'
 import paramStyles from './ParamControls.module.css'
 import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
 import { BridgeField, ProviderField } from './BridgeField.js'
@@ -148,6 +151,11 @@ const sections: { value: SettingsSection; label: TranslationKey; icon: ReactNode
     value: 'attachmentPoison',
     label: 'settingDialogAsideAttachmentPoisonOptionLabel',
     icon: <IconPaperclipOutline16 />,
+  },
+  {
+    value: 'workspace',
+    label: 'settingDialogAsideWorkspaceOptionLabel',
+    icon: <IconBrowseOutline16 />,
   },
   { value: 'stats', label: 'settingDialogAsideStatsOptionLabel', icon: <IconChartOutline16 /> },
   { value: 'data', label: 'settingDialogAsideDataOptionLabel', icon: <IconDataOutline16 /> },
@@ -232,6 +240,8 @@ const SettingsContent = () => {
             <AttachmentsSetting />
           ) : section === 'attachmentPoison' ? (
             <AttachmentPoisonSettings />
+          ) : section === 'workspace' ? (
+            <WorkspaceSetting />
           ) : section === 'stats' ? (
             <StatsSettings />
           ) : section === 'about' ? (
@@ -690,6 +700,7 @@ const AboutSetting = () => {
           {link.href}
         </a>
       ))}
+      <UpdateCard />
     </div>
   )
 }
@@ -699,8 +710,46 @@ const ChangelogSetting = () => {
   const t = useTranslate()
   const groups: { title: TranslationKey; items: TranslationKey[] }[] = [
     {
+      title: 'changelogV269Title',
+      items: [
+        'changelogV269Update',
+        'changelogV269Storage',
+        'changelogV269Caret',
+        'changelogV269Security',
+        'changelogV269Docs',
+        'changelogV269Apk',
+      ],
+    },
+    {
+      title: 'changelogV267Title',
+      items: [
+        'changelogV267Cot',
+        'changelogV267AnyFiles',
+        'changelogV267UsageFix',
+        'changelogV267Capacity',
+        'changelogV267Billing',
+        'changelogV267WorkspaceOpfs',
+        'changelogV267Persist',
+        'changelogV267Apk',
+      ],
+    },
+    {
+      title: 'changelogV265Title',
+      items: [
+        'changelogV265Workspace',
+        'changelogV265Defaults',
+        'changelogV265Breakdown',
+        'changelogV265Billing',
+        'changelogV265Apk',
+      ],
+    },
+    {
       title: 'changelogV264Title',
       items: [
+        'changelogV264Tools',
+        'changelogV264ToolLoop',
+        'changelogV264ToolApproval',
+        'changelogV264ToolCompat',
         'changelogV264Ledger',
         'changelogV264Charts',
         'changelogV264Export',
@@ -884,11 +933,6 @@ const ChangelogSetting = () => {
       label: 'creditG0dm0d3Label',
       note: 'creditG0dm0d3Note',
       href: 'https://github.com/elder-plinius/G0DM0D3',
-    },
-    {
-      label: 'creditDeepseekAgentLabel',
-      note: 'creditDeepseekAgentNote',
-      href: 'https://github.com/Aoan2011/DeepSeek-Agent',
     },
     {
       label: 'creditDshUnrestrictedLabel',
@@ -1265,7 +1309,7 @@ const CustomCotSetting = () => {
           <span className={styles.systemPromptHint}>
             {t('settingsCustomCotCount', { count: draft.length, max: CUSTOM_COT_MAX_CHARS })}
           </span>
-          <Button variant="outlined" size="s" onClick={() => commit(t('settingsCustomCotExample'))}>
+          <Button variant="outlined" size="s" onClick={() => commit(DEFAULT_CUSTOM_COT)}>
             {t('settingsCustomCotInsertExample')}
           </Button>
           <Button variant="outlined" size="s" disabled={draft === ''} onClick={() => commit('')}>

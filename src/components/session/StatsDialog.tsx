@@ -28,6 +28,11 @@ import { Modal } from '../base/Modal.js'
 import { Switch } from '../base/Switch.js'
 import { PressureGauge, RingChart, Sparkline } from '../stats/charts.js'
 import { ledgerSeries, ledgerTotals, useLedger } from '../../services/chat/usageLedger.js'
+import {
+  CONTEXT_CATEGORIES,
+  breakdownTotal,
+  useContextBreakdown,
+} from '../../services/chat/contextBreakdown.js'
 import { readVoiceUsage } from '../../services/chat/sessionStats.js'
 import { openSettings } from '../settings/settingsDialogState.js'
 import { closeStats, useStatsDialog } from './statsDialogState.js'
@@ -75,6 +80,7 @@ const StatsContent = () => {
   const apiKey = useSettings((state) => state.apiKey) ?? ''
   const maxTokens = useSettings((state) => state.maxTokens)
   const model = useSettings((state) => state.model)
+  const serverSearchFree = useSettings((state) => state.serverSearchFree)
   const memoryDimension = useSettings((state) => state.memoryBankDimension)
   const memoryNodes = useMemoryBank((state) => state.nodes.length)
   const memoryEdges = useMemoryBank((state) => state.edges.length)
@@ -89,8 +95,13 @@ const StatsContent = () => {
   const contextWindow = contextWindowFor(model)
   const reserve = reserveGeometry(contextWindow, maxTokens ?? 8192)
   const cost = useMemo(
-    () => estimateCost(session, { holiday, voiceDiscount: discount }),
-    [session, holiday, discount]
+    () =>
+      estimateCost(session, {
+        holiday,
+        voiceDiscount: discount,
+        serverSearchFree,
+      }),
+    [session, holiday, discount, serverSearchFree]
   )
   const daily = useDailyUsage()
   useEffect(() => {
@@ -139,6 +150,18 @@ const StatsContent = () => {
     [week]
   )
   const voice = useMemo(() => readVoiceUsage(session?.id ?? null), [session])
+  // 上下文分类：当前会话最近一轮请求的构成
+  const breakdownEntry = useContextBreakdown((state) =>
+    activeId ? state.byId[activeId] : undefined
+  )
+  const breakdownSum = breakdownEntry ? breakdownTotal(breakdownEntry.parts) : 0
+  const breakdownRows = breakdownEntry
+    ? CONTEXT_CATEGORIES.map((key) => ({
+        key,
+        label: t(`contextCategory_${key}`),
+        tokens: breakdownEntry.parts[key],
+      })).filter((row) => row.tokens > 0)
+    : []
 
   const liveItems: MetricItem[] = liveMetrics
     ? [
@@ -378,6 +401,39 @@ const StatsContent = () => {
       </section>
 
       <section className={styles.section}>
+        <div className={styles.sectionTitle}>{t('contextBreakdownTitle')}</div>
+        {breakdownRows.length > 0 ? (
+          <div className={styles.compositionRow}>
+            <RingChart
+              segments={breakdownRows.map((row) => ({
+                key: row.key,
+                label: row.label,
+                value: row.tokens,
+              }))}
+              centerLabel={t('statsUnitTokens')}
+              centerValue={formatTokens(breakdownSum)}
+              ariaLabel={t('contextBreakdownTitle')}
+            />
+            <ul className={styles.compositionLegend}>
+              {breakdownRows.map((row, index) => (
+                <li key={row.key} className={styles.compositionItem}>
+                  <span className={styles.swatch} data-index={(index % 5) + 1} aria-hidden />
+                  <span className={styles.compositionLabel}>{row.label}</span>
+                  <span className={styles.compositionValue}>
+                    {formatTokens(row.tokens)} ·{' '}
+                    {((row.tokens / Math.max(1, breakdownSum)) * 100).toFixed(1)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className={styles.empty}>{t('contextBreakdownEmpty')}</div>
+        )}
+        <div className={styles.note}>{t('contextBreakdownHint')}</div>
+      </section>
+
+      <section className={styles.section}>
         <div className={styles.sectionTitle}>{t('statsContextTitle')}</div>
         <div className={styles.contextRow}>
           <PressureGauge
@@ -507,6 +563,9 @@ const StatsContent = () => {
             {cost.peakNow ? t('billingPeak') : t('billingOffPeak')}
           </span>
         </div>
+        {serverSearchFree ? (
+          <div className={styles.freeNote}>{t('billingSearchFreeNote')}</div>
+        ) : null}
         <div className={styles.switchRow}>
           <span className={styles.switchLabel}>{t('billingHoliday')}</span>
           <Switch checked={holiday} onChange={setHoliday} label={t('billingHoliday')} />

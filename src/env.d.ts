@@ -11,6 +11,12 @@ declare module '*.md' {
   export default source
 }
 
+/** 默认自定义思维链按原文内联，见 rspack.config.ts 的 asset/source 规则 */
+declare module '*.txt' {
+  const source: string
+  export default source
+}
+
 /** 公开 API 的地址，见 rspack.config.ts 的 createConfig */
 declare const __API_ORIGIN__: string
 

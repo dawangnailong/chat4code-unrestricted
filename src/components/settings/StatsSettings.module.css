@@ -482,3 +482,66 @@
   color: var(--dsw-alias-label-primary);
   font-weight: 600;
 }
+
+/* 计费口径：单价与说明左名右值 */
+.rateList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rateRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 18px;
+
+  &:nth-child(odd) {
+    background-color: var(--dsw-alias-interactive-bg-hover);
+  }
+}
+
+.rateName {
+  color: var(--dsw-alias-label-secondary);
+}
+
+.rateValue {
+  color: var(--dsw-alias-label-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 计费政策开关：说明在上、开关在右 */
+.billingSwitch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 7%, transparent);
+}
+
+.billingSwitchText {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.billingSwitchLabel {
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.billingSwitchDesc {
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 17px;
+}

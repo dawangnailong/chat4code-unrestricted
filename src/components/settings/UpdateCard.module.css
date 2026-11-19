@@ -1,0 +1,124 @@
+/* 设置 → 关于：检查更新卡片 */
+.card {
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 16px;
+  background-color: var(--dsw-alias-bg-base);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.current {
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.latest {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.available {
+  color: var(--dsw-alias-brand-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.hint {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* 下载链接做成胶囊按钮，APK 里走系统浏览器 */
+.download {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 4096px;
+  background-color: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color var(--ds-transition-duration) var(--ds-ease-in-out);
+
+  &:hover {
+    background-color: var(--dsw-alias-button-primary-hover);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--dsw-alias-button-primary-fill);
+  }
+}
+
+.meta {
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.notes {
+  color: var(--dsw-alias-label-secondary);
+
+  & > summary {
+    cursor: pointer;
+    list-style: none;
+    color: var(--dsw-alias-brand-text);
+    font-size: 12px;
+    line-height: 18px;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+}
+
+.notesBody {
+  box-sizing: border-box;
+  max-height: 200px;
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background-color: var(--dsw-alias-markdown-code-block);
+  color: var(--dsw-alias-label-secondary);
+  font-family: var(--ds-font-family-code);
+  font-size: 11px;
+  line-height: 17px;
+  white-space: pre-wrap;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  color: var(--dsw-alias-state-error-primary);
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}

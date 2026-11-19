@@ -245,6 +245,14 @@ const TTS_PER_CHAR = 3 / 10000
 /** 语音识别：0.78 元 / 小时（限时 5 折） */
 const ASR_PER_SECOND = 0.78 / 3600
 
+/** 计费口径：统计页把单价摊开展示，避免用户去翻文档 */
+export const billingRates = () => ({
+  searchPerCall: SEARCH_PER_CALL,
+  parsePerPage: PARSE_PER_PAGE,
+  ttsPerChar: TTS_PER_CHAR,
+  asrPerSecond: ASR_PER_SECOND,
+})
+
 /** 北京时间的工作日高峰时段：9:00–12:00、14:00–18:00；节假日整体按空闲价 */
 export const isPeakHour = (date: Date, holiday = false): boolean => {
   if (holiday) {
@@ -341,10 +349,16 @@ export type CostBreakdown = {
 /** 估算一个会话的费用；每条回复按它自己的请求时间判断高峰 / 空闲 */
 export const estimateCost = (
   session: Session | null,
-  options: { holiday?: boolean; voiceDiscount?: boolean } = {}
+  options: {
+    holiday?: boolean
+    voiceDiscount?: boolean
+    /** 服务端搜索 / 抓取是否免费；默认按 2026-11-18 12:00 起的新政策免费 */
+    serverSearchFree?: boolean
+  } = {}
 ): CostBreakdown => {
   const holiday = options.holiday ?? false
   const discount = options.voiceDiscount ?? true
+  const searchFree = options.serverSearchFree ?? true
   const usage = {
     cacheHit: 0,
     cacheMiss: 0,
@@ -436,8 +450,9 @@ export const estimateCost = (
     return sum
   })()
   const outputCost = modelCost - cacheHitCost - cacheMissCost
-  const searchCost = usage.search * SEARCH_PER_CALL
-  const fetchCost = usage.fetch * SEARCH_PER_CALL
+  // 新政策：模型调用触发的服务端搜索与抓取不再计费，只保留次数用于展示
+  const searchCost = searchFree ? 0 : usage.search * SEARCH_PER_CALL
+  const fetchCost = searchFree ? 0 : usage.fetch * SEARCH_PER_CALL
   const parseCost = usage.pages * PARSE_PER_PAGE
   const voiceFactor = discount ? 0.5 : 1
   const ttsCost = usage.ttsChars * TTS_PER_CHAR * voiceFactor

@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -13,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
@@ -89,6 +91,8 @@ public final class MainActivity extends Activity {
         );
 
         webView.addJavascriptInterface(new DownloadBridge(), "AndroidDownload");
+        // NanoVM Slim 的「切换输入法」按钮：WebView 里没法直接唤起输入法选择器
+        webView.addJavascriptInterface(new KeyboardBridge(), "AndroidKeyboard");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -212,6 +216,32 @@ public final class MainActivity extends Activity {
             return true;
         }
         return false;
+    }
+
+    /** Bridges the terminal's "switch keyboard" button to the system IME picker. */
+    public class KeyboardBridge {
+        @JavascriptInterface
+        public boolean available() {
+            return true;
+        }
+
+        @JavascriptInterface
+        public void showInputMethodPicker() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        InputMethodManager manager =
+                            (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        if (manager != null) {
+                            manager.showInputMethodPicker();
+                        }
+                    } catch (RuntimeException ignored) {
+                        // Some vendor ROMs refuse the picker; the terminal keeps working.
+                    }
+                }
+            });
+        }
     }
 
     /** Blob/data downloads cannot be handled by WebView's DownloadListener; route them to MediaStore. */

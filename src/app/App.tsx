@@ -96,57 +96,59 @@ export const App = () => {
               </Button>
             </div>
           ) : null}
-          <div className={styles.content}>
-            {siderCollapsed ? <CollapsedSider /> : null}
-            {labOpen ? (
-              <ErrorBoundary
-                fallback={(error) => (
-                  <div className={styles.labFallback}>
-                    <div>{t('labRenderError')}</div>
-                    <pre className={styles.labFallbackDetail}>{error.message}</pre>
-                    <Button variant="outlined" size="m" onClick={closeLab}>
-                      {t('labBack')}
-                    </Button>
+          <div className={styles.workspace}>
+            <div className={styles.content}>
+              {siderCollapsed ? <CollapsedSider /> : null}
+              {labOpen ? (
+                <ErrorBoundary
+                  fallback={(error) => (
+                    <div className={styles.labFallback}>
+                      <div>{t('labRenderError')}</div>
+                      <pre className={styles.labFallbackDetail}>{error.message}</pre>
+                      <Button variant="outlined" size="m" onClick={closeLab}>
+                        {t('labBack')}
+                      </Button>
+                    </div>
+                  )}
+                >
+                  <LabView />
+                </ErrorBoundary>
+              ) : !ready || (activeId !== null && !session) ? (
+                <div className={styles.loadingView}>
+                  {isMobile ? <MobileHeader /> : null}
+                  <div className={styles.loadingState} role="status" aria-live="polite">
+                    <span>
+                      {(!ready ? initError : sessionLoadError)
+                        ? t(!ready ? 'sessionListLoadFailed' : 'sessionLoadFailed')
+                        : t('sessionLoading')}
+                    </span>
+                    {(!ready ? initError : sessionLoadError) ? (
+                      <Button
+                        variant="outlined"
+                        size="m"
+                        onClick={() => {
+                          if (!ready) {
+                            void initChat()
+                          } else if (activeId !== null) {
+                            selectSession(activeId)
+                          }
+                        }}
+                      >
+                        {t('retry')}
+                      </Button>
+                    ) : null}
                   </div>
-                )}
-              >
-                <LabView />
-              </ErrorBoundary>
-            ) : !ready || (activeId !== null && !session) ? (
-              <div className={styles.loadingView}>
-                {isMobile ? <MobileHeader /> : null}
-                <div className={styles.loadingState} role="status" aria-live="polite">
-                  <span>
-                    {(!ready ? initError : sessionLoadError)
-                      ? t(!ready ? 'sessionListLoadFailed' : 'sessionLoadFailed')
-                      : t('sessionLoading')}
-                  </span>
-                  {(!ready ? initError : sessionLoadError) ? (
-                    <Button
-                      variant="outlined"
-                      size="m"
-                      onClick={() => {
-                        if (!ready) {
-                          void initChat()
-                        } else if (activeId !== null) {
-                          selectSession(activeId)
-                        }
-                      }}
-                    >
-                      {t('retry')}
-                    </Button>
-                  ) : null}
                 </div>
-              </div>
-            ) : session ? (
-              <SessionView
-                session={session}
-                streaming={streaming}
-                siderCollapsed={siderCollapsed}
-              />
-            ) : (
-              <Welcome />
-            )}
+              ) : session ? (
+                <SessionView
+                  session={session}
+                  streaming={streaming}
+                  siderCollapsed={siderCollapsed}
+                />
+              ) : (
+                <Welcome />
+              )}
+            </div>
           </div>
         </main>
         <SearchPanel />

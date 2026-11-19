@@ -70,8 +70,8 @@ export const createConfig = ({
         },
         type: 'javascript/auto',
       },
-      // 提示词文档按原文内联，构建后不再依赖仓库里的 .md 文件
-      { test: /\.md$/, type: 'asset/source' },
+      // 提示词文档按原文内联，构建后不再依赖仓库里的 .md / .txt 文件
+      { test: /\.(md|txt)$/, type: 'asset/source' },
       { test: /\.(woff2?|ttf)$/, type: 'asset/resource' },
     ],
   },

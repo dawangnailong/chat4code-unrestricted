@@ -1,8 +1,8 @@
 import clsx from 'clsx'
 import { useMemo, useState } from 'react'
 import { useTranslate } from '../../i18n/index.js'
-import type { TranslationKey } from '../../i18n/index.js'
 import { showToast } from '../base/toastState.js'
+import { Switch } from '../base/Switch.js'
 import { BarChart, Heatmap, RingChart, type BarColumn, type HeatCell } from '../stats/charts.js'
 import {
   LEDGER_KEEP_DAYS,
@@ -24,10 +24,23 @@ import {
   useContextUsage,
 } from '../../services/chat/contextUsage.js'
 import { effectiveContextTokens, pressurePercent } from '../../services/chat/contextPressure.js'
-import { formatMoney, formatTokens, totalVoiceUsage } from '../../services/chat/sessionStats.js'
+import {
+  billingRates,
+  formatMoney,
+  formatTokens,
+  modelPriceFor,
+  totalVoiceUsage,
+} from '../../services/chat/sessionStats.js'
+import {
+  CONTEXT_CATEGORIES,
+  breakdownTotal,
+  clearContextBreakdown,
+  useContextBreakdown,
+} from '../../services/chat/contextBreakdown.js'
+import type { TranslationKey } from '../../i18n/index.js'
 import { selectSession, useChatStore } from '../../services/chat/store.js'
 import { closeSettings } from './settingsDialogState.js'
-import { useSettings } from '../../services/settings.js'
+import { setServerSearchFree, useSettings } from '../../services/settings.js'
 import { modelLabel } from '../../services/api/models.js'
 import settingsStyles from './Settings.module.css'
 import styles from './StatsSettings.module.css'
@@ -99,6 +112,7 @@ export const StatsSettings = () => {
   const locale = useSettings((state) => state.locale)
   const model = useSettings((state) => state.model)
   const maxTokens = useSettings((state) => state.maxTokens)
+  const serverSearchFree = useSettings((state) => state.serverSearchFree)
   const days = useLedger((state) => state.days)
   const [rangeDays, setRangeDays] = useState(7)
   // 趋势图可以切换看点：token / 费用 / 请求数
@@ -106,6 +120,9 @@ export const StatsSettings = () => {
   const usageById = useContextUsage((state) => state.byId)
   const sessions = useChatStore((state) => state.sessions)
   const activeId = useChatStore((state) => state.activeId)
+  const breakdownEntry = useContextBreakdown((state) =>
+    activeId ? state.byId[activeId] : undefined
+  )
 
   const series = useMemo(() => ledgerSeries(days, rangeDays), [days, rangeDays])
   const totals = useMemo(() => ledgerTotals(series), [series])
@@ -154,6 +171,20 @@ export const StatsSettings = () => {
       ].filter((segment) => segment.value > 0),
     }
   }, [totals, t])
+
+  // 上下文分类：只展示当前会话最近一轮；没有记录时给出空状态
+  const breakdown = breakdownEntry?.parts
+  const breakdownSum = breakdown ? breakdownTotal(breakdown) : 0
+  const breakdownRows = breakdown
+    ? CONTEXT_CATEGORIES.map((key) => ({
+        key,
+        label: t(`contextCategory_${key}` as TranslationKey),
+        tokens: breakdown[key],
+        share: breakdownSum > 0 ? (breakdown[key] / breakdownSum) * 100 : 0,
+      })).filter((row) => row.tokens > 0)
+    : []
+  const rates = billingRates()
+  const price = modelPriceFor(model)
 
   const window = contextWindowFor(model)
   const entries = useMemo(() => contextUsageEntries(usageById), [usageById])
@@ -455,6 +486,94 @@ export const StatsSettings = () => {
         <div className={styles.note}>{t('statsExtrasHint')}</div>
       </section>
 
+      <div className={settingsStyles.groupTitle}>{t('contextBreakdownTitle')}</div>
+      <section className={styles.card}>
+        {breakdownRows.length > 0 ? (
+          <div className={styles.ringRow}>
+            <RingChart
+              segments={breakdownRows.map((row) => ({
+                key: row.key,
+                label: row.label,
+                value: row.tokens,
+              }))}
+              centerLabel={t('statsUnitTokens')}
+              centerValue={formatTokens(breakdownSum)}
+              ariaLabel={t('contextBreakdownTitle')}
+            />
+            <ul className={styles.ringLegend}>
+              {breakdownRows.map((row, index) => (
+                <li key={row.key} className={styles.ringLegendItem}>
+                  <span className={styles.swatch} data-index={(index % 5) + 1} aria-hidden />
+                  <span className={styles.ringLegendLabel}>{row.label}</span>
+                  <span className={styles.ringLegendValue}>
+                    {formatTokens(row.tokens)} · {row.share.toFixed(1)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className={styles.empty}>{t('contextBreakdownEmpty')}</div>
+        )}
+        <div className={styles.note}>{t('contextBreakdownHint')}</div>
+      </section>
+
+      <div className={settingsStyles.groupTitle}>{t('billingRatesTitle')}</div>
+      <section className={styles.card}>
+        <div className={styles.billingSwitch}>
+          <div className={styles.billingSwitchText}>
+            <span className={styles.billingSwitchLabel}>{t('billingSearchFreeLabel')}</span>
+            <span className={styles.billingSwitchDesc}>{t('billingSearchFreeDesc')}</span>
+          </div>
+          <Switch
+            checked={serverSearchFree}
+            onChange={setServerSearchFree}
+            label={t('billingSearchFreeLabel')}
+          />
+        </div>
+        <div className={styles.rateList}>
+          <div className={styles.rateRow}>
+            <span className={styles.rateName}>
+              {t('billingRateModel', { model: modelLabel(model) })}
+            </span>
+            <span className={styles.rateValue}>
+              {t('billingRateTokens', {
+                miss: price.cacheMiss,
+                hit: price.cacheHit,
+                output: price.output,
+              })}
+            </span>
+          </div>
+          <div className={styles.rateRow}>
+            <span className={styles.rateName}>{t('statsKpiSearches')}</span>
+            <span className={styles.rateValue}>
+              {serverSearchFree
+                ? t('billingSearchFreeValue')
+                : t('billingRatePerCall', { price: rates.searchPerCall })}
+            </span>
+          </div>
+          <div className={styles.rateRow}>
+            <span className={styles.rateName}>{t('statsExtrasPages')}</span>
+            <span className={styles.rateValue}>
+              {t('billingRatePerPage', { price: rates.parsePerPage })}
+            </span>
+          </div>
+          <div className={styles.rateRow}>
+            <span className={styles.rateName}>{t('statsExtrasTtsChars')}</span>
+            <span className={styles.rateValue}>
+              {t('billingRatePerChar', { price: rates.ttsPerChar })}
+            </span>
+          </div>
+          <div className={styles.rateRow}>
+            <span className={styles.rateName}>{t('statsExtrasAsrSeconds')}</span>
+            <span className={styles.rateValue}>
+              {t('billingRatePerSecond', { price: rates.asrPerSecond })}
+            </span>
+          </div>
+        </div>
+        <div className={styles.note}>{t('billingRatesHint')}</div>
+      </section>
+
       <div className={settingsStyles.groupTitle}>{t('statsContextTitle')}</div>
       <section className={styles.card}>
         <div className={styles.contextHead}>
@@ -548,6 +667,7 @@ export const StatsSettings = () => {
             disabled={entries.length === 0}
             onClick={() => {
               clearContextUsage()
+              clearContextBreakdown()
               showToast({ key: 'statsContextCleared' })
             }}
           >

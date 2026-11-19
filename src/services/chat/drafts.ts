@@ -26,7 +26,6 @@ export type DraftAttachment = {
   id: string
   file: File
   isImage: boolean
-  previewUrl: string | null
   /** 伴随投毒文本本身不再投毒 */
   skipPoison?: boolean
   /** 由附件投毒自动生成的伴随附件 */
@@ -108,15 +107,13 @@ export const addDraftFiles = (
       return { key: 'bridgeImageFormatUnsupported', params: { name: unsupported.name } }
     }
   }
-  const added = files.map((file): DraftAttachment => {
-    const image = isImage(resolveMimeType(file))
-    return {
+  const added = files.map(
+    (file): DraftAttachment => ({
       id: createId(),
       file,
-      isImage: image,
-      previewUrl: image ? URL.createObjectURL(file) : null,
-    }
-  })
+      isImage: isImage(resolveMimeType(file)),
+    })
+  )
   // 伴随文本附件是普通附件，占一个名额；名额不足时只为前面的文件生成
   // bridge 模式不支持文档附件，伴随文本没有载体，跳过生成
   const poison = useSettings.getState().attachmentPoison
@@ -137,7 +134,6 @@ export const addDraftFiles = (
         id: createId(),
         file,
         isImage: false,
-        previewUrl: null,
         skipPoison: true,
         generated: true,
       })
@@ -222,21 +218,12 @@ export const prepareDraftMessage = (draft: Draft, tasks: Record<string, UploadTa
   return { text, files }
 }
 
-const releaseAttachment = (attachment: DraftAttachment, cancel: boolean) => {
-  if (cancel) {
-    cancelUpload(attachment.id)
-  }
-  if (attachment.previewUrl) {
-    URL.revokeObjectURL(attachment.previewUrl)
-  }
-}
-
 export const removeDraftAttachment = (sessionId: string | null, attachmentId: string) => {
   const attachment = getDraft(sessionId).attachments.find((item) => item.id === attachmentId)
   if (!attachment) {
     return
   }
-  releaseAttachment(attachment, true)
+  cancelUpload(attachment.id)
   updateDraft(sessionId, (draft) => ({
     ...draft,
     attachments: draft.attachments.filter((item) => item.id !== attachmentId),
@@ -252,7 +239,7 @@ export const syncDraftSidecars = (sessionId: string | null, apiKey: string) => {
   const draft = getDraft(sessionId)
   const generated = draft.attachments.filter((attachment) => attachment.generated)
   const originals = draft.attachments.filter((attachment) => !attachment.generated)
-  generated.forEach((attachment) => releaseAttachment(attachment, true))
+  generated.forEach((attachment) => cancelUpload(attachment.id))
 
   if (isBridgeMode()) {
     updateDraft(sessionId, (current) => ({
@@ -272,7 +259,6 @@ export const syncDraftSidecars = (sessionId: string | null, apiKey: string) => {
         id: createId(),
         file,
         isImage: false,
-        previewUrl: null,
         skipPoison: true,
         generated: true,
       })
@@ -285,21 +271,20 @@ export const syncDraftSidecars = (sessionId: string | null, apiKey: string) => {
   sidecars.forEach((attachment) => upload(attachment, apiKey))
 }
 
-/** 发送成功后原件与 serverId 已交给会话，释放预览但保留上传完成态。 */
+/** 发送成功后原件与 serverId 已交给会话，保留上传完成态。 */
 export const clearSentDraft = (sessionId: string | null) => {
-  getDraft(sessionId).attachments.forEach((attachment) => releaseAttachment(attachment, false))
   updateDraft(sessionId, () => EMPTY_DRAFT)
 }
 
 /** 删除会话或替换历史成功后，释放尚未发送的草稿及上传任务。 */
 export const clearDraft = (sessionId: string | null) => {
-  getDraft(sessionId).attachments.forEach((attachment) => releaseAttachment(attachment, true))
+  getDraft(sessionId).attachments.forEach((attachment) => cancelUpload(attachment.id))
   updateDraft(sessionId, () => EMPTY_DRAFT)
 }
 
 export const clearAllDrafts = () => {
   for (const draft of useDrafts.getState().drafts.values()) {
-    draft.attachments.forEach((attachment) => releaseAttachment(attachment, true))
+    draft.attachments.forEach((attachment) => cancelUpload(attachment.id))
   }
   useDrafts.setState({ drafts: new Map() })
 }

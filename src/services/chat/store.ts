@@ -20,6 +20,7 @@ import {
 import { composeSystemPrompt } from './systemPrompt.js'
 import { customCotSnapshot, formatCustomCotContext } from './customCot.js'
 import { noteContextUsage } from './contextUsage.js'
+import { buildContextBreakdown, noteContextBreakdown } from './contextBreakdown.js'
 import { noteAutoTune, useFeedback } from './feedbackStore.js'
 import { beginLiveRun, finishLiveRun, noteDelta, noteUsage } from './liveStats.js'
 import { estimatePages, noteRunTiming } from './sessionStats.js'
@@ -1514,6 +1515,12 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
         if (autoTuned) {
           noteAutoTune(initial.id, autoTuned.detectedContext, autoTuned.params)
         }
+        // 工具列表在发出前先定下来：上下文分类要用同一份定义，不能发给模型的和统计的不一致
+        const tools = serverTools((initial.search ?? false) && !shouldTakeoverSearch(poisonConfig))
+        noteContextBreakdown(
+          sessionId,
+          buildContextBreakdown({ system: systemText, tools, messages })
+        )
         const events = streamMessage(
           apiKey ?? '',
           {
@@ -1534,7 +1541,7 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
             ...(maxTokens === null ? {} : { max_tokens: maxTokens }),
             safety_check: safetyCheck(unrestricted || autoJailbreak, skipSafetyCheck),
             // 接管搜索时只保留阅读链接工具，模型只能看到本地注入的结果
-            tools: serverTools((initial.search ?? false) && !shouldTakeoverSearch(poisonConfig)),
+            tools,
             ...(titleRequests.has(controller) ? { title: { enabled: true } } : {}),
           },
           controller.signal,

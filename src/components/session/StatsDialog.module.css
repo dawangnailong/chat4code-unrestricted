@@ -409,3 +409,14 @@
 .footerButton {
   flex-shrink: 0;
 }
+
+/* 新计费政策提示：服务端搜索 / 抓取免费 */
+.freeNote {
+  margin-bottom: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 10%, transparent);
+  color: var(--dsw-alias-brand-text);
+  font-size: 11px;
+  line-height: 17px;
+}

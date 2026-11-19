@@ -14,6 +14,7 @@ import {
   useSettings,
 } from '../../services/settings.js'
 import { isCustomCotActive } from '../../services/chat/customCot.js'
+import { DEFAULT_CUSTOM_COT } from '../../services/chat/defaultCot.js'
 import styles from './CustomCotPanel.module.css'
 
 /**
@@ -109,7 +110,7 @@ export const CustomCotButton = ({
                 <button
                   type="button"
                   className={styles.textButton}
-                  onClick={() => setCustomCot(t('settingsCustomCotExample'))}
+                  onClick={() => setCustomCot(DEFAULT_CUSTOM_COT)}
                 >
                   {t('settingsCustomCotInsertExample')}
                 </button>

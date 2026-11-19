@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { useSettings } from '../../services/settings.js'
 
-/** 设置弹窗的分组：通用 / 模型 / 提示词 / 思维链 / 高级 / 搜索投毒 / 记忆 / 附件 / 附件投毒 / 统计 / 数据管理 / 关于 / 更新日志 */
+/** 设置弹窗的分组：通用 / 模型 / 提示词 / 思维链 / 高级 / 搜索投毒 / 记忆 / 附件 / 附件投毒 / 工作区 / 统计 / 数据管理 / 关于 / 更新日志 */
 export type SettingsSection =
   | 'general'
   | 'model'
@@ -12,6 +12,7 @@ export type SettingsSection =
   | 'memory'
   | 'attachments'
   | 'attachmentPoison'
+  | 'workspace'
   | 'stats'
   | 'data'
   | 'about'

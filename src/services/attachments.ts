@@ -307,6 +307,36 @@ const MIME_BY_EXT: Record<string, string> = {
   webp: 'image/webp',
 }
 
+const VIEW_MIME_BY_EXT: Record<string, string> = {
+  ...MIME_BY_EXT,
+  apng: 'image/png',
+  jpe: 'image/jpeg',
+  jfif: 'image/jpeg',
+  pjp: 'image/jpeg',
+  pjpeg: 'image/jpeg',
+  bmp: 'image/bmp',
+  dib: 'image/bmp',
+  ico: 'image/x-icon',
+  cur: 'image/x-icon',
+  avif: 'image/avif',
+  avifs: 'image/avif',
+  tif: 'image/tiff',
+  tiff: 'image/tiff',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  svg: 'image/svg+xml',
+  pdf: 'application/pdf',
+}
+
+/**
+ * 展示附件时只按后缀确定类型。
+ * 浏览器/服务端给的 MIME 不可信：一个 .png 里塞 HTML 再用 blob: 打开会继承本站 origin。
+ */
+export const getFileViewType = (name: string) => {
+  const ext = getFileExt(name)
+  return Object.hasOwn(VIEW_MIME_BY_EXT, ext) ? VIEW_MIME_BY_EXT[ext] : ''
+}
+
 /** 取文件的 MIME：优先用浏览器给出的类型，缺失时按扩展名推断 */
 export const resolveMimeType = (file: File) => file.type || MIME_BY_EXT[getFileExt(file.name)] || ''
 
