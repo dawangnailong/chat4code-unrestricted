@@ -291,6 +291,38 @@
   background-color: var(--dsw-alias-border-l2);
 }
 
+/* bridge 内联图片张数的窄输入框：外观对齐 apiKeyInput，宽度收窄 */
+.bridgeInlineInput {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 120px;
+  height: var(--ds-control-height-xl);
+  font-size: 14px;
+  line-height: 24px;
+  padding: 0 14px;
+  border-radius: 22px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  transition: border-color var(--ds-transition-duration) var(--ds-ease-in-out);
+
+  &:focus-within {
+    border-color: var(--dsw-alias-brand-primary);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--dsw-alias-label-primary);
+    font: inherit;
+    caret-color: var(--dsw-alias-brand-text);
+  }
+}
+
 .confirm {
   flex-shrink: 0;
   padding: 0;

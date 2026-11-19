@@ -1062,11 +1062,20 @@ export const zh = {
   bridgeErrorUnknown: '扩展返回错误：{message}',
   bridgeErrorDisconnected: '扩展后台连接中断，本次回复未能完成。',
   bridgeErrorBadRequest: '请求格式不符合 OpenCode 的 Anthropic 兼容接口要求。',
-  bridgeErrorBodyTooLarge: '请求体超过 Bridge 的 4 MiB 限制，请压缩对话或减少附件。',
+  bridgeErrorBodyTooLarge:
+    '请求体超过 Bridge 的请求体上限（扩展默认 32 MiB，可在扩展选项里调整），请减少图片或清理对话。',
   bridgeErrorResponseTooLarge: '回复超过 Bridge 的 32 MiB 限制。',
   bridgeErrorUpstreamHttp: '上游返回 HTTP {status}：{message}',
-  bridgeAttachmentsUnsupported: 'OpenCode Bridge 模式暂不支持附件上传。',
+  bridgeAttachmentsUnsupported: 'OpenCode Bridge 模式不支持文档附件；图片会以 base64 内联发送。',
   bridgeSpeechUnsupported: 'OpenCode Bridge 模式暂不支持语音识别与朗读。',
   bridgeSearchUnsupported: 'OpenCode Bridge 模式暂不支持服务端联网搜索。',
   bridgeLabUnsupported: 'OpenCode Bridge 模式下实验台不可用，请切换回 DeepSeek。',
+  bridgeInlineImagesLabel: '内联图片张数',
+  bridgeInlineImagesDescription:
+    'bridge 通道每次请求只内联最近的几张图片（1-10，其余替换为占位文本），图片总量另有约 24 MB 预算。需要扩展 v0.2.0+；本地原件始终完整保存。',
+  bridgeDocumentsUnsupported: 'OpenCode Bridge 模式暂不支持文档附件，只能添加图片。',
+  bridgeImageFormatUnsupported: '「{name}」不是受支持的图片格式（PNG / JPEG / GIF / WebP）。',
+  bridgeImageTooLarge: '「{name}」编码后约 {size}，超出单次请求的图片预算，请压缩后重试。',
+  bridgeAttachmentMissing: '「{name}」的本地原件不可用，请重新添加该图片。',
+  bridgeImageOmitted: '[图片已省略：{name}]',
 } as const

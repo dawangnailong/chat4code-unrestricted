@@ -143,6 +143,22 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
     }
   }, [sessionId, sidecarMode])
 
+  // 切换推理通道时迁移草稿附件：bridge 的完成态没有服务端副本，切回 DeepSeek 需真实上传；
+  // 反向只需重盖本地完成标记（投毒在发送时对副本应用）。
+  const lastBridgeMode = useRef(bridgeMode)
+  useEffect(() => {
+    if (lastBridgeMode.current === bridgeMode) {
+      return
+    }
+    lastBridgeMode.current = bridgeMode
+    const apiKey = useSettings.getState().apiKey ?? ''
+    for (const attachment of getDraft(sessionId).attachments) {
+      if (!attachment.generated) {
+        restartDraftAttachment(sessionId, attachment.id, apiKey)
+      }
+    }
+  }, [sessionId, bridgeMode])
+
   // 排队、上传中或上传失败的附件都留在输入框，全部上传成功后才能发送
   const canSend = !importingHistory && !streaming && voice.status === 'idle' && draftReady
 
@@ -175,9 +191,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
         }
       }}
     >
-      {bridgeMode ? null : (
-        <DraftAttachments items={attachments} onRetry={retryFile} onRemove={removeFile} />
-      )}
+      <DraftAttachments items={attachments} onRetry={retryFile} onRemove={removeFile} />
       <div className={styles.textareaWrapper}>
         <textarea
           ref={textareaRef}
@@ -288,29 +302,25 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
               }}
             />
           )}
-          {bridgeMode ? null : (
-            <>
-              <IconButton
-                size="m"
-                tone="primary"
-                icon={<IconPaperclipOutline16 />}
-                tooltip={t('uploadFile')}
-                disabled={importingHistory}
-                onClick={() => ensureApiKey() && fileInputRef.current?.click()}
-              />
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                hidden
-                accept={acceptFilesAttr()}
-                onChange={(event) => {
-                  acceptFiles(Array.from(event.target.files ?? []))
-                  event.target.value = ''
-                }}
-              />
-            </>
-          )}
+          <IconButton
+            size="m"
+            tone="primary"
+            icon={<IconPaperclipOutline16 />}
+            tooltip={t('uploadFile')}
+            disabled={importingHistory}
+            onClick={() => ensureApiKey() && fileInputRef.current?.click()}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            hidden
+            accept={acceptFilesAttr()}
+            onChange={(event) => {
+              acceptFiles(Array.from(event.target.files ?? []))
+              event.target.value = ''
+            }}
+          />
           {streaming && sessionId ? (
             <button
               type="button"

@@ -3,6 +3,11 @@
 // Vendored from https://github.com/dawangnailong/opencode-bridge
 // at commit ec91664 (MIT License). Do not edit by hand; regenerate from the
 // upstream sdk/opencode-bridge.js when the bridge protocol changes.
+// The SDK file itself is unchanged up to upstream v0.2.0 (commit 034d494):
+// that release changes only the extension side, which since v0.2.0
+// guarantees opaque passthrough of multimodal content parts (e.g. Anthropic
+// image blocks with base64 sources) and raises the default request body
+// limit to 32 MiB (configurable 1-32 MiB in the extension options).
 //
 // This file is intentionally dependency-free. The page never sees an API key;
 // it only talks to the companion browser extension over chrome.runtime, or a

@@ -1,6 +1,7 @@
 import type {
   AssistantBlockParam,
   FileBlockParam,
+  InlineImageBlockParam,
   MessageParam,
   MessageStreamEvent,
   OutputBlockStart,
@@ -8,6 +9,7 @@ import type {
 } from '../api/types.js'
 import { translate } from '../../i18n/index.js'
 import { isPoisonToolId } from '../searchPoison.js'
+import type { InlineImagePayload } from './bridgeImages.js'
 import type {
   AssistantMessage,
   FileAttachment,
@@ -308,16 +310,60 @@ const isUsableReply = (message: Message): message is AssistantMessage =>
   !message.blocks.some((block) => block.type === 'text' && block.isTemplate) &&
   getReplyText(message) !== ''
 
-/** 有文件时用内容块数组：先文件后文本，文件按 Files API 的 file_id 引用 */
-const toUserParam = ({ content, files }: UserMessage): MessageParam => {
-  const blocks = toFileBlocks(files)
+/**
+ * bridge 模式的图片块：map 里的 inline 渲染为 Anthropic base64 块，omitted 渲染为
+ * 占位文本（不进请求的图片对模型不可见，但轮次结构保留）；文档类附件不支持，跳过。
+ */
+const toBridgeImageBlocks = (
+  files: FileAttachment[],
+  bridgeImages: Map<string, InlineImagePayload>
+): (InlineImageBlockParam | TextBlockParam)[] =>
+  files.flatMap((file): (InlineImageBlockParam | TextBlockParam)[] => {
+    const payload = file.isImage ? bridgeImages.get(file.id) : undefined
+    if (!payload) {
+      return []
+    }
+    return payload.kind === 'inline'
+      ? [
+          {
+            type: 'image' as const,
+            source: {
+              type: 'base64' as const,
+              media_type: payload.mediaType,
+              data: payload.data,
+            },
+          },
+        ]
+      : [{ type: 'text' as const, text: translate('bridgeImageOmitted', { name: file.name }) }]
+  })
+
+/** 有文件时用内容块数组：先文件后文本。DeepSeek 按 file_id 引用，bridge 按 base64 内联 */
+const toUserParam = (
+  user: UserMessage,
+  bridgeImages?: Map<string, InlineImagePayload>
+): MessageParam => {
+  const blocks = bridgeImages
+    ? toBridgeImageBlocks(user.files, bridgeImages)
+    : toFileBlocks(user.files)
   return blocks.length === 0
-    ? { role: 'user', content }
+    ? { role: 'user', content: user.content }
     : {
         role: 'user',
-        content: [...blocks, ...(content ? [{ type: 'text' as const, text: content }] : [])],
+        content: [
+          ...blocks,
+          ...(user.content ? [{ type: 'text' as const, text: user.content }] : []),
+        ],
       }
 }
+
+/** 历史轮次是否携带可进请求的附件：DeepSeek 看有无 serverId，bridge 看是否在图片 map 里 */
+const hasRequestFiles = (
+  user: UserMessage,
+  bridgeImages?: Map<string, InlineImagePayload>
+): boolean =>
+  bridgeImages
+    ? user.files.some((file) => file.isImage && bridgeImages.has(file.id))
+    : toFileBlocks(user.files).length > 0
 
 /**
  * assistant 的内容块按历史与续写场景转换：
@@ -418,6 +464,7 @@ export const getContextRounds = (history: Message[]): [UserMessage, AssistantMes
 /**
  * 把会话转成请求的 messages：只保留「提问 + 有回答的回复」成对的轮次，最后接上本轮提问。
  * 失败或没有回答的轮次不进上下文。续写时末尾再带上本轮 assistant。
+ * bridgeImages 仅 bridge 通道传入：图片按 base64 内联渲染；缺省时走 DeepSeek 的 file_id 引用。
  */
 export const toRequestMessages = (
   history: Message[],
@@ -426,7 +473,8 @@ export const toRequestMessages = (
   thinking = prefix?.thinking ?? false,
   latestReminder?: string,
   compression?: SessionCompression,
-  disguiseThinking = false
+  disguiseThinking = false,
+  bridgeImages?: Map<string, InlineImagePayload>
 ): MessageParam[] => {
   const messages: MessageParam[] = []
   let previousReminder: string | undefined
@@ -452,18 +500,18 @@ export const toRequestMessages = (
   }
   const lastRound = rounds.length - 1
   rounds.forEach(([user, reply], index) => {
-    // 历史提问没有文字、附件也都没有 serverId 时，提问为空，连同回答一起省略。
-    if (!user.content && toFileBlocks(user.files).length === 0) {
+    // 历史提问没有文字、附件也进不了请求时，提问为空，连同回答一起省略。
+    if (!user.content && !hasRequestFiles(user, bridgeImages)) {
       return
     }
     appendReminder(reply.latestReminder)
     messages.push(
-      toUserParam(user),
+      toUserParam(user, bridgeImages),
       toAssistantParam(reply, false, thinking, disguiseThinking && index === lastRound)
     )
   })
   appendReminder(latestReminder)
-  messages.push(toUserParam(question))
+  messages.push(toUserParam(question, bridgeImages))
   if (prefix?.prefix) {
     const assistant = toAssistantParam(prefix, true, thinking)
     // 没有非空白正文或有效思考时直接重发原问题，避免服务端拒绝空 Prefill。

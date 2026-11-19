@@ -90,10 +90,14 @@ export const validateFiles = (files: File[], currentCount: number): TranslationM
 }
 
 /**
- * 上传失败在附件上显示的文案：与设计稿状态对应的用具体原因，其余统一「上传失败」。
+ * 上传失败在附件上显示的文案：带本地翻译的 ApiError 原样展示（bridge 模式的
+ * 图片装配错误依赖它），其余与设计稿状态对应的用具体原因，或统一「上传失败」。
  * 服务端原文多为英文且较长，不直接展示。
  */
 export const describeUploadError = (error: unknown): TranslationMessage => {
+  if (error instanceof ApiError && error.localMessage) {
+    return error.localMessage
+  }
   if (classifyApiError(error) === 'serverBusy') {
     return { key: 'uploadServerBusy' }
   }
@@ -205,7 +209,8 @@ export const uploadAttachment = (
   options?: { skipPoison?: boolean }
 ): Promise<string> => {
   if (isBridgeMode()) {
-    // OpenCode Bridge 不提供 DeepSeek Files API；附件上传在 bridge 模式禁用
+    // 草稿附件在 bridge 模式走 completeAttachmentLocally（本地保留、发送时内联），
+    // 不该再走到这里；保留兜底拒绝，覆盖历史遗留的非草稿调用路径。
     return Promise.reject(new ApiError('http', { key: 'bridgeAttachmentsUnsupported' }))
   }
   const current = pending.get(id)
@@ -260,6 +265,14 @@ export const uploadAttachment = (
 export const cancelUpload = (id: string) => {
   pending.get(id)?.controller.abort()
   setTask(id, null)
+}
+
+/**
+ * bridge 模式的「上传」：没有 Files API，原件只存本地（IndexedDB），
+ * 发送时再转 base64 内联。任务直接置为完成，serverId 用空串表示仅本地、无服务端副本。
+ */
+export const completeAttachmentLocally = (id: string, poison: string) => {
+  setTask(id, { status: 'done', serverId: '', poison })
 }
 
 /** 中止旧任务并按当前设置重新上传；用于启用/关闭附件投毒后刷新草稿附件 */

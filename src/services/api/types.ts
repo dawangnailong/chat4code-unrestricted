@@ -146,6 +146,15 @@ export type FileBlockParam = {
   source: { type: 'file'; file_id: string }
 }
 
+/**
+ * base64 内联图片块：OpenCode Bridge 通道没有 Files API，图片发送时从本地原件
+ * 转成 Anthropic 原生 base64 形状随消息下发；上游扩展 v0.2.0+ 做不透明透传。
+ */
+export type InlineImageBlockParam = {
+  type: 'image'
+  source: { type: 'base64'; media_type: string; data: string }
+}
+
 /** 接口接受的调用块；历史只回传 kind 为 read_link 的调用 */
 export type ServerToolUseBlockParam = Pick<
   ServerToolUseBlock,
@@ -169,7 +178,10 @@ export type AssistantBlockParam =
 export type MessageParam =
   /** Chat Engine 扩展角色，位于对应 user 前；需服务端支持 latest_reminder。 */
   | { role: 'latest_reminder'; content: string }
-  | { role: 'user'; content: string | (FileBlockParam | TextBlockParam)[] }
+  | {
+      role: 'user'
+      content: string | (FileBlockParam | TextBlockParam | InlineImageBlockParam)[]
+    }
   | { role: 'assistant'; content: AssistantBlockParam[] }
 
 /** 开启联网搜索与边想边搜 */

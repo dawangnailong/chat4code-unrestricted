@@ -7,6 +7,7 @@ import type { ApiProvider } from '../../services/api/types.js'
 import {
   setApiProvider,
   setBridgeExtensionId,
+  setBridgeInlineImageCount,
   useBridgeMode,
   useSettings,
 } from '../../services/settings.js'
@@ -51,14 +52,24 @@ export const ProviderField = () => {
   )
 }
 
-/** OpenCode Bridge 配置：扩展 ID + 连接测试 + 使用步骤 */
+/** OpenCode Bridge 配置：扩展 ID + 图片内联张数 + 连接测试 + 使用步骤 */
 export const BridgeField = () => {
   const t = useTranslate()
   const bridgeMode = useBridgeMode()
   const savedId = useSettings((state) => state.bridgeExtensionId)
+  const inlineImageCount = useSettings((state) => state.bridgeInlineImageCount)
   const [value, setValue] = useState(savedId)
+  const [inlineImageCountDraft, setInlineImageCountDraft] = useState(String(inlineImageCount))
   const [testing, setTesting] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
+
+  /** 输入过程中只更新草稿，失焦或回车时夹取到 1-10 后提交 */
+  const commitInlineImageCount = (raw: string) => {
+    const parsed = Number(raw.trim())
+    const next = Number.isFinite(parsed) ? Math.min(10, Math.max(1, Math.round(parsed))) : 4
+    setInlineImageCountDraft(String(next))
+    setBridgeInlineImageCount(next)
+  }
 
   if (!bridgeMode) {
     return null
@@ -114,7 +125,12 @@ export const BridgeField = () => {
         {!testing ? (
           <>
             <span className={styles.divider} />
-            <button type="button" className={styles.confirm} onMouseDown={(event) => event.preventDefault()} onClick={() => void test()}>
+            <button
+              type="button"
+              className={styles.confirm}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => void test()}
+            >
               {t('bridgeTestConnection')}
             </button>
           </>
@@ -123,6 +139,26 @@ export const BridgeField = () => {
       {result ? (
         <div className={result.ok ? styles.description : styles.error}>{result.message}</div>
       ) : null}
+      <div className={styles.label}>{t('bridgeInlineImagesLabel')}</div>
+      <div className={styles.description}>{t('bridgeInlineImagesDescription')}</div>
+      <div className={styles.bridgeInlineInput}>
+        <input
+          type="number"
+          min={1}
+          max={10}
+          step={1}
+          inputMode="numeric"
+          value={inlineImageCountDraft}
+          onChange={(event) => setInlineImageCountDraft(event.target.value)}
+          onBlur={() => commitInlineImageCount(inlineImageCountDraft)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+              commitInlineImageCount(event.currentTarget.value)
+              event.currentTarget.blur()
+            }
+          }}
+        />
+      </div>
       <div className={styles.systemPromptHint}>
         <strong>{t('bridgeSetupTitle')}</strong>
         <div>{t('bridgeSetupOriginHint', { origin })}</div>

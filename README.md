@@ -492,7 +492,9 @@ Setup:
 
 Safari has no offscreen document, so requests run inside the MV3 service worker and are subject to its fetch limits (roughly 25 seconds to first byte and 5 minutes per request). Chrome is not affected; very long Safari replies may be interrupted.
 
-Bridge mode sends standard Anthropic Messages only: DeepSeek-specific fields (`safety_check`, `latest_reminder`, `deepseek_*` server tools, `title`, `reasoning_effort`) are stripped, the model id `deepseek-flash` is mapped to `deepseek-v4.1-flash`, and a stable `x-opencode-session` is derived from each chat. Attachments, speech, server-side web search and the lab are disabled in this mode.
+Bridge mode sends standard Anthropic Messages only: DeepSeek-specific fields (`safety_check`, `latest_reminder`, `deepseek_*` server tools, `title`, `reasoning_effort`) are stripped, the model id `deepseek-flash` is mapped to `deepseek-v4.1-flash`, and a stable `x-opencode-session` is derived from each chat.
+
+Image attachments are inlined as Anthropic base64 blocks in bridge mode (requires extension v0.2.0+): each request inlines only the most recent few images (configurable in Settings → OpenCode Bridge, default 4, with an overall ~24 MB image budget); older images become placeholder text in the request. Local originals are always kept in full in IndexedDB and exported with backups. Document attachments remain unsupported in bridge mode. Speech, server-side web search and the lab are disabled in this mode.
 
 ---
 

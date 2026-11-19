@@ -1162,11 +1162,22 @@ export const en = {
   bridgeErrorDisconnected: 'The extension background connection closed before the reply finished.',
   bridgeErrorBadRequest: 'The request does not match the OpenCode Anthropic-compatible schema.',
   bridgeErrorBodyTooLarge:
-    'The request exceeds the bridge 4 MiB limit. Compress the conversation or remove attachments.',
+    'The request exceeds the bridge body limit (32 MiB by default, configurable in the extension options). Remove some images or clean up the conversation.',
   bridgeErrorResponseTooLarge: 'The reply exceeds the bridge 32 MiB limit.',
   bridgeErrorUpstreamHttp: 'Upstream returned HTTP {status}: {message}',
-  bridgeAttachmentsUnsupported: 'Attachment upload is not available in OpenCode Bridge mode.',
+  bridgeAttachmentsUnsupported:
+    'Documents are not supported in OpenCode Bridge mode; images are sent inline as base64.',
   bridgeSpeechUnsupported: 'Speech input and read-aloud are not available in OpenCode Bridge mode.',
   bridgeSearchUnsupported: 'Server-side web search is not available in OpenCode Bridge mode.',
   bridgeLabUnsupported: 'The lab is unavailable in OpenCode Bridge mode. Switch back to DeepSeek.',
+  bridgeInlineImagesLabel: 'Inline image count',
+  bridgeInlineImagesDescription:
+    'Each bridge request inlines only the most recent few images (1-10; older ones become placeholder text), with an overall ~24 MB budget. Requires extension v0.2.0+. Local originals are always kept in full.',
+  bridgeDocumentsUnsupported: 'Documents are not supported in OpenCode Bridge mode; images only.',
+  bridgeImageFormatUnsupported:
+    '"{name}" is not a supported image format (PNG / JPEG / GIF / WebP).',
+  bridgeImageTooLarge:
+    '"{name}" is about {size} after encoding, exceeding the per-request image budget. Compress it and retry.',
+  bridgeAttachmentMissing: 'The local original of "{name}" is unavailable. Add the image again.',
+  bridgeImageOmitted: '[Image omitted: {name}]',
 } satisfies Record<keyof typeof zh, string>

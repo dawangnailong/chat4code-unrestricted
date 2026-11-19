@@ -36,6 +36,7 @@ import { depthDirective, jailbreakSystemPrompt } from '../unrestricted/prompts.j
 import { looksLikeRefusal } from '../unrestricted/refusal.js'
 import { applyHallOfFameCombo, HALL_OF_FAME } from '../unrestricted/libertas.js'
 import { appendBranch, getVisibleMessages, normalizeSession, selectVersion } from './branches.js'
+import { buildBridgeImages, type InlineImagePayload } from './bridgeImages.js'
 import * as db from './db.js'
 import {
   clearAllDrafts,
@@ -176,6 +177,10 @@ const sessionAccess = new Map<string, number>()
 const unsavedSessions = new Set<string>()
 /** 保存失败时保留原件，重试成功后才释放。 */
 const pendingFiles = new Map<string, db.StoredFile[]>()
+
+/** 读取尚未落盘的附件原件；bridge 模式转 base64 时优先用它，避免异步保存造成读空 */
+export const peekPendingFile = (sessionId: string, fileId: string): Blob | undefined =>
+  pendingFiles.get(sessionId)?.find((file) => file.id === fileId)?.blob
 const deletingSessions = new Set<string>()
 const deletionTasks = new Set<Promise<boolean>>()
 const streamFlushes = new Map<string, () => void>()
@@ -1161,15 +1166,27 @@ const refreshRequest = (sessionId: string, request: Request): Request => {
  * - 本轮提问的附件并行补齐，任一失败则整体失败，已成功的照常写回，重试时复用成功结果；
  * - 历史轮次（仅进入上下文的）中没有 serverId 的附件，多为导入的图片：从最新的消息往前逐张补传，
  *   失败静默跳过，该附件不进入本次请求，下次发送时再试。
+ * bridge 模式没有 Files API：改为把上下文里最近 N 张图片转成 base64 载荷，
+ * 由 toRequestMessages 渲染成内联块，其余附件渲染为占位文本。
  */
-const prepareFiles = async (sessionId: string, request: Request, signal: AbortSignal) => {
+const prepareFiles = async (
+  sessionId: string,
+  request: Request,
+  signal: AbortSignal
+): Promise<Request & { bridgeImages?: Map<string, InlineImagePayload> }> => {
   const epoch = historyEpoch
   // 服务端判定 file_id 失效时会清掉会话里的 serverId，先用最新消息替换请求快照，
   // 否则快照里仍是旧 id，补传会直接复用它。
   request = refreshRequest(sessionId, request)
-  // OpenCode Bridge 模式禁用附件上传：Files API 是 DeepSeek 专属，图片块会在请求清洗时丢弃
+  // OpenCode Bridge 模式改走 base64 内联：图片从本地原件读取，无需服务端 file_id
   if (isBridgeMode()) {
-    return { history: request.history, question: request.question, prefix: request.prefix }
+    const bridgeImages = await buildBridgeImages(sessionId, request, signal, peekPendingFile)
+    return {
+      history: request.history,
+      question: request.question,
+      prefix: request.prefix,
+      bridgeImages,
+    }
   }
   const apiKey = useSettings.getState().apiKey ?? ''
   const serverIds = new Map<string, UploadedFile>()
@@ -1477,7 +1494,8 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
           initial.thinking ?? false,
           requestReminder,
           getSession(sessionId)?.compression,
-          thinkingAsBody
+          thinkingAsBody,
+          prepared.bridgeImages
         )
         const effort = initial.thinking ? reasoningEffort : 0
         // 自动调参只覆盖 temperature 与 top_p：Anthropic 兼容接口不接受其余采样参数。

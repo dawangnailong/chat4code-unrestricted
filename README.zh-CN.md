@@ -491,7 +491,9 @@ Persona（官方身份分块）
 
 Safari 没有 offscreen document，请求在 MV3 service worker 内执行，受其 fetch 计时限制（约 25 秒首字节、单请求 5 分钟）。Chrome 不受影响；Safari 下超长回复可能被中断。
 
-Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safety_check`、`latest_reminder`、`deepseek_*` 服务端工具、`title`、`reasoning_effort`）会被剥离，模型 id `deepseek-flash` 映射为 `deepseek-v4.1-flash`，并按聊天会话派生稳定的 `x-opencode-session`。附件、语音、服务端联网搜索与实验台在该模式下禁用。
+Bridge 模式只发送标准 Anthropic Messages：DeepSeek 专属字段（`safety_check`、`latest_reminder`、`deepseek_*` 服务端工具、`title`、`reasoning_effort`）会被剥离，模型 id `deepseek-flash` 映射为 `deepseek-v4.1-flash`，并按聊天会话派生稳定的 `x-opencode-session`。
+
+附件图片在 bridge 模式下以 Anthropic base64 块内联发送（需扩展 v0.2.0+）：每次请求只内联最近的几张图（设置 → OpenCode Bridge 里可调，默认 4 张，另有约 24 MB 的图片总量预算），更早的图片在请求中替换为占位文本；本地原件始终完整保存在 IndexedDB，导出备份照常携带。文档附件在 bridge 模式仍不支持。语音、服务端联网搜索与实验台在该模式下禁用。
 
 ---
 

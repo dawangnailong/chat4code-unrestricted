@@ -29,6 +29,8 @@ type Settings = {
   apiProvider: ApiProvider
   /** OpenCode Bridge 扩展 ID；空串表示未配置 */
   bridgeExtensionId: string
+  /** bridge 通道每次请求内联的最近图片张数（1-10） */
+  bridgeInlineImageCount: number
   /** 当前模型：内置 flash / v4-pro，或云端列表里的任意 id */
   model: ChatModel
   /** 是否逐字渲染回复；关闭后等完整回复生成完再显示 */
@@ -128,6 +130,7 @@ const KEYS = {
   apiKey: 'chat-demo:api-key',
   apiProvider: 'chat-demo:api-provider',
   bridgeExtensionId: 'chat-demo:bridge-extension-id',
+  bridgeInlineImageCount: 'chat-demo:bridge-inline-image-count',
   model: 'chat-demo:model',
   streamOutput: 'chat-demo:stream-output',
   locale: 'chat-demo:locale',
@@ -399,6 +402,7 @@ export const useSettings = create<Settings>(() => ({
   apiKey: read(KEYS.apiKey),
   apiProvider: initialEnum(KEYS.apiProvider, API_PROVIDERS, 'deepseek'),
   bridgeExtensionId: (read(KEYS.bridgeExtensionId) ?? '').trim(),
+  bridgeInlineImageCount: initialNumber(KEYS.bridgeInlineImageCount, 4, 1, 10),
   model: initialModel(),
   streamOutput: read(KEYS.streamOutput) !== 'false',
   locale: initialLocale(),
@@ -516,6 +520,13 @@ export const setBridgeExtensionId = (bridgeExtensionId: string) => {
   const next = bridgeExtensionId.trim()
   write(KEYS.bridgeExtensionId, next === '' ? null : next)
   useSettings.setState({ bridgeExtensionId: next })
+}
+
+/** bridge 通道每次请求内联的最近图片张数；夹取到 1-10 */
+export const setBridgeInlineImageCount = (bridgeInlineImageCount: number) => {
+  const value = Math.min(10, Math.max(1, Math.round(bridgeInlineImageCount)))
+  write(KEYS.bridgeInlineImageCount, String(value))
+  useSettings.setState({ bridgeInlineImageCount: value })
 }
 
 /** 是否处于 OpenCode Bridge 模式；组件用它隐藏 DeepSeek 专属功能 */
@@ -805,6 +816,7 @@ export const resetSettings = () => {
     apiKey,
     apiProvider: 'deepseek',
     bridgeExtensionId: '',
+    bridgeInlineImageCount: 4,
     model: 'deepseek-flash',
     streamOutput: true,
     locale: isChineseBrowser() ? 'zh-CN' : 'en-US',

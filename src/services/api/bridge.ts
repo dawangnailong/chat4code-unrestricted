@@ -192,8 +192,14 @@ export async function* streamViaBridge(
 // ---------------------------------------------------------------------------
 
 type BridgeTextBlock = { type: 'text'; text: string }
+/** base64 内联图片块：OpenCode v0.2.0+ 对 content part 做不透明透传，原样转发 */
+type BridgeImageBlock = {
+  type: 'image'
+  source: { type: 'base64'; media_type: string; data: string }
+}
+type BridgeContentBlock = BridgeTextBlock | BridgeImageBlock
 type BridgeMessage =
-  | { role: 'user'; content: string | BridgeTextBlock[] }
+  | { role: 'user'; content: string | BridgeContentBlock[] }
   | { role: 'assistant'; content: BridgeTextBlock[] }
 
 type BridgeBody = {
@@ -248,7 +254,7 @@ const toBridgeMessages = (messages: MessageParam[]): BridgeMessage[] => {
       continue
     }
     if (message.role === 'user') {
-      const blocks = toUserTextBlocks(message.content)
+      const blocks = toUserContentBlocks(message.content)
       if (pendingReminder) {
         blocks.unshift({ type: 'text', text: pendingReminder })
         pendingReminder = ''
@@ -275,15 +281,24 @@ const toBridgeMessages = (messages: MessageParam[]): BridgeMessage[] => {
   return out
 }
 
-const toUserTextBlocks = (
+const toUserContentBlocks = (
   content: Extract<MessageParam, { role: 'user' }>['content']
-): BridgeTextBlock[] => {
+): BridgeContentBlock[] => {
   if (typeof content === 'string') {
     return content ? [{ type: 'text', text: content }] : []
   }
-  return content.flatMap((block): BridgeTextBlock[] =>
-    block.type === 'text' ? [{ type: 'text', text: block.text }] : []
-  )
+  return content.flatMap((block): BridgeContentBlock[] => {
+    if (block.type === 'text') {
+      return [{ type: 'text', text: block.text }]
+    }
+    // DeepSeek 的 file_id 引用块与 bridge 通道无关，在这里丢弃；
+    // base64 图片块在 reply.ts 装配时已是标准 Anthropic 形状，原样透传。
+    if (block.type === 'image' && block.source.type === 'base64') {
+      const { media_type, data } = block.source
+      return [{ type: 'image', source: { type: 'base64', media_type, data } }]
+    }
+    return []
+  })
 }
 
 const toAssistantText = (blocks: AssistantBlockParam[]): string =>
