@@ -33,7 +33,7 @@ jobs:
           update-readme: false
           commit: false
 
-      - name: Update bilingual README
+      - name: Update README
         shell: bash
         run: |
           python3 - <<'PY'
@@ -45,7 +45,7 @@ jobs:
             <img alt="Star History Chart" src="assets/star-history/star-history-light.svg" />
           </picture>"""
 
-          for filename in ("README.md", "README.zh-CN.md"):
+          for filename in ("README.md",):
               path = Path(filename)
               content = path.read_text(encoding="utf-8")
 
@@ -70,12 +70,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add assets/star-history README.md README.zh-CN.md
+          git add assets/star-history README.md
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
 
-          git commit -m "docs: update bilingual star history"
+          git commit -m "docs: update star history"
           git push
